@@ -1,0 +1,23 @@
+# Node & Angular common
+**/node_modules/
+**/dist/
+**/tmp/
+**/.angular/cache/
+
+# Logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+**/logs/
+**/*.log
+
+# Env files
+**/.env
+**/.env.*
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
