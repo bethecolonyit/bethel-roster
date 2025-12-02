@@ -95,7 +95,10 @@ app.use(express.static('public'));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:4200',  // your Angular dev origin
+  credentials: true,               // allow cookies to be sent
+}));
 
 
 function ensureAuthenticated(req, res, next) {
