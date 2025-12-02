@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NgIf, AsyncPipe } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -41,7 +41,8 @@ export class App {
   isDarkMode = false; // if you're using the theme toggle
 
   constructor(private breakpointObserver: BreakpointObserver,
-  public auth: AuthService
+  public auth: AuthService,
+  private router: Router
   ) {
     this.isHandset$ = this.breakpointObserver
       .observe([Breakpoints.Handset])
@@ -67,7 +68,19 @@ export class App {
   toggleTheme(): void {
     this.isDarkMode = !this.isDarkMode;
     document.body.classList.toggle('dark-theme', this.isDarkMode);
-  }  onLogout(): void {
-    this.auth.logout().subscribe();
-  }
+  }  
+  onLogout(): void {
+  this.auth.logout().subscribe({
+    next: () => {
+      // User is logged out → reset UI state
+      this.isCollapsed = false;  // optional: reset sidenav
+      this.router.navigateByUrl('/'); // login page shows automatically
+    },
+    error: () => {
+      // Even if backend fails, force logout behavior
+      this.isCollapsed = false;
+      this.router.navigateByUrl('/');
+    }
+  });
+}
 }
