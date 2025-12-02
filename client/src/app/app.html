@@ -1,17 +1,17 @@
-<ng-container *ngIf="(auth.currentUser$ | async) as user; else showLogin">
 <mat-sidenav-container class="app-shell">
   <!-- SIDE NAV -->
   <mat-sidenav
-    #sidenav
-    class="app-sidenav"
-    fixedInViewport
-    [mode]="(isHandset$ | async) ? 'over' : 'side'"
-    [opened]="(isHandset$ | async) ? false : !isCollapsed"
-    [class.collapsed]="!(isHandset$ | async) && isCollapsed"
-  >
+  *ngIf="!isLoginPage"
+  #sidenav
+  class="app-sidenav"
+  fixedInViewport
+  [mode]="(isHandset$ | async) ? 'over' : 'side'"
+  [opened]="(isHandset$ | async) ? false : !isCollapsed"
+  [class.collapsed]="!(isHandset$ | async) && isCollapsed"
+>
     <!-- Brand / Logo -->
     <mat-toolbar color="primary" class="app-sidenav-header">
-      <span class="logo" *ngIf="!isCollapsed">Bethel Roster</span>
+      <span class="logo" *ngIf="!isCollapsed">Menu</span>
       <mat-icon *ngIf="isCollapsed">dashboard</mat-icon>
     </mat-toolbar>
 
@@ -59,85 +59,59 @@
   <!-- MAIN CONTENT -->
   <mat-sidenav-content>
     <!-- TOP APP BAR -->
-    <mat-toolbar color="primary" class="app-toolbar">
-      <!-- Hamburger: on handset = open/close overlay; on desktop = collapse/expand -->
-      <button
-        type="button"
-        mat-icon-button
-        (click)="toggleSidebar(sidenav)"
-        aria-label="Toggle navigation"
-      >
-        <mat-icon>menu</mat-icon>
-      </button>
+<mat-toolbar color="primary" class="app-toolbar">
+  <!-- Hamburger: only when sidenav exists -->
+  <button
+    *ngIf="!isLoginPage"
+    type="button"
+    mat-icon-button
+    (click)="toggleSidebar()"
+    aria-label="Toggle navigation"
+  >
+    <mat-icon>menu</mat-icon>
+  </button>
 
-      <span class="app-title">Ministry Dashboard</span>
+  <span class="app-title">Bethel Roster</span>
 
-      <span class="spacer"></span>
+  <span class="spacer"></span>
 
-      <!-- Theme toggle (optional if you wired it) -->
-      <button
-        mat-icon-button
-        (click)="toggleTheme()"
-        aria-label="Toggle theme"
-      >
-        <mat-icon>{{ isDarkMode ? 'dark_mode' : 'light_mode' }}</mat-icon>
-      </button>
+  <!-- Theme toggle: you can keep this on login if you like -->
+  <button
+    mat-icon-button
+    (click)="toggleTheme()"
+    aria-label="Toggle theme"
+  >
+    <mat-icon>{{ isDarkMode ? 'dark_mode' : 'light_mode' }}</mat-icon>
+  </button>
 
-      <!-- Right-side actions -->
-      <button mat-icon-button aria-label="Notifications">
-        <mat-icon>notifications</mat-icon>
-      </button>
+  <!-- Right-side actions: probably hide on login too -->
+  <button
+    *ngIf="!isLoginPage"
+    mat-icon-button
+    aria-label="Notifications"
+  >
+    <mat-icon>notifications</mat-icon>
+  </button>
 
-      <button mat-icon-button aria-label="User account">
-        <mat-icon>account_circle</mat-icon>
-      </button>
-      <button mat-icon-button (click)="onLogout()" aria-label="Logout">
-  <mat-icon>logout</mat-icon>
-</button>
-    </mat-toolbar>
+  <button
+    *ngIf="!isLoginPage"
+    mat-icon-button
+    aria-label="User account"
+  >
+    <mat-icon>account_circle</mat-icon>
+  </button>
 
-    <!-- PAGE BODY -->
-    <div class="app-content">
-      <!-- Replace this with <router-outlet> if you like -->
-      <div class="dashboard-grid">
-        <mat-card class="dashboard-card">
-          <mat-card-header>
-            <mat-card-title>Overview</mat-card-title>
-            <mat-card-subtitle>Today</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <p>Total Users: 1,248</p>
-            <p>Active Sessions: 87</p>
-          </mat-card-content>
-        </mat-card>
+  <button
+    *ngIf="!isLoginPage"
+    mat-icon-button
+    (click)="onLogout()"
+    aria-label="Logout"
+  >
+    <mat-icon>logout</mat-icon>
+  </button>
+</mat-toolbar>
 
-        <mat-card class="dashboard-card">
-          <mat-card-header>
-            <mat-card-title>Performance</mat-card-title>
-            <mat-card-subtitle>This Week</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <p>Conversion Rate: 4.3%</p>
-            <p>Bounce Rate: 32%</p>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="dashboard-card">
-          <mat-card-header>
-            <mat-card-title>System Health</mat-card-title>
-            <mat-card-subtitle>Servers</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <p>Uptime: 99.98%</p>
-            <p>Incidents: 0</p>
-          </mat-card-content>
-        </mat-card>
-      </div>
-      <!-- Or: <router-outlet></router-outlet> -->
-    </div>
+    <!-- Routed views render here (login OR dashboard OR students, etc.) -->
+    <router-outlet></router-outlet>
   </mat-sidenav-content>
 </mat-sidenav-container>
-</ng-container>
-<ng-template #showLogin>
-  <app-login></app-login>
-</ng-template>

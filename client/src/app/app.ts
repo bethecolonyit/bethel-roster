@@ -1,6 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { NgIf, AsyncPipe } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
 
 import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -9,22 +14,27 @@ import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 
-import { LayoutModule, BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import {
+  LayoutModule,
+  BreakpointObserver,
+  Breakpoints,
+} from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay, take } from 'rxjs/operators';
 
 import { AuthService } from './services/auth';
-import { LoginComponent } from './components/login/login';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   templateUrl: './app.html',
+  styleUrls: ['../styles.scss'],
   imports: [
     NgIf,
     AsyncPipe,
     RouterLink,
     RouterLinkActive,
+    RouterOutlet,
     MatSidenavModule,
     MatToolbarModule,
     MatIconModule,
@@ -32,55 +42,58 @@ import { LoginComponent } from './components/login/login';
     MatButtonModule,
     MatCardModule,
     LayoutModule,
-    LoginComponent
   ],
 })
 export class App {
+ 
   isHandset$!: Observable<boolean>;
   isCollapsed = false;
-  isDarkMode = false; // if you're using the theme toggle
+  isDarkMode = false;
 
-  constructor(private breakpointObserver: BreakpointObserver,
-  public auth: AuthService,
-  private router: Router
+  constructor(
+    private breakpointObserver: BreakpointObserver,
+    public auth: AuthService,
+    private router: Router
   ) {
+    // Restore logged-in user from session cookie on app start
+    this.auth.loadMe().subscribe();
+
     this.isHandset$ = this.breakpointObserver
       .observe([Breakpoints.Handset])
       .pipe(
-        map(result => result.matches),
+        map((result) => result.matches),
         shareReplay()
       );
   }
 
-  toggleSidebar(sidenav: MatSidenav): void {
-    this.isHandset$.pipe(take(1)).subscribe(isHandset => {
-      if (isHandset) {
-        // On phones: open/close overlay drawer
-        sidenav.toggle();
-      } else {
-        // On desktop: just collapse/expand the docked sidenav
-        this.isCollapsed = !this.isCollapsed;
-      }
-    });
+    get isLoginPage(): boolean {
+    return this.router.url.startsWith('/login');
   }
-
-  // Optional: theme toggle if you wired the SCSS
-  toggleTheme(): void {
-    this.isDarkMode = !this.isDarkMode;
-    document.body.classList.toggle('dark-theme', this.isDarkMode);
-  }  
-  onLogout(): void {
-  this.auth.logout().subscribe({
-    next: () => {
-      // User is logged out → reset UI state
-      this.isCollapsed = false;  // optional: reset sidenav
-      this.router.navigateByUrl('/'); // login page shows automatically
-    },
-    error: () => {
-      // Even if backend fails, force logout behavior
-      this.isCollapsed = false;
-      this.router.navigateByUrl('/');
+ @ViewChild('sidenav') sidenav!: MatSidenav;
+ toggleSidebar(): void {
+  this.isHandset$.pipe(take(1)).subscribe((isHandset) => {
+    if (isHandset) {
+      this.sidenav.toggle();
+    } else {
+      this.isCollapsed = !this.isCollapsed;
     }
   });
 }
+  toggleTheme(): void {
+    this.isDarkMode = !this.isDarkMode;
+    document.body.classList.toggle('dark-theme', this.isDarkMode);
+  }
+
+  onLogout(): void {
+    this.auth.logout().subscribe({
+      next: () => {
+        this.isCollapsed = false;
+        this.router.navigateByUrl('/login');
+      },
+      error: () => {
+        this.isCollapsed = false;
+        this.router.navigateByUrl('/login');
+      },
+    });
+  }
 }

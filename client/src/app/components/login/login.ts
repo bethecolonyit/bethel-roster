@@ -1,6 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 
 // Angular Material
@@ -23,10 +27,10 @@ import { AuthService } from '../../services/auth';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
   ],
   templateUrl: './login.html',
-  styleUrl: './login.scss'
+  styleUrl: './login.scss',
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);
@@ -39,7 +43,7 @@ export class LoginComponent {
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required]
+    password: ['', Validators.required],
   });
 
   onSubmit(): void {
@@ -53,12 +57,13 @@ export class LoginComponent {
     this.auth.login(email!, password!).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigateByUrl('/');
+        // ✅ Go directly to the dashboard after login
+        this.router.navigateByUrl('/dashboard');
       },
       error: (err) => {
         this.loading = false;
         this.error = err?.error?.error || 'Login failed';
-      }
+      },
     });
   }
 }

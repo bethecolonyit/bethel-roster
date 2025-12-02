@@ -52,6 +52,7 @@ body {
 
 .app-content {
   padding: 16px;
+
 }
 
 .dashboard-grid {
@@ -94,4 +95,9 @@ mat-sidenav .mat-toolbar-row,
 /* 4) Make sure the inner container doesn't create a gap */
 .mat-drawer-inner-container {
   padding-top: 0 !important;
+}
+.logo img {
+  height: 75px;
+  padding: .5rem;
+  width: auto;
 }
