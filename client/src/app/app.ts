@@ -13,6 +13,9 @@ import { LayoutModule, BreakpointObserver, Breakpoints } from '@angular/cdk/layo
 import { Observable } from 'rxjs';
 import { map, shareReplay, take } from 'rxjs/operators';
 
+import { AuthService } from './services/auth';
+import { LoginComponent } from './components/login/login';
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -29,6 +32,7 @@ import { map, shareReplay, take } from 'rxjs/operators';
     MatButtonModule,
     MatCardModule,
     LayoutModule,
+    LoginComponent
   ],
 })
 export class App {
@@ -36,7 +40,9 @@ export class App {
   isCollapsed = false;
   isDarkMode = false; // if you're using the theme toggle
 
-  constructor(private breakpointObserver: BreakpointObserver) {
+  constructor(private breakpointObserver: BreakpointObserver,
+  public auth: AuthService
+  ) {
     this.isHandset$ = this.breakpointObserver
       .observe([Breakpoints.Handset])
       .pipe(
@@ -61,5 +67,7 @@ export class App {
   toggleTheme(): void {
     this.isDarkMode = !this.isDarkMode;
     document.body.classList.toggle('dark-theme', this.isDarkMode);
+  }  onLogout(): void {
+    this.auth.logout().subscribe();
   }
 }

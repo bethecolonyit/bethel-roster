@@ -1,0 +1,21 @@
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mat-sys-surface);
+}
+
+.login-card {
+  width: 360px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.error {
+  color: #e53935;
+  font-size: 14px;
+  margin-top: -8px;
+}
