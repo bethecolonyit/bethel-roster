@@ -1,0 +1,58 @@
+/* src/material-theme.scss */
+@use '@angular/material' as mat;
+
+/* LIGHT THEME (default) */
+html {
+  color-scheme: light;
+
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$blue-palette,
+      // optional extra:
+      // tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+/* DARK THEME (activated via <body class="dark-theme">) */
+body.dark-theme {
+  color-scheme: dark;
+
+  @include mat.theme((
+    color: (
+      theme-type: dark,
+      primary: mat.$blue-palette,
+      // tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+/* Global document styling */
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+
+  /* Use Material system tokens so theme actually shows */
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}
+
+/* Make the toolbar actually use the primary color */
+:root {
+  @include mat.toolbar-overrides((
+    container-background-color: var(--mat-sys-primary),
+    container-text-color: var(--mat-sys-on-primary),
+  ));
+
+  /* Optional: tweak sidenav look a bit */
+  @include mat.sidenav-overrides((
+    content-background-color: var(--mat-sys-surface-container-high),
+    container-divider-color: var(--mat-sys-outline-variant),
+  ));
+}

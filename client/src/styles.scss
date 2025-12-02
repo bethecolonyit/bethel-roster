@@ -1,0 +1,97 @@
+/* You can add global styles to this file, and also import other style files */
+@use 'material-theme' as *;
+
+/* Base document styles */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/* Layout for shell / sidenav / toolbar / content */
+.app-shell {
+  height: 100vh;
+}
+
+.app-sidenav {
+  width: 260px;
+  transition: width 200ms ease;
+  overflow: hidden;
+}
+
+.app-sidenav.collapsed {
+  width: 72px;
+}
+
+.app-sidenav.collapsed .menu-label {
+  display: none;
+}
+
+.app-sidenav.collapsed .mat-mdc-list-item {
+  justify-content: center;
+}
+
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.app-title {
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.app-content {
+  padding: 16px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.dashboard-card {
+  height: 100%;
+}
+
+.app-sidenav-header .logo {
+  font-weight: 600;
+}
+
+/* --- FINAL FIX: remove blue line & any rounded corner in the sidenav header --- */
+
+/* 1) No divider/shadow line between sidenav and content */
+.mat-drawer-side {
+  border-right: none !important;
+  box-shadow: none !important;
+}
+
+/* 2) Flat sidenav background */
+mat-sidenav {
+  background-color: var(--mat-sys-surface) !important;
+}
+
+/* 3) Brutally remove ALL radius from anything in the sidenav header */
+mat-sidenav,
+mat-sidenav .mat-drawer-inner-container,
+mat-sidenav .mat-toolbar,
+mat-sidenav .mat-toolbar-row,
+.app-sidenav-header,
+.app-sidenav-header * {
+  border-radius: 0 !important;
+}
+
+/* 4) Make sure the inner container doesn't create a gap */
+.mat-drawer-inner-container {
+  padding-top: 0 !important;
+}

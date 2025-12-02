@@ -1,0 +1,49 @@
+.app-shell {
+  height: 100vh;
+}
+
+.app-sidenav {
+  width: 260px;
+  background-color: blue;
+}
+.app-sidenav-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #1976d2;
+  color: white;
+}
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.app-title {
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.app-content {
+  padding: 16px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.dashboard-card {
+  height: 100%;
+}
+
+.app-sidenav-header .logo {
+  font-weight: 600;
+}
+
