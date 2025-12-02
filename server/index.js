@@ -212,31 +212,114 @@ app.post('/auth/users', ensureAuthenticated, ensureAdmin, (req, res) => {
       return res.status(500).json({ error: 'Error hashing password' });
     }
 
-    const db = new sqlite3.Database(DB_FILE);
-    db.run(
-      'INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)',
-      [email, hash, role],
-      function (err) {
-        db.close();
+    try {
+      const stmt = db.prepare(
+        'INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)'
+      );
+      const info = stmt.run(email, hash, role);
 
-        if (err) {
-          console.error(err);
-          if (err.message && err.message.includes('UNIQUE')) {
-            return res.status(409).json({ error: 'Email already in use' });
-          }
-          return res.status(500).json({ error: 'Database error creating user' });
-        }
-
-        res.status(201).json({
-          id: this.lastID,
-          email,
-          role
-        });
+      res.status(201).json({
+        id: info.lastInsertRowid,
+        email,
+        role
+      });
+    } catch (err) {
+      console.error(err);
+      if (err.message && err.message.includes('UNIQUE')) {
+        return res.status(409).json({ error: 'Email already in use' });
       }
-    );
+      return res.status(500).json({ error: 'Database error creating user' });
+    }
   });
 });
+// GET /auth/users  (admin only) - list all users
+app.get('/auth/users', ensureAuthenticated, ensureAdmin, (req, res) => {
+  try {
+    const stmt = db.prepare('SELECT id, email, role, created_at FROM users ORDER BY email ASC');
+    const users = stmt.all();
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error fetching users' });
+  }
+});
 
+// PUT /auth/users/:id  (admin only) - update email/role and optionally password
+app.put('/auth/users/:id', ensureAuthenticated, ensureAdmin, (req, res) => {
+  const { id } = req.params;
+  const { email, role, password } = req.body;
+
+  if (!email || !role) {
+    return res.status(400).json({ error: 'Email and role are required' });
+  }
+
+  if (!['admin', 'user'].includes(role)) {
+    return res.status(400).json({ error: 'Role must be admin or user' });
+  }
+
+  const updateUser = (passwordHash = null) => {
+    try {
+      let stmt;
+      if (passwordHash) {
+        stmt = db.prepare(`
+          UPDATE users
+          SET email = ?, role = ?, password_hash = ?
+          WHERE id = ?
+        `);
+        stmt.run(email, role, passwordHash, id);
+      } else {
+        stmt = db.prepare(`
+          UPDATE users
+          SET email = ?, role = ?
+          WHERE id = ?
+        `);
+        stmt.run(email, role, id);
+      }
+
+      // return updated record
+      const selectStmt = db.prepare('SELECT id, email, role, created_at FROM users WHERE id = ?');
+      const user = selectStmt.get(id);
+      res.json(user);
+    } catch (err) {
+      console.error(err);
+      if (err.message && err.message.includes('UNIQUE')) {
+        return res.status(409).json({ error: 'Email already in use' });
+      }
+      res.status(500).json({ error: 'Database error updating user' });
+    }
+  };
+
+  if (password) {
+    bcrypt.hash(password, 10, (hashErr, hash) => {
+      if (hashErr) {
+        console.error(hashErr);
+        return res.status(500).json({ error: 'Error hashing password' });
+      }
+      updateUser(hash);
+    });
+  } else {
+    updateUser();
+  }
+});
+
+// DELETE /auth/users/:id  (admin only)
+app.delete('/auth/users/:id', ensureAuthenticated, ensureAdmin, (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const stmt = db.prepare('DELETE FROM users WHERE id = ?');
+    const info = stmt.run(id);
+
+    if (info.changes === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error deleting user' });
+  }
+});
 
 // STUDENT ROUTES
 app.get('/students', ensureAuthenticated, (req, res) => {
