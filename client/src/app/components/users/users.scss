@@ -1,0 +1,146 @@
+.users-page {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.users-card {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.users-avatar {
+  background: rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 20px;
+  }
+}
+
+.flex-spacer {
+  flex: 1 1 auto;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f44336;
+  margin-bottom: 12px;
+
+  mat-icon {
+    font-size: 20px;
+  }
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+
+  th,
+  td {
+    padding: 8px 12px;
+  }
+
+  th {
+    font-weight: 600;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.actions-col {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.inline-field {
+  width: 100%;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  opacity: 0.8;
+
+  mat-icon {
+    font-size: 20px;
+  }
+}
+
+/* Collapsible create user section */
+.create-user-section {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.create-user-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  mat-icon {
+    font-size: 20px;
+  }
+}
+
+.create-user-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+
+  button mat-icon {
+    margin-right: 4px;
+  }
+}
+
+/* Role chips */
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+
+  &.admin {
+    background-color: rgba(244, 67, 54, 0.12);
+    color: #f44336;
+  }
+
+  &.user {
+    background-color: rgba(33, 150, 243, 0.12);
+    color: #2196f3;
+  }
+
+  .role-icon {
+    font-size: 16px;
+  }
+}

@@ -1,0 +1,57 @@
+// src/app/services/user.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+export interface User {
+  id: number;
+  email: string;
+  role: string;      // 'admin' | 'user' (backend may have more)
+  created_at?: string;
+}
+
+export interface CreateUserDto {
+  email: string;
+  password: string;
+  role: 'admin' | 'user';
+}
+
+export interface UpdateUserDto {
+  email: string;
+  role: 'admin' | 'user';
+  password?: string;  // optional when editing
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+  // Adjust to environment later if you want
+  private baseUrl = 'http://localhost:3000/auth/users';
+
+  constructor(private http: HttpClient) {}
+
+  getUsers(): Observable<User[]> {
+    return this.http.get<User[]>(this.baseUrl, {
+      withCredentials: true,  // send session cookie
+    });
+  }
+
+  createUser(payload: CreateUserDto): Observable<User> {
+    return this.http.post<User>(this.baseUrl, payload, {
+      withCredentials: true,
+    });
+  }
+
+  updateUser(id: number, payload: UpdateUserDto): Observable<User> {
+    return this.http.put<User>(`${this.baseUrl}/${id}`, payload, {
+      withCredentials: true,
+    });
+  }
+
+  deleteUser(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.baseUrl}/${id}`, {
+      withCredentials: true,
+    });
+  }
+}

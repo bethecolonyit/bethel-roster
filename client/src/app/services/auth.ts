@@ -5,14 +5,17 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 export interface User {
   id: number;
   email: string;
-  role: string; // 'admin' | 'user' | 'office' etc.
+  role: string; // 'admin' | 'user' | etc.
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-
-  // TODO: move to environment file later if you want
   private apiUrl = 'http://localhost:3000';
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
@@ -22,27 +25,42 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  /** Try to restore the logged-in user from the session cookie */
-  loadMe(): Observable<User | null> {
+  private setUser(user: User | null) {
+    this.currentUserSubject.next(user);
+  }
+
+  /** Check current session */
+  me(): Observable<User | null> {
     return this.http
       .get<User | null>(`${this.apiUrl}/auth/me`, {
-        withCredentials: true, // send session cookie
+        withCredentials: true,
       })
-      .pipe(tap(user => this.currentUserSubject.next(user)));
+      .pipe(tap(user => this.setUser(user)));
   }
 
-  /** Log in and store user in BehaviorSubject */
+  /**
+   * Alias kept for backwards compatibility.
+   * Your app.ts and old auth-guard.ts call auth.loadMe().
+   */
+  loadMe(): Observable<User | null> {
+    return this.me();
+  }
+
+  /**
+   * Old signature: login(email, password)
+   * Your login component calls it like this, so we keep that API.
+   */
   login(email: string, password: string): Observable<User> {
+    const payload: LoginPayload = { email, password };
+
     return this.http
-      .post<User>(
-        `${this.apiUrl}/auth/login`,
-        { email, password },
-        { withCredentials: true }
-      )
-      .pipe(tap(user => this.currentUserSubject.next(user)));
+      .post<User>(`${this.apiUrl}/auth/login`, payload, {
+        withCredentials: true,
+      })
+      .pipe(tap(user => this.setUser(user)));
   }
 
-  /** Log out and clear user */
+  /** Logout and clear user */
   logout(): Observable<{ message: string }> {
     return this.http
       .post<{ message: string }>(
@@ -50,6 +68,6 @@ export class AuthService {
         {},
         { withCredentials: true }
       )
-      .pipe(tap(() => this.currentUserSubject.next(null)));
+      .pipe(tap(() => this.setUser(null)));
   }
 }

@@ -1,0 +1,202 @@
+<div class="users-page">
+  <mat-card class="users-card">
+    <mat-card-header>
+      <div mat-card-avatar class="users-avatar">
+        <mat-icon>group</mat-icon>
+      </div>
+
+      <mat-card-title>User Management</mat-card-title>
+      <mat-card-subtitle>View and manage application users and roles</mat-card-subtitle>
+
+      <!-- spacer pushes the button to the right -->
+      <span class="flex-spacer"></span>
+
+      <!-- + / close toggle button -->
+      <button
+        mat-icon-button
+        color="primary"
+        type="button"
+        (click)="toggleCreateForm()"
+        [attr.aria-label]="showCreateForm ? 'Hide create user form' : 'Show create user form'"
+      >
+        <mat-icon>{{ showCreateForm ? 'close' : 'add' }}</mat-icon>
+      </button>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Error -->
+      <div *ngIf="error" class="error-message">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ error }}</span>
+      </div>
+
+      <!-- User list -->
+      <table class="users-table mat-elevation-z2" *ngIf="users && users.length; else noUsers">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Created</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <!-- Email -->
+            <td>
+              <ng-container *ngIf="editingUserId === user.id; else viewEmail">
+                <mat-form-field appearance="outline" class="inline-field">
+                  <mat-label>Email</mat-label>
+                  <input
+                    matInput
+                    type="email"
+                    [(ngModel)]="editModel.email"
+                    name="editEmail-{{ user.id }}"
+                    required
+                  />
+                </mat-form-field>
+              </ng-container>
+              <ng-template #viewEmail>
+                {{ user.email }}
+              </ng-template>
+            </td>
+
+            <!-- Role -->
+            <td>
+              <ng-container *ngIf="editingUserId === user.id; else viewRole">
+                <mat-form-field appearance="outline" class="inline-field">
+                  <mat-label>Role</mat-label>
+                  <mat-select [(ngModel)]="editModel.role" name="editRole-{{ user.id }}">
+                    <mat-option value="user">User</mat-option>
+                    <mat-option value="admin">Admin</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </ng-container>
+              <ng-template #viewRole>
+                <span class="role-chip" [ngClass]="user.role">
+                  <mat-icon class="role-icon" *ngIf="user.role === 'admin'">security</mat-icon>
+                  {{ user.role | titlecase }}
+                </span>
+              </ng-template>
+            </td>
+
+            <!-- Created -->
+            <td>
+              {{ user.created_at | date: 'short' }}
+            </td>
+
+            <!-- Actions -->
+            <td class="actions-col">
+              <ng-container *ngIf="editingUserId === user.id; else viewActions">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  (click)="saveEdit(user)"
+                >
+                  <mat-icon>check</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  type="button"
+                  (click)="cancelEdit()"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+              </ng-container>
+              <ng-template #viewActions>
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  (click)="startEdit(user)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  (click)="deleteUser(user)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </ng-template>
+              <!-- ToDo: Add password reset functionality to users -->
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty state -->
+      <ng-template #noUsers>
+        <div class="empty-state">
+          <mat-icon>info</mat-icon>
+          <span>No users found.</span>
+        </div>
+      </ng-template>
+
+      <!-- Create user form (collapsible) -->
+      <div *ngIf="showCreateForm" class="create-user-section">
+        <h3 class="create-user-title">
+          <mat-icon>person_add</mat-icon>
+          <span>Create New User</span>
+        </h3>
+
+        <form (ngSubmit)="createUser()" #createForm="ngForm" class="create-user-form">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Email</mat-label>
+              <input
+                matInput
+                type="email"
+                name="email"
+                [(ngModel)]="newUser.email"
+                required
+              />
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Password</mat-label>
+              <input
+                matInput
+                type="password"
+                name="password"
+                [(ngModel)]="newUser.password"
+                required
+              />
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Role</mat-label>
+              <mat-select
+                name="role"
+                [(ngModel)]="newUser.role"
+                required
+              >
+                <mat-option value="user">User</mat-option>
+                <mat-option value="admin">Admin</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="form-actions">
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              [disabled]="createForm.invalid"
+            >
+              <mat-icon>save</mat-icon>
+              <span>Create User</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

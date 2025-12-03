@@ -1,19 +1,17 @@
-// src/app/app.routes.ts
 import { Routes } from '@angular/router';
 
 import { LoginComponent } from './components/login/login';
 import { Dashboard } from './components/dashboard/dashboard';
 import { Students } from './components/students/students';
 import { authGuard } from './guards/auth-guard';
+import { UsersComponent } from './components/users/users';   // ⬅️ add this
+import { adminGuard } from './guards/admin-guard';            // ⬅️ and this
 
 export const appRoutes: Routes = [
-  // Default → login
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 
-  // Public
   { path: 'login', component: LoginComponent },
 
-  // Protected routes
   {
     path: 'dashboard',
     component: Dashboard,
@@ -24,7 +22,11 @@ export const appRoutes: Routes = [
     component: Students,
     canActivate: [authGuard],
   },
+  {
+    path: 'users',
+    component: UsersComponent,
+    canActivate: [adminGuard],   // only admins
+  },
 
-  // Fallback
   { path: '**', redirectTo: 'login' },
 ];

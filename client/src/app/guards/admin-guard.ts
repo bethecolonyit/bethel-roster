@@ -4,33 +4,40 @@ import { of } from 'rxjs';
 import { catchError, map, take } from 'rxjs/operators';
 import { AuthService } from '../services/auth';
 
-export const authGuard: CanActivateFn = (route, state) => {
+export const adminGuard: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  // If we already have a user in memory, allow immediately
   const existingUser = auth.currentUser;
   if (existingUser) {
-    return true;
+    if (existingUser.role === 'admin') {
+      return true;
+    }
+    // Logged in but not admin → send to dashboard
+    router.navigate(['/dashboard']);
+    return false;
   }
 
-  // Otherwise, hit /auth/me to see if there is a valid session
+  // No user in memory – check session with /auth/me
   return auth.me().pipe(
     take(1),
     map(user => {
-      if (user) {
-        // Session is valid, user is now stored in AuthService
+      if (user && user.role === 'admin') {
         return true;
       }
 
-      // Not logged in → go to login
+      if (user && user.role !== 'admin') {
+        router.navigate(['/dashboard']);
+        return false;
+      }
+
+      // Not logged in
       router.navigate(['/login'], {
         queryParams: { returnUrl: state.url },
       });
       return false;
     }),
     catchError(() => {
-      // Any error: treat as unauthenticated
       router.navigate(['/login'], {
         queryParams: { returnUrl: state.url },
       });
