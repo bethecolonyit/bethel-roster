@@ -91,8 +91,84 @@
                     <div matListItemLine *ngIf="!bed.occupancy">
                       <span class="available-label">Available</span>
                     </div>
+
+                    <!-- Checkout button for occupied beds -->
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      *ngIf="bed.occupancy"
+                      (click)="onCheckoutClick(building, room, bed, $event)"
+                      matTooltip="Checkout / unassign"
+                    >
+                      <mat-icon>logout</mat-icon>
+                    </button>
+
+                    <!-- Assign button for available beds -->
+                    <button
+                      mat-icon-button
+                      color="primary"
+                      *ngIf="!bed.occupancy"
+                      (click)="onAssignClick(building, room, bed, $event)"
+                      matTooltip="Assign student to this bed"
+                    >
+                      <mat-icon>person_add</mat-icon>
+                    </button>
+                      <!-- Inline assign panel for THIS bed -->
+                    <div
+                      *ngIf="assigningContext && assigningContext.bedId === bed.id"
+                      class="assign-inline-panel"
+                    >
+                      <p class="assign-subtitle">
+                        Assigning to Room {{ room.roomNumber }} ({{ room.roomType }}) •
+                        Bed {{ bed.bedLetter }}
+                      </p>
+
+                      <div *ngIf="studentsLoading">
+                        Loading students.
+                      </div>
+
+                      <div *ngIf="!studentsLoading && studentsLoaded">
+                        <mat-form-field appearance="outline" class="assign-field">
+                          <mat-label>Search student</mat-label>
+                          <input
+                            type="text"
+                            matInput
+                            [formControl]="studentSearchControl"
+                            [matAutocomplete]="studentAuto"
+                          />
+                        </mat-form-field>
+
+                        <mat-autocomplete
+                          #studentAuto="matAutocomplete"
+                          (optionSelected)="onStudentSelected($event.option.value)"
+                        >
+                          <mat-option
+                            *ngFor="let s of filteredStudents"
+                            [value]="s.id"
+                          >
+                            {{ s.lastName }}, {{ s.firstName }} ({{ s.idNumber }})
+                          </mat-option>
+                        </mat-autocomplete>
+
+                        <div class="assign-actions">
+                          <button
+                            mat-raised-button
+                            color="primary"
+                            (click)="confirmAssign()"
+                            [disabled]="!selectedStudent"
+                          >
+                            Assign
+                          </button>
+                          <button mat-button type="button" (click)="cancelAssign()">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+    
                   </mat-list-item>
                 </mat-list>
+
               </mat-expansion-panel>
             </mat-accordion>
           </mat-expansion-panel>

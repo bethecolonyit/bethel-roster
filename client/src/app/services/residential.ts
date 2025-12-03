@@ -42,6 +42,13 @@ export interface ResidentialBuilding {
   rooms: ResidentialRoom[];
 }
 
+export interface StudentOption {
+  id: number;
+  firstName: string;
+  lastName: string;
+  idNumber: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -54,7 +61,42 @@ export class ResidentialService {
   /** Load full residential tree: buildings → rooms → beds + current occupancy */
   getStructure(): Observable<ResidentialBuilding[]> {
     return this.http.get<ResidentialBuilding[]>(
-      `${this.apiUrl}/residential/structure`
+      `${this.apiUrl}/residential/structure`,
+      { withCredentials: true }
+    );
+  }
+   getStudents(): Observable<StudentOption[]> {
+    return this.http.get<StudentOption[]>(`${this.apiUrl}/students/simple`, { withCredentials: true });
+  }
+
+  /** Assign a student to a bed */
+  assignBed(bedId: number, studentId: number, startDate?: string) {
+    const body: any = {
+      bedId,
+      studentId,
+    };
+
+    if (startDate) {
+      body.startDate = startDate;
+    }
+
+    return this.http.post(
+      `${this.apiUrl}/residential/bed-assignments`,
+      body,
+      { withCredentials: true } 
+    );
+  }
+    /** Checkout (end) an active bed assignment */
+  checkoutAssignment(assignmentId: number, endDate?: string) {
+    const body: any = {};
+    if (endDate) {
+      body.endDate = endDate;
+    }
+
+    return this.http.post(
+      `${this.apiUrl}/residential/bed-assignments/${assignmentId}/checkout`,
+      body,
+      { withCredentials: true }
     );
   }
 }

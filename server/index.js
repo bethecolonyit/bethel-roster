@@ -424,6 +424,20 @@ app.get('/students', ensureAuthenticated, (req, res) => {
         res.status(500).send("Database error");
     }
 });
+app.get('/students/simple', ensureAuthenticated, (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT id, firstName, lastName, idNumber
+      FROM students
+      ORDER BY lastName COLLATE NOCASE, firstName COLLATE NOCASE;
+    `).all();
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch students list' });
+  }
+});
 
 
 app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
