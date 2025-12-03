@@ -1,11 +1,11 @@
 import { Routes } from '@angular/router';
-
 import { LoginComponent } from './components/login/login';
 import { Dashboard } from './components/dashboard/dashboard';
 import { Students } from './components/students/students';
 import { authGuard } from './guards/auth-guard';
-import { UsersComponent } from './components/users/users';   // ⬅️ add this
-import { adminGuard } from './guards/admin-guard';            // ⬅️ and this
+import { UsersComponent } from './components/users/users'; 
+import { adminGuard } from './guards/admin-guard';           
+import { Residential } from './components/residential/residential';
 
 export const appRoutes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -26,6 +26,11 @@ export const appRoutes: Routes = [
     path: 'users',
     component: UsersComponent,
     canActivate: [adminGuard],   // only admins
+  },
+  {
+    path: 'residential',
+    component: Residential,
+    canActivate: [adminGuard],  
   },
 
   { path: '**', redirectTo: 'login' },
