@@ -6,11 +6,50 @@
 
 .residential-card {
   width: 100%;
-  max-width: 900px;
+  max-width: 1100px;
 }
 
 .residential-icon {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.buildings-accordion {
+  margin-top: 8px;
+}
+
+.building-panel {
+  margin-bottom: 4px;
+}
+
+.rooms-accordion {
+  margin-top: 8px;
+}
+
+.room-panel {
+  margin-bottom: 4px;
+}
+
+.beds-list {
+  margin-top: 4px;
+}
+
+.available-label {
+  opacity: 0.75;
+}
+
+.since {
+  opacity: 0.75;
+  font-size: 0.85rem;
+}
+
+.error {
+  color: #f44336;
+}
+
+.empty-msg {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin: 4px 0 8px;
 }

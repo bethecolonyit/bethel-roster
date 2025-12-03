@@ -6,25 +6,104 @@
       </div>
       <mat-card-title>Residential Management</mat-card-title>
       <mat-card-subtitle>
-        Buildings • Rooms • Beds • Assignments
+        Buildings • Rooms • Beds • Occupancy
       </mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
-      <p>
-        This will be the hub for viewing residential structure and managing bed
-        assignments.
-      </p>
-      <p>
-        Next steps: we'll load live data from
-        <code>/residential/structure</code> and show occupancy.
-      </p>
+      <div *ngIf="loading">
+        Loading residential structure...
+      </div>
+
+      <div *ngIf="error" class="error">
+        {{ error }}
+      </div>
+
+      <ng-container *ngIf="!loading && !error">
+        <div *ngIf="buildings.length === 0">
+          No residential data found. Add buildings, rooms, and beds on the
+          backend.
+        </div>
+
+        <!-- BUILDINGS -->
+        <mat-accordion
+          *ngIf="buildings.length > 0"
+          multi="true"
+          class="buildings-accordion"
+        >
+          <mat-expansion-panel
+            *ngFor="let building of buildings"
+            class="building-panel"
+          >
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                {{ building.buildingName }}
+              </mat-panel-title>
+              <mat-panel-description>
+                {{ building.occupiedBeds }}/{{ building.totalBeds }}
+                occupied • {{ building.availableBeds }} available
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <!-- ROOMS -->
+            <div *ngIf="building.rooms.length === 0" class="empty-msg">
+              No rooms defined for this building.
+            </div>
+
+            <mat-accordion
+              *ngIf="building.rooms.length > 0"
+              multi="true"
+              class="rooms-accordion"
+            >
+              <mat-expansion-panel
+                *ngFor="let room of building.rooms"
+                class="room-panel"
+              >
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    Room {{ room.roomNumber }} ({{ room.roomType }})
+                  </mat-panel-title>
+                  <mat-panel-description>
+                    {{ room.occupiedBeds }}/{{ room.totalBeds }} occupied •
+                    {{ room.availableBeds }} available
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+
+                <!-- BEDS -->
+                <mat-list dense class="beds-list">
+                  <mat-list-item *ngFor="let bed of room.beds">
+                    <mat-icon matListItemIcon>
+                      {{ bed.occupancy ? 'person' : 'single_bed' }}
+                    </mat-icon>
+
+                    <div matListItemTitle>
+                      Bed {{ bed.bedLetter }}
+                    </div>
+
+                    <div matListItemLine *ngIf="bed.occupancy && bed.occupancy.student">
+                      {{ bed.occupancy.student.firstName }}
+                      {{ bed.occupancy.student.lastName }}
+                      <span class="since">
+                        • since {{ bed.occupancy.startDate | date: 'MMM d, y' }}
+                      </span>
+                    </div>
+
+                    <div matListItemLine *ngIf="!bed.occupancy">
+                      <span class="available-label">Available</span>
+                    </div>
+                  </mat-list-item>
+                </mat-list>
+              </mat-expansion-panel>
+            </mat-accordion>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </ng-container>
     </mat-card-content>
 
     <mat-card-actions>
-      <button mat-raised-button>
-        <mat-icon>list</mat-icon>
-        View Structure (coming soon)
+      <button mat-stroked-button (click)="loadStructure()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
       </button>
     </mat-card-actions>
   </mat-card>

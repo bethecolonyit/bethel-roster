@@ -1104,7 +1104,7 @@ app.get('/residential/structure', (req, res) => {
         s.id           AS studentId,
         s.firstName    AS studentFirstName,
         s.lastName     AS studentLastName,
-        s.studentId    AS studentCode  -- adjust to your schema if different
+        s.idNumber   AS studentCode  -- adjust to your schema if different
       FROM buildings bl
       LEFT JOIN rooms r
         ON r.buildingId = bl.id
