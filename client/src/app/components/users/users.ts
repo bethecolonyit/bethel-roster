@@ -18,6 +18,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-users',
@@ -30,7 +32,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MatSnackBarModule,
   ],
   templateUrl: './users.html',
   styleUrls: ['./users.scss']
@@ -60,7 +63,8 @@ export class UsersComponent implements OnInit {
   constructor(
     private userService: UserService,
     private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -71,33 +75,20 @@ export class UsersComponent implements OnInit {
   toggleCreateForm(): void {
     this.showCreateForm = !this.showCreateForm;
   }
-  loadUsers(): void {
-    console.log('%c[UsersComponent] loadUsers() called', 'color: blue; font-weight: bold;');
-    this.error = null;
-
-    this.userService.getUsers().subscribe({
-      next: (users) => {
-        this.ngZone.run(() => {
-          console.log('%c[UsersComponent] API returned:', 'color: purple; font-weight: bold;', users);
-          this.users = Array.isArray(users) ? [...users] : [];
-          console.log(
-            '%c[UsersComponent] AFTER SUCCESS users length =',
-            'color: orange; font-weight: bold;',
-            this.users.length
-          );
-          this.cdr.detectChanges();
-        });
-      },
-      error: (err) => {
-        this.ngZone.run(() => {
-          console.log('%c[UsersComponent] API ERROR:', 'color: red; font-weight: bold;', err);
-          this.error = err.error?.error || 'Error loading users';
-          this.users = [];
-          this.cdr.detectChanges();
-        });
-      }
-    });
-  }
+ loadUsers(): void {
+  this.userService.getUsers().subscribe({
+    next: (users) => {
+      console.log('Loaded users:', users);
+      this.users = Array.isArray(users) ? users : [];
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Error loading users:', err);
+      this.users = [];
+      this.error = 'Failed to load users';
+    }
+  });
+}
 
   // --- create ---
 
@@ -219,26 +210,54 @@ export class UsersComponent implements OnInit {
   }
 
   submitResetPassword(user: User): void {
-    if (!this.resettingUserId || !this.resetPassword) return;
+  if (!this.resettingUserId || !this.resetPassword) return;
 
-    this.isResettingPassword = true;
+  this.isResettingPassword = true;
+  this.error = null;
 
-    const payload: ResetPasswordDto = {
-      password: this.resetPassword,
-    };
+  const payload: ResetPasswordDto = {
+    password: this.resetPassword,
+  };
 
-    this.userService.resetPassword(user.id, payload).subscribe({
-      next: (res) => {
-        // You may want to show a toast/snackbar here instead
-        console.log('Password reset response:', res);
-        this.cancelResetPassword();
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error resetting password:', err);
-        this.error = err.error?.error || 'Error resetting password';
-        this.isResettingPassword = false;
-      },
-    });
-  }
-}
+  this.userService.resetPassword(user.id, payload).subscribe({
+    next: (res) => {
+      console.log('Password reset response:', res);
+
+      // ✅ Success toast
+      this.snackBar.open(
+        `Password reset for ${user.email}`,
+        'Close',
+        {
+          duration: 3000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        }
+      );
+
+      // Reset UI state
+      this.cancelResetPassword();  // sets isResettingPassword = false
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Error resetting password:', err);
+
+      const message = err?.error?.error || 'Error resetting password';
+
+      // existing inline error message
+      this.error = message;
+
+      // Error toast
+      this.snackBar.open(
+        message,
+        'Close',
+        {
+          duration: 4000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        }
+      );
+
+      this.isResettingPassword = false;
+    },
+  });
+}}

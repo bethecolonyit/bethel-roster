@@ -301,6 +301,43 @@ app.put('/auth/users/:id', ensureAuthenticated, ensureAdmin, (req, res) => {
     updateUser();
   }
 });
+// POST /auth/users/:id/reset-password  (admin only)
+// body: { password: 'newPasswordHere' }
+app.post('/auth/users/:id/reset-password', ensureAuthenticated, ensureAdmin, (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+
+  if (!password || typeof password !== 'string' || password.trim().length < 6) {
+    return res.status(400).json({ error: 'A password of at least 6 characters is required' });
+  }
+
+  // Hash the new password
+  bcrypt.hash(password, 10, (hashErr, hash) => {
+    if (hashErr) {
+      console.error(hashErr);
+      return res.status(500).json({ error: 'Error hashing password' });
+    }
+
+    try {
+      const stmt = db.prepare(`
+        UPDATE users
+        SET password_hash = ?
+        WHERE id = ?
+      `);
+
+      const info = stmt.run(hash, id);
+
+      if (info.changes === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      return res.json({ message: 'Password reset successfully' });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Database error resetting password' });
+    }
+  });
+});
 
 // DELETE /auth/users/:id  (admin only)
 app.delete('/auth/users/:id', ensureAuthenticated, ensureAdmin, (req, res) => {
