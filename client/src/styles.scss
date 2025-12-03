@@ -101,3 +101,9 @@ mat-sidenav .mat-toolbar-row,
   padding: .5rem;
   width: auto;
 }
+/* Give the main content area the same themed background as the login page */
+mat-sidenav-content {
+  background-color: var(--mat-sys-surface-container-low) !important;
+  color: var(--mat-sys-on-surface);
+  transition: background-color 250ms ease, color 250ms ease;
+}

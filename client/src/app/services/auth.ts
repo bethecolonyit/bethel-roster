@@ -70,4 +70,11 @@ export class AuthService {
       )
       .pipe(tap(() => this.setUser(null)));
   }
+    get isLoggedIn(): boolean {
+    return !!this.currentUser;
+  }
+
+  get isAdmin(): boolean {
+    return this.currentUser?.role === 'admin';
+  }
 }

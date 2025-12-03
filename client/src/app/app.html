@@ -40,6 +40,7 @@
         mat-list-item
         routerLink="/users"
         routerLinkActive="active-link"
+        *ngIf="auth.isAdmin"
       >
         <mat-icon matListItemIcon>group</mat-icon>
         <span class="menu-label">Users</span>

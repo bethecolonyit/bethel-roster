@@ -1,34 +1,85 @@
- <div class="dashboard-grid">
-        <mat-card class="dashboard-card">
-          <mat-card-header>
-            <mat-card-title>Overview</mat-card-title>
-            <mat-card-subtitle>Today</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <p>Total Users: 1,248</p>
-            <p>Active Sessions: 87</p>
-          </mat-card-content>
-        </mat-card>
+<div class="dashboard-grid">
 
-        <mat-card class="dashboard-card">
-          <mat-card-header>
-            <mat-card-title>Performance</mat-card-title>
-            <mat-card-subtitle>This Week</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <p>Conversion Rate: 4.3%</p>
-            <p>Bounce Rate: 32%</p>
-          </mat-card-content>
-        </mat-card>
+  <!-- Current Enrollment -->
+  <mat-card class="dashboard-card">
+    <mat-card-header>
+      <mat-card-title>Current Enrollment</mat-card-title>
+      <mat-card-subtitle>As of Today</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Total Students: <strong>56</strong></p>
+    </mat-card-content>
+  </mat-card>
 
-        <mat-card class="dashboard-card">
-          <mat-card-header>
-            <mat-card-title>System Health</mat-card-title>
-            <mat-card-subtitle>Servers</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <p>Uptime: 99.98%</p>
-            <p>Incidents: 0</p>
-          </mat-card-content>
-        </mat-card>
-      </div>
+  <!-- Intakes & Graduations -->
+  <mat-card class="dashboard-card">
+    <mat-card-header>
+      <mat-card-title>Program Flow</mat-card-title>
+      <mat-card-subtitle>This Week</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Intakes Scheduled: <strong>5</strong></p>
+      <p>Graduations Scheduled: <strong>2</strong></p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Signed Out Students -->
+  <mat-card class="dashboard-card">
+    <mat-card-header>
+      <mat-card-title>Students Signed Out</mat-card-title>
+      <mat-card-subtitle>Off Property</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <ul>
+        <li>John Doe – With Family</li>
+        <li>Mark Stevens – Work Detail</li>
+        <li>Adam Rice – Church Outing</li>
+      </ul>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Students On Leave -->
+  <mat-card class="dashboard-card">
+    <mat-card-header>
+      <mat-card-title>Students On Leave</mat-card-title>
+      <mat-card-subtitle>Visit / Court / Medical</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <ul>
+        <li>James Miller – Court</li>
+        <li>Brian Carter – Medical</li>
+        <li>Kevin Smith – Weekend Visit</li>
+      </ul>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Student Alerts -->
+  <mat-card class="dashboard-card">
+    <mat-card-header>
+      <mat-card-title>Student Alerts</mat-card-title>
+      <mat-card-subtitle>Under Observation</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <ul>
+        <li>Alex Johnson – Emotional Concerns</li>
+        <li>Tyler Brooks – Peer Conflict</li>
+      </ul>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Staff Announcements -->
+  <mat-card class="dashboard-card">
+    <mat-card-header>
+      <mat-card-title>Staff Announcements</mat-card-title>
+      <mat-card-subtitle>Important Updates</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <ul>
+        <li>Staff meeting Thursday @ 3:00 PM</li>
+        <li>Work Project assignments updated</li>
+        <li>New counseling rotation begins Monday</li>
+      </ul>
+    </mat-card-content>
+  </mat-card>
+
+</div>

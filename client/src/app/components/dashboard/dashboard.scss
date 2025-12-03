@@ -1,7 +1,42 @@
+/* dashboard.scss */
+
+/* Overall page wrapper */
+.dashboard-wrapper {
+  min-height: 100vh;
+  padding: 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  /* Same background + transition as login */
+  background-color: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Grid (your existing layout) */
 .dashboard-grid {
-  padding-left: 2rem;
-  padding-top: 1rem;
+  padding: 2rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* Dashboard cards — matching your login card exactly */
+.dashboard-card {
+  padding: 16px 20px;
+  border-radius: 18px;
+
+  background-color: var(--mat-sys-surface-container-high);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Optional hover effect */
+.dashboard-card:hover {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.23);
+  transform: translateY(-2px);
+  transition: all 150ms ease;
 }
