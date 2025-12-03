@@ -32,7 +32,100 @@
 }
 
 .beds-list {
-  margin-top: 4px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Each bed as an elevated block */
+.bed-row {
+  /* padding & margin handled on inner element */
+}
+
+.bed-row-main {
+  border-radius: 12px;
+  padding: 8px 12px;
+  background-color: var(--mat-sys-surface-container-high);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Header: icon + title + actions */
+.bed-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bed-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bed-icon {
+  font-size: 20px;
+}
+
+.bed-title {
+  font-weight: 600;
+}
+
+/* Body: details + assign panel */
+.bed-row-body {
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bed-line {
+  font-size: 0.9rem;
+}
+
+.bed-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Inline assign panel nested inside the bed card */
+.assign-inline-panel {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background-color: var(--mat-sys-surface-container-highest);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.assign-subtitle {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.assign-field {
+  width: 100%;
+  max-width: 380px;
+}
+
+.assign-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.available-label {
+  opacity: 0.8;
+}
+
+.since {
+  opacity: 0.75;
+  font-size: 0.85rem;
 }
 
 .available-label {
