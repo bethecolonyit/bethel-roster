@@ -29,11 +29,12 @@
 
       <a
         mat-list-item
-        routerLink="/reports"
+        routerLink="/residential"
         routerLinkActive="active-link"
+        *ngIf="auth.isAdmin"
       >
-        <mat-icon matListItemIcon>bar_chart</mat-icon>
-        <span class="menu-label">Reports</span>
+        <mat-icon matListItemIcon>apartment</mat-icon>
+        <span class="menu-label">Residential</span>
       </a>
 
       <a
