@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -27,6 +27,7 @@ import {
 })
 export class Residential implements OnInit {
   private residentialService = inject(ResidentialService);
+  private cdr = inject(ChangeDetectorRef);
 
   buildings: ResidentialBuilding[] = [];
   loading = false;
@@ -39,16 +40,19 @@ export class Residential implements OnInit {
   loadStructure(): void {
     this.loading = true;
     this.error = null;
+    this.cdr.detectChanges
 
     this.residentialService.getStructure().subscribe({
       next: (buildings) => {
         this.buildings = buildings;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to load residential structure', err);
         this.error = 'Failed to load residential structure.';
         this.loading = false;
+        this.cdr.detectChanges();
       },
     });
   }
