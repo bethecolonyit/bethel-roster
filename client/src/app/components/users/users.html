@@ -41,91 +41,144 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of users">
-            <!-- Email -->
-            <td>
-              <ng-container *ngIf="editingUserId === user.id; else viewEmail">
-                <mat-form-field appearance="outline" class="inline-field">
-                  <mat-label>Email</mat-label>
-                  <input
-                    matInput
-                    type="email"
-                    [(ngModel)]="editModel.email"
-                    name="editEmail-{{ user.id }}"
-                    required
-                  />
-                </mat-form-field>
-              </ng-container>
-              <ng-template #viewEmail>
-                {{ user.email }}
-              </ng-template>
-            </td>
+  <ng-container *ngFor="let user of users">
+    <tr>
+      <!-- Email -->
+      <td>
+        <ng-container *ngIf="editingUserId === user.id; else viewEmail">
+          <mat-form-field appearance="outline" class="inline-field">
+            <mat-label>Email</mat-label>
+            <input
+              matInput
+              type="email"
+              [(ngModel)]="editModel.email"
+              name="editEmail-{{ user.id }}"
+              required
+            />
+          </mat-form-field>
+        </ng-container>
+        <ng-template #viewEmail>
+          {{ user.email }}
+        </ng-template>
+      </td>
 
-            <!-- Role -->
-            <td>
-              <ng-container *ngIf="editingUserId === user.id; else viewRole">
-                <mat-form-field appearance="outline" class="inline-field">
-                  <mat-label>Role</mat-label>
-                  <mat-select [(ngModel)]="editModel.role" name="editRole-{{ user.id }}">
-                    <mat-option value="user">User</mat-option>
-                    <mat-option value="admin">Admin</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </ng-container>
-              <ng-template #viewRole>
-                <span class="role-chip" [ngClass]="user.role">
-                  <mat-icon class="role-icon" *ngIf="user.role === 'admin'">security</mat-icon>
-                  {{ user.role | titlecase }}
-                </span>
-              </ng-template>
-            </td>
+      <!-- Role -->
+      <td>
+        <ng-container *ngIf="editingUserId === user.id; else viewRole">
+          <mat-form-field appearance="outline" class="inline-field">
+            <mat-label>Role</mat-label>
+            <mat-select [(ngModel)]="editModel.role" name="editRole-{{ user.id }}">
+              <mat-option value="user">User</mat-option>
+              <mat-option value="admin">Admin</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </ng-container>
+        <ng-template #viewRole>
+          <span class="role-chip" [ngClass]="user.role">
+            <mat-icon class="role-icon" *ngIf="user.role === 'admin'">security</mat-icon>
+            {{ user.role | titlecase }}
+          </span>
+        </ng-template>
+      </td>
 
-            <!-- Created -->
-            <td>
-              {{ user.created_at | date: 'short' }}
-            </td>
+      <!-- Created -->
+      <td>
+        {{ user.created_at | date: 'short' }}
+      </td>
 
-            <!-- Actions -->
-            <td class="actions-col">
-              <ng-container *ngIf="editingUserId === user.id; else viewActions">
-                <button
-                  mat-icon-button
-                  color="primary"
-                  type="button"
-                  (click)="saveEdit(user)"
-                >
-                  <mat-icon>check</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  type="button"
-                  (click)="cancelEdit()"
-                >
-                  <mat-icon>close</mat-icon>
-                </button>
-              </ng-container>
-              <ng-template #viewActions>
-                <button
-                  mat-icon-button
-                  color="primary"
-                  type="button"
-                  (click)="startEdit(user)"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  color="warn"
-                  type="button"
-                  (click)="deleteUser(user)"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </ng-template>
-              <!-- ToDo: Add password reset functionality to users -->
-            </td>
-          </tr>
-        </tbody>
+      <!-- Actions -->
+      <td class="actions-col">
+        <ng-container *ngIf="editingUserId === user.id; else viewActions">
+          <button
+            mat-icon-button
+            color="primary"
+            type="button"
+            (click)="saveEdit(user)"
+          >
+            <mat-icon>check</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            type="button"
+            (click)="cancelEdit()"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </ng-container>
+
+        <ng-template #viewActions>
+          <button
+            mat-icon-button
+            color="primary"
+            type="button"
+            (click)="startEdit(user)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            color="accent"
+            type="button"
+            (click)="toggleResetPassword(user)"
+            [attr.aria-label]="'Reset password for ' + user.email"
+          >
+            <mat-icon>key</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            color="warn"
+            type="button"
+            (click)="deleteUser(user)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </ng-template>
+      </td>
+    </tr>
+
+    <!-- ✅ reset-password row is now in the same *ngFor*, so 'user' is in scope -->
+    <tr *ngIf="resettingUserId === user.id" class="reset-password-row">
+      <td colspan="4">
+        <form (ngSubmit)="submitResetPassword(user)" #resetForm="ngForm" class="reset-password-form">
+          <mat-form-field appearance="outline" class="inline-field full-width">
+            <mat-label>New Password</mat-label>
+            <input
+              matInput
+              type="password"
+              name="newPassword-{{ user.id }}"
+              [(ngModel)]="resetPassword"
+              required
+            />
+          </mat-form-field>
+
+          <div class="reset-actions">
+            <button
+              mat-stroked-button
+              color="primary"
+              type="submit"
+              [disabled]="resetForm.invalid || isResettingPassword"
+            >
+              <mat-icon>check</mat-icon>
+              <span *ngIf="!isResettingPassword">Set New Password</span>
+              <span *ngIf="isResettingPassword">Saving…</span>
+            </button>
+
+            <button
+              mat-button
+              type="button"
+              (click)="cancelResetPassword()"
+            >
+              <mat-icon>close</mat-icon>
+              <span>Cancel</span>
+            </button>
+          </div>
+        </form>
+      </td>
+    </tr>
+  </ng-container>
+</tbody>
       </table>
 
       <!-- Empty state -->

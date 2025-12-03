@@ -7,7 +7,8 @@ import {
   UserService,
   User,
   CreateUserDto,
-  UpdateUserDto
+  UpdateUserDto,
+  ResetPasswordDto
 } from '../../services/user.service';
 
 // Angular Material
@@ -44,6 +45,9 @@ export class UsersComponent implements OnInit {
     password: '',
     role: 'user'
   };
+  resettingUserId: number | null = null;
+  resetPassword = '';
+  isResettingPassword = false;
 
   // edit state
   editingUserId: number | null = null;
@@ -137,6 +141,7 @@ export class UsersComponent implements OnInit {
       role: (user.role as 'admin' | 'user') || 'user',
       password: ''
     };
+    this.cancelResetPassword();
   }
 
   cancelEdit(): void {
@@ -192,6 +197,48 @@ export class UsersComponent implements OnInit {
         console.error('Error deleting user:', err);
         this.error = err.error?.error || 'Error deleting user';
       }
+    });
+  }
+  toggleResetPassword(user: User): void {
+    if (this.resettingUserId === user.id) {
+      // clicking again closes it
+      this.cancelResetPassword();
+    } else {
+      this.resettingUserId = user.id;
+      this.resetPassword = '';
+      this.error = null;
+      // Optional: cancel edit if it's open on this row
+      this.cancelEdit();
+    }
+  }
+
+  cancelResetPassword(): void {
+    this.resettingUserId = null;
+    this.resetPassword = '';
+    this.isResettingPassword = false;
+  }
+
+  submitResetPassword(user: User): void {
+    if (!this.resettingUserId || !this.resetPassword) return;
+
+    this.isResettingPassword = true;
+
+    const payload: ResetPasswordDto = {
+      password: this.resetPassword,
+    };
+
+    this.userService.resetPassword(user.id, payload).subscribe({
+      next: (res) => {
+        // You may want to show a toast/snackbar here instead
+        console.log('Password reset response:', res);
+        this.cancelResetPassword();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error resetting password:', err);
+        this.error = err.error?.error || 'Error resetting password';
+        this.isResettingPassword = false;
+      },
     });
   }
 }

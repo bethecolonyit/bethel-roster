@@ -21,7 +21,9 @@ export interface UpdateUserDto {
   role: 'admin' | 'user';
   password?: string;  // optional when editing
 }
-
+export interface ResetPasswordDto {
+  password: string;
+}
 @Injectable({
   providedIn: 'root'
 })
@@ -53,5 +55,13 @@ export class UserService {
     return this.http.delete<{ message: string }>(`${this.baseUrl}/${id}`, {
       withCredentials: true,
     });
+  }
+  resetPassword(id: number, payload: ResetPasswordDto): Observable<{ message: string }> {
+    // Adjust URL if your backend uses something different
+    return this.http.post<{ message: string }>(
+      `${this.baseUrl}/${id}/reset-password`,
+      payload,
+      { withCredentials: true }
+    );
   }
 }
