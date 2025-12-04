@@ -15,6 +15,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 
 import {
@@ -38,6 +39,7 @@ import {
     MatAutocompleteModule,
     MatTooltipModule,
     ReactiveFormsModule,
+    MatSelectModule,
   ],
   templateUrl: './residential.html',
   styleUrl: './residential.scss',
@@ -407,6 +409,35 @@ onCreateBuildingSubmit() {
     },
   });
 }
+onDeleteBuilding(building: any) {
+  if (!building || !building.id) {
+    return;
+  }
+
+  if (building.occupiedBeds > 0) {
+    alert('You cannot delete a building that has occupied beds.');
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Delete building "${building.buildingName}" and all its rooms and beds?`
+  );
+  if (!confirmed) return;
+
+  this.residentialService.deleteBuilding(building.id).subscribe({
+    next: () => {
+      // reload structure so UI updates
+      this.loadStructure();
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Error deleting building', err);
+      alert('Failed to delete building. Please try again.');
+      this.cdr.detectChanges();
+    },
+    
+  });
+}
 // ROOM creation
 showCreateRoomForBuildingId: number | null = null;
 createRoomLoading = false;
@@ -501,6 +532,31 @@ onCreateRoomSubmit(building: any) {
       },
     });
 }
+onDeleteRoom(building: any, room: any) {
+  if (!room || !room.id) {
+    return;
+  }
+
+  if (room.occupiedBeds > 0) {
+    alert('You cannot delete a room that has occupied beds.');
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Delete Room ${room.roomNumber} in ${building.buildingName} and all its beds?`
+  );
+  if (!confirmed) return;
+
+  this.residentialService.deleteRoom(room.id).subscribe({
+    next: () => {
+      this.loadStructure();
+    },
+    error: (err) => {
+      console.error('Error deleting room', err);
+      alert('Failed to delete room. Please try again.');
+    },
+  });
+}
 toggleCreateBed(room: any) {
   const id = room.id; // adjust property name if needed
 
@@ -565,5 +621,31 @@ onCreateBedSubmit(building: any, room: any) {
       },
     });
 }
+onDeleteBed(building: any, room: any, bed: any, event?: MouseEvent) {
+  event?.stopPropagation();
 
+  if (!bed || !bed.id) {
+    return;
+  }
+
+  if (bed.occupancy) {
+    alert('You cannot delete a bed that is currently occupied.');
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Delete Bed ${bed.bedLetter} in Room ${room.roomNumber} (${building.buildingName})?`
+  );
+  if (!confirmed) return;
+
+  this.residentialService.deleteBed(bed.id).subscribe({
+    next: () => {
+      this.loadStructure();
+    },
+    error: (err) => {
+      console.error('Error deleting bed', err);
+      alert('Failed to delete bed. Please try again.');
+    },
+  });
+  }
 }

@@ -120,4 +120,15 @@ createBed(payload: {
 }): Observable<any> {
   return this.http.post<any>(`${this.apiUrl}/residential/beds`, payload);
   }
+deleteBuilding(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/residential/buildings/${id}`);
+  }
+
+  deleteRoom(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/residential/rooms/${id}`);
+  }
+
+  deleteBed(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/residential/beds/${id}`);
+  }
 }

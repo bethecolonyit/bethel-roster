@@ -682,16 +682,57 @@ app.put('/residential/rooms/:id', (req, res) => {
 
 // DELETE room
 app.delete('/residential/rooms/:id', (req, res) => {
+  const roomId = Number(req.params.id);
+
   try {
-    const stmt = db.prepare('DELETE FROM rooms WHERE id = ?;');
-    const info = stmt.run(req.params.id);
+    // 1) Make sure the room exists
+    const existingRoom = db
+      .prepare('SELECT id FROM rooms WHERE id = ?;')
+      .get(roomId);
+
+    if (!existingRoom) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    // 2) Optional safety: block if any *active* assignment exists in this room
+    const activeAssignment = db
+      .prepare(`
+        SELECT 1
+        FROM bed_assignments ba
+        JOIN beds b ON ba.bed_id = b.id
+        WHERE b.roomId = ? AND ba.end_date IS NULL
+        LIMIT 1
+      `)
+      .get(roomId);
+
+    if (activeAssignment) {
+      return res
+        .status(400)
+        .json({ error: 'Cannot delete a room that has an active bed assignment.' });
+    }
+
+    // 3) Delete assignment history for all beds in this room
+    db.prepare(`
+      DELETE FROM bed_assignments
+      WHERE bed_id IN (SELECT id FROM beds WHERE roomId = ?);
+    `).run(roomId);
+
+    // 4) Delete all beds in this room
+    db.prepare('DELETE FROM beds WHERE roomId = ?;').run(roomId);
+
+    // 5) Delete the room itself
+    const info = db
+      .prepare('DELETE FROM rooms WHERE id = ?;')
+      .run(roomId);
+
     if (info.changes === 0) {
       return res.status(404).json({ error: 'Room not found' });
     }
-    res.status(204).send();
+
+    return res.status(204).send();
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to delete room' });
+    return res.status(500).json({ error: 'Failed to delete room' });
   }
 });
 // --- BEDS ---
@@ -795,16 +836,35 @@ app.put('/residential/beds/:id', (req, res) => {
 
 // DELETE bed
 app.delete('/residential/beds/:id', (req, res) => {
+  const bedId = req.params.id;
+
   try {
-    const stmt = db.prepare('DELETE FROM beds WHERE id = ?;');
-    const info = stmt.run(req.params.id);
-    if (info.changes === 0) {
+    // 1) Make sure the bed exists
+    const existing = db
+      .prepare('SELECT id FROM beds WHERE id = ?;')
+      .get(bedId);
+
+    if (!existing) {
       return res.status(404).json({ error: 'Bed not found' });
     }
-    res.status(204).send();
+
+    // 2) Delete all assignment history for this bed
+    db.prepare('DELETE FROM bed_assignments WHERE bed_id = ?;').run(bedId);
+
+    // 3) Now delete the bed itself
+    const info = db
+      .prepare('DELETE FROM beds WHERE id = ?;')
+      .run(bedId);
+
+    if (info.changes === 0) {
+      // Very unlikely, since we just checked, but safe to keep
+      return res.status(404).json({ error: 'Bed not found' });
+    }
+
+    return res.status(204).send();
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to delete bed' });
+    return res.status(500).json({ error: 'Failed to delete bed' });
   }
 });
 

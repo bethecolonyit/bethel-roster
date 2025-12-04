@@ -122,6 +122,16 @@
               >
                 <mat-icon>add</mat-icon>
               </button>
+              <button
+                *ngIf="!buildingPanel.expanded"
+                mat-icon-button
+                color="warn"
+                matTooltip="Delete building (and all its rooms & beds)"
+                [disabled]="building.occupiedBeds > 0"
+                (click)="$event.stopPropagation(); onDeleteBuilding(building)"
+              >
+      <mat-icon>delete</mat-icon>
+    </button>
             </mat-expansion-panel-header>
             <!-- Create Room form for THIS building -->
             <div
@@ -148,14 +158,12 @@
 
                 <mat-form-field appearance="outline" class="create-room-field">
                   <mat-label>Room type</mat-label>
-                  <input
-                    matInput
-                    formControlName="roomType"
-                    autocomplete="off"
-                    placeholder="e.g. Student, Staff"
-                  />
+                   <mat-select formControlName="roomType">
+                  <mat-option value="student">Student</mat-option>
+                  <mat-option value="staff">Staff</mat-option>
+                  <mat-option value="vsp">VSP</mat-option>
+                </mat-select>
                 </mat-form-field>
-
                 <div class="create-room-actions">
                   <button
                     mat-raised-button
@@ -219,6 +227,16 @@
                   (click)="$event.stopPropagation()"
                 >
                   <mat-icon>add</mat-icon>
+                </button>
+                <button
+                  *ngIf="!roomPanel.expanded"
+                  mat-icon-button
+                  color="warn"
+                  matTooltip="Delete room (and all its beds)"
+                  [disabled]="room.occupiedBeds > 0"
+                  (click)="$event.stopPropagation(); onDeleteRoom(building, room)"
+                >
+                  <mat-icon>delete</mat-icon>
                 </button>
                 </mat-expansion-panel-header>
                  <div
@@ -318,6 +336,15 @@
             matTooltip="Assign student to this bed"
           >
             <mat-icon>person_add</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            color="warn"
+            *ngIf="!bed.occupancy"
+            (click)="onDeleteBed(building, room, bed, $event)"
+            matTooltip="Delete bed"
+          >
+            <mat-icon>delete</mat-icon>
           </button>
         </div>
       </div>
