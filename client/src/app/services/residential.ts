@@ -120,6 +120,15 @@ createBed(payload: {
 }): Observable<any> {
   return this.http.post<any>(`${this.apiUrl}/residential/beds`, payload, { withCredentials: true });
   }
+  updateBed(
+    id: number,
+    payload: {
+  buildingId: number;
+  roomId: number;
+  bedLetter: string;
+}): Observable<any> {
+  return this.http.put<any>(`${this.apiUrl}/residential/beds/${id}`, payload, { withCredentials: true });
+  }
 deleteBuilding(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/residential/buildings/${id}`, { withCredentials: true });
   }

@@ -239,11 +239,73 @@
                   *ngIf="roomPanel.expanded"
                   mat-icon-button
                   matTooltip="Add bed"
-                  (click)="$event.stopPropagation(); toggleCreateBed(room)"
+                  (click)="openCreateBed(room, $event)"
                 >
                   <mat-icon>add</mat-icon>
                 </button>
+
                 </mat-expansion-panel-header>
+                <!-- 🔹 Shared Bed form (create + edit) at ROOM level -->
+                <div *ngIf="bedFormRoomId === room.id" class="bed-form-panel">
+                  <form
+                    [formGroup]="bedForm"
+                    (ngSubmit)="onSubmitBedForm(building, room)"
+                    class="bed-form"
+                  >
+                    <mat-form-field appearance="outline" class="bed-form-field">
+                      <mat-label>Bed letter</mat-label>
+                      <input
+                        matInput
+                        formControlName="bedLetter"
+                        autocomplete="off"
+                        maxlength="2"
+                      />
+                      <mat-hint>Examples: A, B, C</mat-hint>
+                      <mat-error
+                        *ngIf="
+                          bedForm.controls.bedLetter.touched &&
+                          bedForm.controls.bedLetter.hasError('required')
+                        "
+                      >
+                        Bed letter is required
+                      </mat-error>
+                    </mat-form-field>
+
+                    <div class="bed-form-actions">
+                      <button
+                        mat-raised-button
+                        color="primary"
+                        type="submit"
+                        [disabled]="bedForm.invalid || bedFormLoading"
+                      >
+                        <mat-icon>check</mat-icon>
+                        {{ bedFormMode === 'create' ? 'Create bed' : 'Save changes' }}
+                      </button>
+
+                      <button
+                        mat-button
+                        type="button"
+                        (click)="cancelBedForm()"
+                        [disabled]="bedFormLoading"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+
+                    <div *ngIf="bedFormLoading" class="subtle-status">
+                      Saving…
+                    </div>
+                    <div *ngIf="bedFormError" class="error">
+                      {{ bedFormError }}
+                    </div>
+                  </form>
+                </div>
+
+                <!-- BEDS -->
+                <div class="beds-list">
+                  ...
+                </div>
+
                 <!-- BEDS -->
 <div class="beds-list">
   <div class="bed-row" *ngFor="let bed of room.beds">
