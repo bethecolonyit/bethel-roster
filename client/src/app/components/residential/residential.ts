@@ -92,6 +92,7 @@ export class Residential implements OnInit {
     this.loading = true;
     this.error = null;
     this.cdr.detectChanges();
+    console.log('Loading residential structure...');
 
     this.residentialService.getStructure().subscribe({
       next: (buildings) => {
@@ -438,21 +439,23 @@ onDeleteBuilding(building: any) {
     
   });
 }
-// ROOM creation
-showCreateRoomForBuildingId: number | null = null;
-createRoomLoading = false;
-createRoomError: string | null = null;
+// Room creation and editing
+roomFormMode: 'create' | 'edit' = 'create';
+roomFormBuildingId: number | null = null; // which building this form belongs to
+roomFormRoomId: number | null = null;     // which room we’re editing (null when creating)
+roomFormLoading = false;
+roomFormError: string | null = null;
 
-createRoomForm = new FormGroup({
+roomForm = new FormGroup({
   roomNumber: new FormControl<string>('', {
     nonNullable: true,
     validators: [Validators.required, Validators.maxLength(10)],
   }),
-  roomType: new FormControl<string>('', {
+  roomType: new FormControl<'student' | 'staff' | 'vsp'>('student', {
     nonNullable: true,
-    validators: [Validators.maxLength(50)],
   }),
 });
+
 
 // BED creation
 showCreateBedForRoomId: number | null = null;
@@ -468,70 +471,105 @@ createBedForm = new FormGroup({
     nonNullable: true,
   }),
 });
-toggleCreateRoom(building: any) {
-  const id = building.id; // adjust property name if needed
+openCreateRoom(building: any, event?: MouseEvent) {
+  event?.stopPropagation();
 
-  if (this.showCreateRoomForBuildingId === id) {
-    // toggle off
-    this.showCreateRoomForBuildingId = null;
-  } else {
-    this.showCreateRoomForBuildingId = id;
-    this.createRoomError = null;
-    this.createRoomForm.reset({
-      roomNumber: '',
-      roomType: '',
-    });
-  }
+  this.roomFormMode = 'create';
+  this.roomFormBuildingId = building.id;
+  this.roomFormRoomId = null;
+  this.roomFormError = null;
+
+  this.roomForm.reset({
+    roomNumber: '',
+    roomType: 'student',
+  });
 }
+openEditRoom(building: any, room: any) {
+  this.roomFormMode = 'edit';
+  this.roomFormBuildingId = building.id;
+  this.roomFormRoomId = room.id;
+  this.roomFormError = null;
 
-cancelCreateRoom() {
-  this.showCreateRoomForBuildingId = null;
-  this.createRoomError = null;
+  this.roomForm.setValue({
+    roomNumber: String(room.roomNumber ?? ''),
+    roomType: (room.roomType ?? 'student') as 'student' | 'staff' | 'vsp',
+  });
 }
-
-onCreateRoomSubmit(building: any) {
-  if (this.createRoomForm.invalid || this.createRoomLoading) {
-    this.createRoomForm.markAllAsTouched();
+cancelRoomForm() {
+  this.roomFormBuildingId = null;
+  this.roomFormRoomId = null;
+  this.roomFormMode = 'create';
+  this.roomFormLoading = false;
+  this.roomFormError = null;
+}
+onSubmitRoomForm() {
+  if (!this.roomFormBuildingId || this.roomForm.invalid) {
+    this.roomForm.markAllAsTouched();
     return;
   }
 
-  const buildingId = building.id; // adjust if needed
-  const roomNumber = (this.createRoomForm.controls.roomNumber.value || '').trim();
-  const roomType = (this.createRoomForm.controls.roomType.value || '').trim();
+  const roomNumber = (this.roomForm.controls.roomNumber.value || '').trim();
+  const roomType = this.roomForm.controls.roomType.value || 'student';
 
   if (!roomNumber) {
-    this.createRoomForm.controls.roomNumber.setErrors({ required: true });
-    this.createRoomForm.controls.roomNumber.markAsTouched();
+    this.roomForm.controls.roomNumber.setErrors({ required: true });
+    this.roomForm.controls.roomNumber.markAsTouched();
     return;
   }
 
-  this.createRoomLoading = true;
-  this.createRoomError = null;
+  this.roomFormLoading = true;
+  this.roomFormError = null;
 
-  this.residentialService
-    .createRoom({
-      buildingId,
-      roomNumber,
-      roomType: roomType || null,
-    })
-    .subscribe({
-      next: (createdRoom) => {
-        this.createRoomLoading = false;
-        this.showCreateRoomForBuildingId = null;
+  const buildingId = this.roomFormBuildingId;
 
-        // easiest: refresh full structure
-        this.loadStructure();
+  if (this.roomFormMode === 'create') {
+    // CREATE
+    this.residentialService
+      .createRoom({
+        buildingId,
+        roomNumber,
+        roomType,
+      })
+      .subscribe({
+        next: () => {
+          this.roomFormLoading = false;
+          this.cancelRoomForm();
+          this.loadStructure();
+        },
+        error: (err) => {
+          console.error('Error creating room', err);
+          this.roomFormLoading = false;
+          this.roomFormError = 'Failed to create room. Please try again.';
+        },
+      });
+  } else {
+    // EDIT
+    if (!this.roomFormRoomId) {
+      this.roomFormLoading = false;
+      return;
+    }
 
-        // Alternatively, push into building.rooms if response matches shape:
-        // building.rooms.push(createdRoom);
-      },
-      error: (err) => {
-        console.error('Error creating room', err);
-        this.createRoomLoading = false;
-        this.createRoomError = 'Failed to create room. Please try again.';
-      },
-    });
+    this.residentialService
+      .updateRoom(this.roomFormRoomId, {
+        buildingId,
+        roomNumber,
+        roomType,
+      })
+      .subscribe({
+        next: () => {
+          this.roomFormLoading = false;
+          this.cancelRoomForm();
+          this.loadStructure();
+        },
+        error: (err) => {
+          console.error('Error updating room', err);
+          this.roomFormLoading = false;
+          this.roomFormError = 'Failed to update room. Please try again.';
+        },
+      });
+  }
 }
+
 onDeleteRoom(building: any, room: any) {
   if (!room || !room.id) {
     return;

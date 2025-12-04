@@ -117,8 +117,7 @@
                 *ngIf="buildingPanel.expanded"
                 mat-icon-button
                 matTooltip="Add room"
-                (click)="toggleCreateRoom(building)"
-                (click)="$event.stopPropagation()"
+                (click)="openCreateRoom(building, $event)"
               >
                 <mat-icon>add</mat-icon>
               </button>
@@ -133,67 +132,62 @@
       <mat-icon>delete</mat-icon>
     </button>
             </mat-expansion-panel-header>
-            <!-- Create Room form for THIS building -->
+             <!-- 🔹 Shared Room form (create + edit) now at BUILDING level -->
             <div
-              *ngIf="showCreateRoomForBuildingId === building.id"
-              class="create-room-panel"
+              *ngIf="roomFormBuildingId === building.id"
+              class="room-form-panel"
             >
               <form
-                [formGroup]="createRoomForm"
-                (ngSubmit)="onCreateRoomSubmit(building)"
-                class="create-room-form"
+                [formGroup]="roomForm"
+                (ngSubmit)="onSubmitRoomForm()"
+                class="room-form"
               >
-                <mat-form-field appearance="outline" class="create-room-field">
+                <mat-form-field appearance="outline" class="room-form-field">
                   <mat-label>Room number</mat-label>
-                  <input matInput formControlName="roomNumber" autocomplete="off" />
-                  <mat-error
-                    *ngIf="
-                      createRoomForm.controls.roomNumber.touched &&
-                      createRoomForm.controls.roomNumber.hasError('required')
-                    "
-                  >
-                    Room number is required
-                  </mat-error>
+                  <input
+                    matInput
+                    formControlName="roomNumber"
+                    autocomplete="off"
+                  />
                 </mat-form-field>
 
-                <mat-form-field appearance="outline" class="create-room-field">
+                <mat-form-field appearance="outline" class="room-form-field">
                   <mat-label>Room type</mat-label>
-                   <mat-select formControlName="roomType">
-                  <mat-option value="student">Student</mat-option>
-                  <mat-option value="staff">Staff</mat-option>
-                  <mat-option value="vsp">VSP</mat-option>
-                </mat-select>
+                  <mat-select formControlName="roomType">
+                    <mat-option value="student">Student</mat-option>
+                    <mat-option value="staff">Staff</mat-option>
+                    <mat-option value="vsp">VSP</mat-option>
+                  </mat-select>
                 </mat-form-field>
-                <div class="create-room-actions">
+
+                <div class="room-form-actions">
                   <button
                     mat-raised-button
                     color="primary"
                     type="submit"
-                    [disabled]="createRoomForm.invalid || createRoomLoading"
+                    [disabled]="roomForm.invalid || roomFormLoading"
                   >
                     <mat-icon>check</mat-icon>
-                    Create room
+                    {{ roomFormMode === 'create' ? 'Create room' : 'Save changes' }}
                   </button>
-
                   <button
                     mat-button
                     type="button"
-                    (click)="cancelCreateRoom()"
-                    [disabled]="createRoomLoading"
+                    (click)="cancelRoomForm()"
+                    [disabled]="roomFormLoading"
                   >
                     Cancel
                   </button>
                 </div>
 
-                <div *ngIf="createRoomLoading" class="subtle-status">
-                  Saving room…
+                <div *ngIf="roomFormLoading" class="subtle-status">
+                  Saving…
                 </div>
-                <div *ngIf="createRoomError" class="error">
-                  {{ createRoomError }}
+                <div *ngIf="roomFormError" class="error">
+                  {{ roomFormError }}
                 </div>
               </form>
             </div>
-
             <!-- ROOMS -->
             <div *ngIf="building.rooms.length === 0" class="empty-msg">
               No rooms defined for this building.
@@ -218,88 +212,38 @@
                     {{ room.availableBeds }} available
                   </mat-panel-description>
                     <span class="header-spacer"></span>
-                <!-- Add Bed button -->
+                <!-- EDIT (collapsed only) -->
                 <button
-                  *ngIf="roomPanel.expanded"
+                  *ngIf="!roomPanel.expanded"
                   mat-icon-button
-                  matTooltip="Add bed"
-                  (click)="toggleCreateBed(room)"
-                  (click)="$event.stopPropagation()"
+                  matTooltip="Edit room"
+                  (click)="openEditRoom(building, room)"
                 >
-                  <mat-icon>add</mat-icon>
+                  <mat-icon>edit</mat-icon>
                 </button>
+
+                <!-- DELETE (collapsed only) -->
                 <button
                   *ngIf="!roomPanel.expanded"
                   mat-icon-button
                   color="warn"
-                  matTooltip="Delete room (and all its beds)"
+                  matTooltip="Delete room"
                   [disabled]="room.occupiedBeds > 0"
                   (click)="$event.stopPropagation(); onDeleteRoom(building, room)"
                 >
                   <mat-icon>delete</mat-icon>
                 </button>
+
+                <!-- ADD room (expanded only) –> opens same form in create mode -->
+                <button
+                  *ngIf="roomPanel.expanded"
+                  mat-icon-button
+                  matTooltip="Add bed"
+                  (click)="$event.stopPropagation(); toggleCreateBed(room)"
+                >
+                  <mat-icon>add</mat-icon>
+                </button>
                 </mat-expansion-panel-header>
-                 <div
-    *ngIf="showCreateBedForRoomId === room.id"
-    class="create-bed-panel"
-  >
-    <form
-      [formGroup]="createBedForm"
-      (ngSubmit)="onCreateBedSubmit(building, room)"
-      class="create-bed-form"
-    >
-      <mat-form-field appearance="outline" class="create-bed-field">
-        <mat-label>Bed label</mat-label>
-        <input
-          matInput
-          formControlName="bedLetter"
-          autocomplete="off"
-          placeholder="e.g. A, B"
-        />
-        <mat-error
-          *ngIf="
-            createBedForm.controls.bedLetter.touched &&
-            createBedForm.controls.bedLetter.hasError('required')
-          "
-        >
-          Bed label is required
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="create-bed-field">
-        
-        
-      </mat-form-field>
-
-      <div class="create-bed-actions">
-        <button
-          mat-raised-button
-          color="primary"
-          type="submit"
-          [disabled]="createBedForm.invalid || createBedLoading"
-        >
-          <mat-icon>check</mat-icon>
-          Create bed
-        </button>
-
-        <button
-          mat-button
-          type="button"
-          (click)="cancelCreateBed()"
-          [disabled]="createBedLoading"
-        >
-          Cancel
-        </button>
-      </div>
-
-      <div *ngIf="createBedLoading" class="subtle-status">
-        Saving bed…
-      </div>
-      <div *ngIf="createBedError" class="error">
-        {{ createBedError }}
-      </div>
-    </form>
-  </div>
                 <!-- BEDS -->
 <div class="beds-list">
   <div class="bed-row" *ngFor="let bed of room.beds">

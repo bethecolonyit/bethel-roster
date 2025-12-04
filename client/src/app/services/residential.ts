@@ -131,4 +131,13 @@ deleteBuilding(id: number): Observable<void> {
   deleteBed(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/residential/beds/${id}`);
   }
+  updateRoom(
+  id: number,
+  payload: { buildingId: number; roomNumber: string; roomType: string | null }
+) {
+  return this.http.put<any>(
+    `${this.apiUrl}/residential/rooms/${id}`,
+    payload
+  );
+  }
 }
