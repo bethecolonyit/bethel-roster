@@ -26,7 +26,14 @@
         <mat-icon matListItemIcon>dashboard</mat-icon>
         <span class="menu-label">Dashboard</span>
       </a>
-
+      <a
+        mat-list-item
+        routerLink="/students"
+        routerLinkActive="active-link"
+      >
+        <mat-icon matListItemIcon>groups</mat-icon>
+        <span class="menu-label">Students</span>
+      </a>
       <a
         mat-list-item
         routerLink="/residential"
@@ -36,24 +43,14 @@
         <mat-icon matListItemIcon>apartment</mat-icon>
         <span class="menu-label">Residential</span>
       </a>
-
       <a
         mat-list-item
         routerLink="/users"
         routerLinkActive="active-link"
         *ngIf="auth.isAdmin"
       >
-        <mat-icon matListItemIcon>group</mat-icon>
+        <mat-icon matListItemIcon>badge</mat-icon>
         <span class="menu-label">Users</span>
-      </a>
-
-      <a
-        mat-list-item
-        routerLink="/settings"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>settings</mat-icon>
-        <span class="menu-label">Settings</span>
       </a>
     </mat-nav-list>
   </mat-sidenav>

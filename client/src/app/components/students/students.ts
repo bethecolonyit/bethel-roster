@@ -4,7 +4,8 @@ import { Component } from '@angular/core';
   selector: 'app-students',
   imports: [],
   templateUrl: './students.html',
-  styleUrl: './students.scss',
+  styleUrls: ['./students.scss'],
+  standalone: true,
 })
 export class Students {
 

@@ -12,10 +12,15 @@ db.prepare(`
     firstName TEXT,
     lastName TEXT,
     idNumber TEXT,
-    roomNumber TEXT,
     counselor TEXT,
     program TEXT,
-    dayin DATE
+    dayin DATE,
+    isFelon BOOLEAN,
+    onProbation BOOLEAN,
+    usesNicotine BOOLEAN,
+    hasDriverLicense BOOLEAN,
+    foodAllergies boolean,
+    beeAllergies boolean
   )
 `).run();
 
