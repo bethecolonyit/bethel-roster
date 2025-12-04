@@ -99,4 +99,25 @@ export class ResidentialService {
       { withCredentials: true }
     );
   }
+  createBuilding(payload: { buildingName: string }): Observable<any> {
+  // Adjust the URL to match your backend route
+  return this.http.post<any>(
+    `${this.apiUrl}/residential/buildings`,
+    payload
+  );
+}
+createRoom(payload: {
+  buildingId: number;
+  roomNumber: string;
+  roomType?: string | null;
+}): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/residential/rooms`, payload);
+}
+createBed(payload: {
+  buildingId: number;
+  roomId: number;
+  bedLetter: string;
+}): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/residential/beds`, payload);
+  }
 }

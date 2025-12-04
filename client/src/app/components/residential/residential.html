@@ -8,7 +8,72 @@
       <mat-card-subtitle>
         Buildings • Rooms • Beds • Occupancy
       </mat-card-subtitle>
+       <!-- spacer to push the icon to the right -->
+      <span class="header-spacer"></span>
+
+      <!--  Add building button -->
+      <button
+        mat-icon-button
+        matTooltip="Add building"
+        (click)="toggleCreateBuilding()"
+        class="add-building-btn"
+      >
+        <mat-icon>add</mat-icon>
+      </button>
     </mat-card-header>
+    <!-- Create building form -->
+    <div *ngIf="showCreateBuilding" class="create-building-panel">
+      <form
+        [formGroup]="createBuildingForm"
+        (ngSubmit)="onCreateBuildingSubmit()"
+        class="create-building-form"
+      >
+        <mat-form-field appearance="outline" class="create-building-field">
+          <mat-label>Building name</mat-label>
+          <input
+            matInput
+            formControlName="buildingName"
+            autocomplete="off"
+          />
+          <mat-error
+            *ngIf="
+              createBuildingForm.controls.buildingName.touched &&
+              createBuildingForm.controls.buildingName.hasError('required')
+            "
+          >
+            Building name is required
+          </mat-error>
+        </mat-form-field>
+
+        <div class="create-building-actions">
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="createBuildingForm.invalid || createBuildingLoading"
+          >
+            <mat-icon>check</mat-icon>
+            Create
+          </button>
+
+          <button
+            mat-button
+            type="button"
+            (click)="cancelCreateBuilding()"
+            [disabled]="createBuildingLoading"
+          >
+            Cancel
+          </button>
+        </div>
+
+        <div *ngIf="createBuildingLoading" class="subtle-status">
+          Saving building…
+        </div>
+        <div *ngIf="createBuildingError" class="error">
+          {{ createBuildingError }}
+        </div>
+      </form>
+    </div>
 
     <mat-card-content>
       <div *ngIf="loading">
@@ -34,6 +99,7 @@
           <mat-expansion-panel
             *ngFor="let building of buildings"
             class="building-panel"
+            #buildingPanel="matExpansionPanel"
           >
             <mat-expansion-panel-header>
               <mat-panel-title>
@@ -43,7 +109,82 @@
                 {{ building.occupiedBeds }}/{{ building.totalBeds }}
                 occupied • {{ building.availableBeds }} available
               </mat-panel-description>
+              <!-- spacer to push icons right -->
+              <span class="header-spacer"></span>
+
+              <!-- Add Room button -->
+              <button
+                *ngIf="buildingPanel.expanded"
+                mat-icon-button
+                matTooltip="Add room"
+                (click)="toggleCreateRoom(building)"
+                (click)="$event.stopPropagation()"
+              >
+                <mat-icon>add</mat-icon>
+              </button>
             </mat-expansion-panel-header>
+            <!-- Create Room form for THIS building -->
+            <div
+              *ngIf="showCreateRoomForBuildingId === building.id"
+              class="create-room-panel"
+            >
+              <form
+                [formGroup]="createRoomForm"
+                (ngSubmit)="onCreateRoomSubmit(building)"
+                class="create-room-form"
+              >
+                <mat-form-field appearance="outline" class="create-room-field">
+                  <mat-label>Room number</mat-label>
+                  <input matInput formControlName="roomNumber" autocomplete="off" />
+                  <mat-error
+                    *ngIf="
+                      createRoomForm.controls.roomNumber.touched &&
+                      createRoomForm.controls.roomNumber.hasError('required')
+                    "
+                  >
+                    Room number is required
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="create-room-field">
+                  <mat-label>Room type</mat-label>
+                  <input
+                    matInput
+                    formControlName="roomType"
+                    autocomplete="off"
+                    placeholder="e.g. Student, Staff"
+                  />
+                </mat-form-field>
+
+                <div class="create-room-actions">
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    type="submit"
+                    [disabled]="createRoomForm.invalid || createRoomLoading"
+                  >
+                    <mat-icon>check</mat-icon>
+                    Create room
+                  </button>
+
+                  <button
+                    mat-button
+                    type="button"
+                    (click)="cancelCreateRoom()"
+                    [disabled]="createRoomLoading"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                <div *ngIf="createRoomLoading" class="subtle-status">
+                  Saving room…
+                </div>
+                <div *ngIf="createRoomError" class="error">
+                  {{ createRoomError }}
+                </div>
+              </form>
+            </div>
 
             <!-- ROOMS -->
             <div *ngIf="building.rooms.length === 0" class="empty-msg">
@@ -58,6 +199,7 @@
               <mat-expansion-panel
                 *ngFor="let room of building.rooms"
                 class="room-panel"
+                #roomPanel="matExpansionPanel"
               >
                 <mat-expansion-panel-header>
                   <mat-panel-title>
@@ -67,7 +209,79 @@
                     {{ room.occupiedBeds }}/{{ room.totalBeds }} occupied •
                     {{ room.availableBeds }} available
                   </mat-panel-description>
+                    <span class="header-spacer"></span>
+                <!-- Add Bed button -->
+                <button
+                  *ngIf="roomPanel.expanded"
+                  mat-icon-button
+                  matTooltip="Add bed"
+                  (click)="toggleCreateBed(room)"
+                  (click)="$event.stopPropagation()"
+                >
+                  <mat-icon>add</mat-icon>
+                </button>
                 </mat-expansion-panel-header>
+                 <div
+    *ngIf="showCreateBedForRoomId === room.id"
+    class="create-bed-panel"
+  >
+    <form
+      [formGroup]="createBedForm"
+      (ngSubmit)="onCreateBedSubmit(building, room)"
+      class="create-bed-form"
+    >
+      <mat-form-field appearance="outline" class="create-bed-field">
+        <mat-label>Bed label</mat-label>
+        <input
+          matInput
+          formControlName="bedLetter"
+          autocomplete="off"
+          placeholder="e.g. A, B"
+        />
+        <mat-error
+          *ngIf="
+            createBedForm.controls.bedLetter.touched &&
+            createBedForm.controls.bedLetter.hasError('required')
+          "
+        >
+          Bed label is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="create-bed-field">
+        
+        
+      </mat-form-field>
+
+      <div class="create-bed-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="createBedForm.invalid || createBedLoading"
+        >
+          <mat-icon>check</mat-icon>
+          Create bed
+        </button>
+
+        <button
+          mat-button
+          type="button"
+          (click)="cancelCreateBed()"
+          [disabled]="createBedLoading"
+        >
+          Cancel
+        </button>
+      </div>
+
+      <div *ngIf="createBedLoading" class="subtle-status">
+        Saving bed…
+      </div>
+      <div *ngIf="createBedError" class="error">
+        {{ createBedError }}
+      </div>
+    </form>
+  </div>
                 <!-- BEDS -->
 <div class="beds-list">
   <div class="bed-row" *ngFor="let bed of room.beds">
@@ -180,8 +394,6 @@
     </div>
   </div>
 </div>
-
-
               </mat-expansion-panel>
             </mat-accordion>
           </mat-expansion-panel>

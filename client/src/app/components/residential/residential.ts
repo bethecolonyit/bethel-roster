@@ -15,7 +15,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 
 import {
   ResidentialService,
@@ -50,6 +50,15 @@ export class Residential implements OnInit {
   buildings: ResidentialBuilding[] = [];
   loading = false;
   error: string | null = null;
+  showCreateBuilding = false;
+  createBuildingLoading = false;
+  createBuildingError: string | null = null;
+  createBuildingForm = new FormGroup({
+  buildingName: new FormControl<string>('', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.maxLength(100)],
+  }),
+});
 
   // assign panel state
   assigningContext:
@@ -345,4 +354,216 @@ export class Residential implements OnInit {
       },
     });
   }
+  toggleCreateBuilding() {
+  this.showCreateBuilding = !this.showCreateBuilding;
+
+  if (this.showCreateBuilding) {
+    this.createBuildingForm.reset({ buildingName: '' });
+    this.createBuildingError = null;
+  }
+}
+
+cancelCreateBuilding() {
+  this.showCreateBuilding = false;
+  this.createBuildingError = null;
+}
+
+onCreateBuildingSubmit() {
+  if (this.createBuildingForm.invalid || this.createBuildingLoading) {
+    this.createBuildingForm.markAllAsTouched();
+    return;
+  }
+
+  const rawName = this.createBuildingForm.controls.buildingName.value ?? '';
+  const buildingName = rawName.trim();
+
+  if (!buildingName) {
+    this.createBuildingForm.controls.buildingName.setErrors({ required: true });
+    this.createBuildingForm.controls.buildingName.markAsTouched();
+    return;
+  }
+
+  this.createBuildingLoading = true;
+  this.createBuildingError = null;
+
+  // Adjust payload/URL to match your backend shape
+  this.residentialService.createBuilding({ buildingName }).subscribe({
+    next: (createdBuilding) => {
+      this.createBuildingLoading = false;
+      this.showCreateBuilding = false;
+
+      // Option A: just reload everything from backend (safest)
+      this.loadStructure();
+
+      // Option B: if backend response matches your Building model,
+      // you could instead push it into the array:
+      // this.buildings.push(createdBuilding);
+    },
+    error: (err) => {
+      console.error('Error creating building', err);
+      this.createBuildingLoading = false;
+      this.createBuildingError =
+        'Failed to create building. Please try again.';
+    },
+  });
+}
+// ROOM creation
+showCreateRoomForBuildingId: number | null = null;
+createRoomLoading = false;
+createRoomError: string | null = null;
+
+createRoomForm = new FormGroup({
+  roomNumber: new FormControl<string>('', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.maxLength(10)],
+  }),
+  roomType: new FormControl<string>('', {
+    nonNullable: true,
+    validators: [Validators.maxLength(50)],
+  }),
+});
+
+// BED creation
+showCreateBedForRoomId: number | null = null;
+createBedLoading = false;
+createBedError: string | null = null;
+
+createBedForm = new FormGroup({
+  bedLetter: new FormControl<string>('', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.maxLength(5)],
+  }),
+  bedType: new FormControl<'student' | 'staff'>('student', {
+    nonNullable: true,
+  }),
+});
+toggleCreateRoom(building: any) {
+  const id = building.id; // adjust property name if needed
+
+  if (this.showCreateRoomForBuildingId === id) {
+    // toggle off
+    this.showCreateRoomForBuildingId = null;
+  } else {
+    this.showCreateRoomForBuildingId = id;
+    this.createRoomError = null;
+    this.createRoomForm.reset({
+      roomNumber: '',
+      roomType: '',
+    });
+  }
+}
+
+cancelCreateRoom() {
+  this.showCreateRoomForBuildingId = null;
+  this.createRoomError = null;
+}
+
+onCreateRoomSubmit(building: any) {
+  if (this.createRoomForm.invalid || this.createRoomLoading) {
+    this.createRoomForm.markAllAsTouched();
+    return;
+  }
+
+  const buildingId = building.id; // adjust if needed
+  const roomNumber = (this.createRoomForm.controls.roomNumber.value || '').trim();
+  const roomType = (this.createRoomForm.controls.roomType.value || '').trim();
+
+  if (!roomNumber) {
+    this.createRoomForm.controls.roomNumber.setErrors({ required: true });
+    this.createRoomForm.controls.roomNumber.markAsTouched();
+    return;
+  }
+
+  this.createRoomLoading = true;
+  this.createRoomError = null;
+
+  this.residentialService
+    .createRoom({
+      buildingId,
+      roomNumber,
+      roomType: roomType || null,
+    })
+    .subscribe({
+      next: (createdRoom) => {
+        this.createRoomLoading = false;
+        this.showCreateRoomForBuildingId = null;
+
+        // easiest: refresh full structure
+        this.loadStructure();
+
+        // Alternatively, push into building.rooms if response matches shape:
+        // building.rooms.push(createdRoom);
+      },
+      error: (err) => {
+        console.error('Error creating room', err);
+        this.createRoomLoading = false;
+        this.createRoomError = 'Failed to create room. Please try again.';
+      },
+    });
+}
+toggleCreateBed(room: any) {
+  const id = room.id; // adjust property name if needed
+
+  if (this.showCreateBedForRoomId === id) {
+    this.showCreateBedForRoomId = null;
+  } else {
+    this.showCreateBedForRoomId = id;
+    this.createBedError = null;
+    this.createBedForm.reset({
+      bedLetter: '',
+      bedType: 'student',
+    });
+  }
+}
+
+cancelCreateBed() {
+  this.showCreateBedForRoomId = null;
+  this.createBedError = null;
+}
+
+onCreateBedSubmit(building: any, room: any) {
+  if (this.createBedForm.invalid || this.createBedLoading) {
+    this.createBedForm.markAllAsTouched();
+    return;
+  }
+
+  const buildingId = building.id; // adjust if needed
+  const roomId = room.id;         // adjust if needed
+
+  const bedLetter = (this.createBedForm.controls.bedLetter.value || '').trim();
+
+  if (!bedLetter) {
+    this.createBedForm.controls.bedLetter.setErrors({ required: true });
+    this.createBedForm.controls.bedLetter.markAsTouched();
+    return;
+  }
+
+  this.createBedLoading = true;
+  this.createBedError = null;
+
+  this.residentialService
+    .createBed({
+      buildingId,
+      roomId,
+      bedLetter
+    })
+    .subscribe({
+      next: (createdBed) => {
+        this.createBedLoading = false;
+        this.showCreateBedForRoomId = null;
+
+        // simplest: reload structure
+        this.loadStructure();
+
+        // Or push into room.beds if structure matches:
+        // room.beds.push(createdBed);
+      },
+      error: (err) => {
+        console.error('Error creating bed', err);
+        this.createBedLoading = false;
+        this.createBedError = 'Failed to create bed. Please try again.';
+      },
+    });
+}
+
 }

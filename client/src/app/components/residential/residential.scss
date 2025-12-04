@@ -178,4 +178,69 @@
   border-top: 1px dashed rgba(0, 0, 0, 0.2);
   width: 100%;
 }
+.residential-card {
+  mat-card-header {
+    display: flex;
+    align-items: center;
+  }
+
+  .header-spacer {
+    flex: 1 1 auto;
+  }
+
+  .add-building-btn {
+    margin-left: 8px;
+  }
+}
+
+.create-building-panel {
+  padding: 0 16px 12px;
+}
+
+.create-building-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.create-building-field {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.create-building-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.subtle-status {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin-top: 4px;
+}
+.create-room-panel,
+.create-bed-panel {
+  padding: 0 16px 12px;
+}
+
+.create-room-form,
+.create-bed-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.create-room-field,
+.create-bed-field {
+  flex: 1 1 200px;
+  min-width: 180px;
+}
+
+.create-room-actions,
+.create-bed-actions {
+  display: flex;
+  gap: 8px;
+}
 
