@@ -6,6 +6,12 @@ function ensureAuthenticated(req, res, next) {
   }
   return res.status(401).json({ error: 'Not authenticated' });
 }
+function ensureOffice(req, res, next) {
+  if (req.session && (req.session.role === 'admin' || req.session.role === 'office')) {
+    return next();
+  }
+  return res.status(403).json({ error: 'Admin or Office only' });
+}
 
 function ensureAdmin(req, res, next) {
   if (req.session && req.session.role === 'admin') {

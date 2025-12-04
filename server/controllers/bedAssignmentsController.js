@@ -1,8 +1,8 @@
 // controllers/bedAssignmentsController.js
-
+const { ensureAuthenticated, ensureOffice} = require('../middleware/auth');
 function registerBedAssignmentRoutes(app, db) {
   // POST /residential/bed-assignments
-  app.post('/residential/bed-assignments', (req, res) => {
+  app.post('/residential/bed-assignments', ensureOffice, (req, res) => {
     try {
       const { bedId, studentId, startDate } = req.body;
 
@@ -99,7 +99,7 @@ function registerBedAssignmentRoutes(app, db) {
   });
 
   // POST /residential/bed-assignments/:id/checkout
-  app.post('/residential/bed-assignments/:id/checkout', (req, res) => {
+  app.post('/residential/bed-assignments/:id/checkout', ensureOffice, (req, res) => {
     try {
       const { endDate } = req.body || {};
       const id = req.params.id;
@@ -155,7 +155,7 @@ function registerBedAssignmentRoutes(app, db) {
   });
 
   // GET /residential/bed-assignments
-  app.get('/residential/bed-assignments', (req, res) => {
+  app.get('/residential/bed-assignments', ensureAuthenticated, (req, res) => {
     try {
       const {
         current = 'true',
@@ -225,7 +225,7 @@ function registerBedAssignmentRoutes(app, db) {
   });
 
   // GET /residential/available-beds
-  app.get('/residential/available-beds', (req, res) => {
+  app.get('/residential/available-beds', ensureAuthenticated, (req, res) => {
     try {
       const { buildingId, roomId, roomType } = req.query;
 
@@ -279,7 +279,7 @@ function registerBedAssignmentRoutes(app, db) {
   });
 
   // GET /residential/students/:id/current-bed
-  app.get('/residential/students/:id/current-bed', (req, res) => {
+  app.get('/residential/students/:id/current-bed', ensureAuthenticated, (req, res) => {
     try {
       const studentId = req.params.id;
 

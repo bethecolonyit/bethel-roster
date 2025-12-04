@@ -1,8 +1,8 @@
 // controllers/buildingsController.js
-
+const { ensureAuthenticated, ensureOffice} = require('../middleware/auth');
 function registerBuildingRoutes(app, db) {
   // GET /residential/buildings
-  app.get('/residential/buildings', (req, res) => {
+  app.get('/residential/buildings', ensureAuthenticated, (req, res) => {
     try {
       const stmt = db.prepare(
         'SELECT * FROM buildings ORDER BY buildingName;'
@@ -16,7 +16,7 @@ function registerBuildingRoutes(app, db) {
   });
 
   // GET /residential/buildings/:id
-  app.get('/residential/buildings/:id', (req, res) => {
+  app.get('/residential/buildings/:id', ensureAuthenticated, (req, res) => {
     try {
       const stmt = db.prepare('SELECT * FROM buildings WHERE id = ?;');
       const building = stmt.get(req.params.id);
@@ -31,7 +31,7 @@ function registerBuildingRoutes(app, db) {
   });
 
   // POST /residential/buildings
-  app.post('/residential/buildings', (req, res) => {
+  app.post('/residential/buildings', ensureOffice, (req, res) => {
     try {
       const { buildingName } = req.body;
       if (!buildingName) {
@@ -60,7 +60,7 @@ function registerBuildingRoutes(app, db) {
   });
 
   // PUT /residential/buildings/:id
-  app.put('/residential/buildings/:id', (req, res) => {
+  app.put('/residential/buildings/:id', ensureOffice, (req, res) => {
     try {
       const { buildingName } = req.body;
       if (!buildingName) {
@@ -88,7 +88,7 @@ function registerBuildingRoutes(app, db) {
   });
 
   // DELETE /residential/buildings/:id
-  app.delete('/residential/buildings/:id', (req, res) => {
+  app.delete('/residential/buildings/:id', ensureOffice, (req, res) => {
     try {
       const stmt = db.prepare('DELETE FROM buildings WHERE id = ?;');
       const info = stmt.run(req.params.id);

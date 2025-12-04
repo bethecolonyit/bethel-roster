@@ -1,8 +1,8 @@
 // controllers/residentialStructureController.js
-
+const { ensureAuthenticated } = require('../middleware/auth');
 function registerResidentialStructureRoutes(app, db) {
   // GET /residential/structure
-  app.get('/residential/structure', (req, res) => {
+  app.get('/residential/structure', ensureAuthenticated, (req, res) => {
     try {
       const rows = db
         .prepare(`

@@ -1,8 +1,8 @@
 // controllers/bedsController.js
-
+const { ensureAuthenticated, ensureOffice} = require('../middleware/auth');
 function registerBedRoutes(app, db) {
   // GET /residential/beds
-  app.get('/residential/beds', (req, res) => {
+  app.get('/residential/beds', ensureAuthenticated, (req, res) => {
     try {
       const { roomId } = req.query;
       let beds;
@@ -34,7 +34,7 @@ function registerBedRoutes(app, db) {
   });
 
   // GET /residential/beds/:id
-  app.get('/residential/beds/:id', (req, res) => {
+  app.get('/residential/beds/:id', ensureAuthenticated, (req, res) => {
     try {
       const stmt = db.prepare('SELECT * FROM beds WHERE id = ?;');
       const bed = stmt.get(req.params.id);
@@ -51,7 +51,7 @@ function registerBedRoutes(app, db) {
   });
 
   // POST /residential/beds
-  app.post('/residential/beds', (req, res) => {
+  app.post('/residential/beds', ensureOffice, (req, res) => {
     try {
       const { roomId, bedLetter } = req.body;
 
@@ -84,7 +84,7 @@ function registerBedRoutes(app, db) {
   });
 
   // PUT /residential/beds/:id
-  app.put('/residential/beds/:id', (req, res) => {
+  app.put('/residential/beds/:id', ensureOffice, (req, res) => {
     try {
       const { roomId, bedLetter } = req.body;
 
@@ -123,7 +123,7 @@ function registerBedRoutes(app, db) {
   });
 
   // DELETE /residential/beds/:id
-  app.delete('/residential/beds/:id', (req, res) => {
+  app.delete('/residential/beds/:id', ensureOffice, (req, res) => {
     const bedId = req.params.id;
 
     try {

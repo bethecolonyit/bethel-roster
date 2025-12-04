@@ -2,13 +2,13 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-/** Match the shape from GET /residential/structure */
+
 
 export interface ResidentialStudent {
   id: number;
   firstName: string;
   lastName: string;
-  studentId: string; // external student code from backend
+  studentId: string; // idNumber
 }
 
 export interface BedOccupancy {
@@ -103,7 +103,7 @@ export class ResidentialService {
   // Adjust the URL to match your backend route
   return this.http.post<any>(
     `${this.apiUrl}/residential/buildings`,
-    payload
+    payload,  { withCredentials: true }
   );
 }
 createRoom(payload: {
@@ -111,25 +111,25 @@ createRoom(payload: {
   roomNumber: string;
   roomType?: string | null;
 }): Observable<any> {
-  return this.http.post<any>(`${this.apiUrl}/residential/rooms`, payload);
+  return this.http.post<any>(`${this.apiUrl}/residential/rooms`, payload, { withCredentials: true });
 }
 createBed(payload: {
   buildingId: number;
   roomId: number;
   bedLetter: string;
 }): Observable<any> {
-  return this.http.post<any>(`${this.apiUrl}/residential/beds`, payload);
+  return this.http.post<any>(`${this.apiUrl}/residential/beds`, payload, { withCredentials: true });
   }
 deleteBuilding(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/residential/buildings/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/residential/buildings/${id}`, { withCredentials: true });
   }
 
   deleteRoom(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/residential/rooms/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/residential/rooms/${id}`, { withCredentials: true });
   }
 
   deleteBed(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/residential/beds/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/residential/beds/${id}`, { withCredentials: true });
   }
   updateRoom(
   id: number,
@@ -137,7 +137,8 @@ deleteBuilding(id: number): Observable<void> {
 ) {
   return this.http.put<any>(
     `${this.apiUrl}/residential/rooms/${id}`,
-    payload
+    payload,
+    { withCredentials: true }
   );
   }
 }
