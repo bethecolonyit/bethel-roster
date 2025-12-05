@@ -22,7 +22,7 @@ const port = 3000;
 // Multer storage for images
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './public/images');
+    cb(null, './uploads/students/');
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname);
@@ -67,8 +67,7 @@ app.use((req, res, next) => {
 });
 
 // Static files
-app.use(express.static('public'));
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Body & CORS
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

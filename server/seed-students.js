@@ -1,6 +1,6 @@
 // seed-students.js
 const Database = require("better-sqlite3");
-const db = new Database("./database.db");
+const db = new Database("./mydb.sqlite");
 
 // -----------------------------
 // Utility functions
@@ -37,12 +37,11 @@ const lastNames = [
 ];
 
 const counselors = [
-  "Pastor Paul", "Pastor David", "Pastor Jonathan", "Pastor Aaron",
-  "Pastor Sam", "Pastor Tim"
+  "Pastor Frye", "Pastor Starnes", "Pastor Benfield", "Pastor Alphin"
 ];
 
 const programs = [
-  "Men's Program", "Women's Program", "Overcomers"
+  "65 Day", "30 Day", "VSP"
 ];
 
 // -----------------------------

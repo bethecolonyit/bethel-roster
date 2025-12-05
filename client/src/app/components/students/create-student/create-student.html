@@ -1,0 +1,65 @@
+<div class="student-card mat-elevation-3">
+  <h2>Create New Student</h2>
+
+  <form (ngSubmit)="onSubmit()" #form="ngForm" enctype="multipart/form-data">
+
+    <div class="row">
+      <mat-form-field appearance="fill">
+        <mat-label>First Name</mat-label>
+        <input matInput name="firstName" [(ngModel)]="student.firstName" required>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Last Name</mat-label>
+        <input matInput name="lastName" [(ngModel)]="student.lastName" required>
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field appearance="fill">
+        <mat-label>Bethel ID Number</mat-label>
+        <input matInput name="idNumber" [(ngModel)]="student.idNumber" required>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Program</mat-label>
+        <mat-select name="program" [(ngModel)]="student.program" required>
+          <mat-option value="Men">Men</mat-option>
+          <mat-option value="Women">Women</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field appearance="fill">
+        <mat-label>Counselor</mat-label>
+        <input matInput name="counselor" [(ngModel)]="student.counselor">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Day In</mat-label>
+        <input matInput [matDatepicker]="picker" name="dayin" [(ngModel)]="student.dayin">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <!-- Boolean Fields -->
+    <div class="boolean-grid">
+      <mat-checkbox [(ngModel)]="student.isFelon" name="felon">Felon</mat-checkbox>
+      <mat-checkbox [(ngModel)]="student.onProbation" name="probation">On Probation</mat-checkbox>
+      <mat-checkbox [(ngModel)]="student.usesNicotine" name="nicotine">Uses Nicotine</mat-checkbox>
+      <mat-checkbox [(ngModel)]="student.hasDriverLicense" name="license">Driver License</mat-checkbox>
+      <mat-checkbox [(ngModel)]="student.foodAllergies" name="foodAllergies">Food Allergies</mat-checkbox>
+      <mat-checkbox [(ngModel)]="student.beeAllergies" name="beeAllergies">Bee Allergies</mat-checkbox>
+    </div>
+
+    <div class="file-upload">
+      <label>Student Photo (.jpg)</label>
+      <input type="file" (change)="onFileSelected($event)" accept=".jpg,.jpeg">
+    </div>
+
+    <button mat-raised-button color="primary" [disabled]="form.invalid">Create Student</button>
+
+  </form>
+</div>

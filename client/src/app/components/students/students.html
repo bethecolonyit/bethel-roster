@@ -1,1 +1,159 @@
-<p>students works!</p>
+<div class="students-page">
+  <mat-card class="students-card">
+    <mat-card-header>
+      <div mat-card-avatar class="students-avatar">
+        <mat-icon>school</mat-icon>
+      </div>
+
+      <mat-card-title>Student Dashboard</mat-card-title>
+      <mat-card-subtitle>View and manage enrolled students</mat-card-subtitle>
+
+      <span class="flex-spacer"></span>
+
+      <!-- View toggle button -->
+      <button
+        mat-icon-button
+        color="primary"
+        (click)="toggleViewMode()"
+        [attr.aria-label]="viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'"
+      >
+        <mat-icon>
+          {{ viewMode === 'grid' ? 'view_list' : 'grid_view' }}
+        </mat-icon>
+      </button>
+
+      <!-- + / close button -->
+      <button
+        mat-icon-button
+        color="primary"
+        type="button"
+        (click)="toggleCreateStudent()"
+        [attr.aria-label]="showCreateForm ? 'Hide create student form' : 'Show create student form'"
+      >
+        <mat-icon>{{ showCreateForm ? 'close' : 'add' }}</mat-icon>
+      </button>
+    </mat-card-header>
+
+    <mat-card-content>
+
+      <!-- Create student form -->
+      <div *ngIf="showCreateForm" class="create-student-section">
+        <app-create-student></app-create-student>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="error" class="error-message">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ error }}</span>
+      </div>
+
+      <!-- GRID VIEW -->
+      <div class="grid-container" *ngIf="viewMode === 'grid' && students.length > 0">
+  <div class="student-card" *ngFor="let student of students">
+    <!-- Top: large photo -->
+    <div class="student-photo-wrapper">
+      <img
+        [src]="getStudentPhoto(student.idNumber)"
+        alt="Student Photo"
+        class="student-photo"
+      />
+    </div>
+
+    <!-- Bottom: info area -->
+    <div class="student-body">
+      <div class="student-name">
+        {{ student.firstName }} {{ student.lastName }}
+      </div>
+
+      <div class="student-meta">
+        <div class="meta-row">
+          <span class="meta-label">File Number:</span>
+          <span class="meta-value">{{ student.idNumber }}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Counselor:</span>
+          <span class="meta-value">
+            {{ student.counselor || 'TBD' }}
+          </span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Day In:</span>
+          <span class="meta-value">
+            {{ student.dayin | date:'MM/dd/yyyy' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Boolean flags as icons (only if true) -->
+      <div class="student-flags">
+        <ng-container *ngIf="student.isFelon">
+          <mat-icon matTooltip="Felony history">balance</mat-icon>
+        </ng-container>
+
+        <ng-container *ngIf="student.onProbation">
+          <mat-icon matTooltip="On probation">gavel</mat-icon>
+        </ng-container>
+
+        <ng-container *ngIf="student.usesNicotine">
+          <mat-icon matTooltip="Uses nicotine">smoking_rooms</mat-icon>
+        </ng-container>
+
+        <ng-container *ngIf="student.hasDriverLicense">
+          <mat-icon matTooltip="Has driver license">directions_car</mat-icon>
+        </ng-container>
+
+        <ng-container *ngIf="student.foodAllergies">
+          <mat-icon matTooltip="Food allergies">restaurant</mat-icon>
+        </ng-container>
+
+        <ng-container *ngIf="student.beeAllergies">
+          <mat-icon [ngStyle]="{'color': '#FF5C00'}" matTooltip="Bee allergies">bug_report</mat-icon>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+      <!-- LIST VIEW -->
+      <table class="students-table mat-elevation-z2" *ngIf="viewMode === 'list' && students.length > 0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Program</th>
+            <th>Day In</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let student of students">
+            <td>{{ student.firstName }} {{ student.lastName }}</td>
+            <td>{{ student.program }}</td>
+            <td>{{ student.dayin | date }}</td>
+
+            <td class="actions-col">
+              <button mat-icon-button color="primary" (click)="viewStudent(student)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+
+              <button mat-icon-button color="accent" (click)="editStudent(student)">
+                <mat-icon>edit</mat-icon>
+              </button>
+
+              <button mat-icon-button color="warn" (click)="deleteStudent(student)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty state -->
+      <div class="empty-state" *ngIf="students.length === 0">
+        <mat-icon>info</mat-icon>
+        <span>No students found.</span>
+      </div>
+
+    </mat-card-content>
+  </mat-card>
+</div>

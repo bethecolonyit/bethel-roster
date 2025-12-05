@@ -4,18 +4,17 @@ const { ensureAuthenticated, ensureOffice } = require('../middleware/auth');
 
 function registerStudentRoutes(app, db, upload) {
   // GET /students
-  app.get('/students', ensureAuthenticated, (req, res) => {
-    try {
-      const stmt = db.prepare(
-        `SELECT * FROM students ORDER BY lastName ASC`
-      );
-      const students = stmt.all();
-      res.json(students);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send('Database error');
-    }
-  });
+app.get('/students', ensureAuthenticated, (req, res) => {
+  try {
+    const stmt = db.prepare(`SELECT * FROM students`);
+    const students = stmt.all();
+    res.json(students);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database read error' });
+  }
+});
+
 
   // GET /students/simple
   app.get('/students/simple', ensureAuthenticated, (req, res) => {
@@ -38,40 +37,78 @@ function registerStudentRoutes(app, db, upload) {
   });
 
   // POST /students
-  app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
-    try {
-      const student = JSON.parse(req.body.data);
-      const {
-        firstName,
-        lastName,
-        idNumber,
-        roomNumber,
-        counselor,
-        program,
-        dayin,
-      } = student;
+app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
+  try {
+    // Student data comes in via multipart/form-data as a JSON string
+    const student = JSON.parse(req.body.data);
 
-      const stmt = db.prepare(`
-        INSERT INTO students (firstName, lastName, idNumber, roomNumber, counselor, program, dayin)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `);
+    const {
+      firstName,
+      lastName,
+      idNumber,
+      counselor,
+      program,
+      dayin,
+      isFelon,
+      onProbation,
+      usesNicotine,
+      hasDriverLicense,
+      foodAllergies,
+      beeAllergies
+    } = student;
 
-      stmt.run(
-        firstName,
-        lastName,
-        idNumber,
-        roomNumber,
-        counselor,
-        program,
-        dayin
-      );
-
-      res.json({ message: 'Student added successfully' });
-    } catch (err) {
-      console.error(err);
-      res.status(500).send('Database insert error');
+    // ---- HANDLE PHOTO UPLOAD ----
+    if (!req.file) {
+      return res.status(400).json({ error: 'Photo is required' });
     }
-  });
+
+    const fs = require('fs');
+    const path = require('path');
+
+    const uploadsDir = path.join(__dirname, '../uploads/students');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    // Rename uploaded file → {idNumber}.jpg
+    const newFilename = `${idNumber}.jpg`;
+    const newPath = path.join(uploadsDir, newFilename);
+
+    fs.renameSync(req.file.path, newPath);
+
+    // ---- INSERT INTO DATABASE ----
+    const stmt = db.prepare(`
+      INSERT INTO students (
+        firstName, lastName, idNumber, counselor, program, dayin,
+        isFelon, onProbation, usesNicotine, hasDriverLicense,
+        foodAllergies, beeAllergies
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    stmt.run(
+      firstName,
+      lastName,
+      idNumber,
+      counselor,
+      program,
+      dayin,
+      isFelon ? 1 : 0,
+      onProbation ? 1 : 0,
+      usesNicotine ? 1 : 0,
+      hasDriverLicense ? 1 : 0,
+      foodAllergies ? 1 : 0,
+      beeAllergies ? 1 : 0
+    );
+
+    res.json({ message: 'Student added successfully' });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Database insert error');
+  }
+});
+
 
   // POST /edit
   app.post('/edit', ensureOffice, (req, res) => {
