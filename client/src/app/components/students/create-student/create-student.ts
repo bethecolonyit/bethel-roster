@@ -1,6 +1,7 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+
+import { Component, ChangeDetectorRef, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -31,7 +32,7 @@ import { Student } from '../../../models/student';
   ]
 })
 export class CreateStudentComponent {
-
+@Output() studentCreated = new EventEmitter<any>();
   student: Student = {
     firstName: '',
     lastName: '',
@@ -59,13 +60,11 @@ export class CreateStudentComponent {
     this.selectedFile = event.target.files[0] ?? null;
   }
 
-onSubmit() {
+onSubmit(form: NgForm) {
   const formData = new FormData();
 
-  // The backend expects ALL student fields as a single JSON string under "data"
   formData.append('data', JSON.stringify(this.student));
 
-  // Append file
   if (this.selectedFile) {
     formData.append('photo', this.selectedFile);
   } else {
@@ -74,35 +73,42 @@ onSubmit() {
   }
 
   this.studentService.createStudent(formData).subscribe({
-    next: () => {
+    next: (newStudent) => {
       this.snack.open('Student created successfully!', 'OK', { duration: 3000 });
-      this.resetForm();
-      this.cdr.detectChanges();
+
+      // 🔔 Notify parent so it can refresh + close the form
+      this.studentCreated.emit(newStudent);
+
+      // ✅ Reset form state + model so no red errors
+      this.resetForm(form);
     },
     error: (err) => {
       console.error(err);
       this.snack.open('Error creating student', 'Close');
-      this.cdr.detectChanges(); 
     }
   });
 }
 
 
-  resetForm() {
-    this.student = {
-      firstName: '',
-      lastName: '',
-      idNumber: '',
-      counselor: '',
-      program: '',
-      dayin: '',
-      isFelon: false,
-      onProbation: false,
-      usesNicotine: false,
-      hasDriverLicense: false,
-      foodAllergies: false,
-      beeAllergies: false
-    };
-    this.selectedFile = null;
+ resetForm(form?: NgForm) {
+  this.student = {
+    firstName: '',
+    lastName: '',
+    idNumber: '',
+    counselor: '',
+    program: '',
+    dayin: '',
+    isFelon: false,
+    onProbation: false,
+    usesNicotine: false,
+    hasDriverLicense: false,
+    foodAllergies: false,
+    beeAllergies: false
+  };
+  this.selectedFile = null;
+
+  if (form) {
+    form.resetForm();
+    }
   }
 }

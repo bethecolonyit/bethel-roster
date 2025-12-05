@@ -38,7 +38,7 @@
 
       <!-- Create student form -->
       <div *ngIf="showCreateForm" class="create-student-section">
-        <app-create-student></app-create-student>
+        <app-create-student (studentCreated)="onStudentCreated()"></app-create-student>
       </div>
 
       <!-- Error -->

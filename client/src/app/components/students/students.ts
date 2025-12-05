@@ -47,7 +47,10 @@ export class Students implements OnInit {
       error: () => this.error = 'Error loading students'
     });
   }
-
+onStudentCreated() {
+  this.loadStudents();  
+  this.showCreateForm = false;
+}
   toggleCreateStudent() {
     this.showCreateForm = !this.showCreateForm;
   }
