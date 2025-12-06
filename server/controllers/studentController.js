@@ -49,6 +49,7 @@ app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
       counselor,
       program,
       dayin,
+      dayout,
       isFelon,
       onProbation,
       usesNicotine,
@@ -79,11 +80,11 @@ app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
     // ---- INSERT INTO DATABASE ----
     const stmt = db.prepare(`
       INSERT INTO students (
-        firstName, lastName, idNumber, counselor, program, dayin,
+        firstName, lastName, idNumber, counselor, program, dayin, dayout,
         isFelon, onProbation, usesNicotine, hasDriverLicense,
         foodAllergies, beeAllergies
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -93,6 +94,7 @@ app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
       counselor,
       program,
       dayin,
+      dayout,
       isFelon ? 1 : 0,
       onProbation ? 1 : 0,
       usesNicotine ? 1 : 0,
@@ -121,11 +123,12 @@ app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
         counselor,
         program,
         dayin,
+        dayout
       } = req.body;
 
       const stmt = db.prepare(`
         UPDATE students
-        SET roomNumber = ?, firstName = ?, lastName = ?, counselor = ?, program = ?, dayin = ?
+        SET roomNumber = ?, firstName = ?, lastName = ?, counselor = ?, program = ?, dayin = ?, dayout = ?
         WHERE idNumber = ?
       `);
 
@@ -136,6 +139,7 @@ app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
         counselor,
         program,
         dayin,
+        dayout,
         idNumber
       );
 

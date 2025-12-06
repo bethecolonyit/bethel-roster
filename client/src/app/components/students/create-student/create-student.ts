@@ -40,6 +40,7 @@ export class CreateStudentComponent {
     counselor: '',
     program: '',
     dayin: '',
+    dayout: '',
     isFelon: false,
     onProbation: false,
     usesNicotine: false,
@@ -89,6 +90,15 @@ onSubmit(form: NgForm) {
   });
 }
 
+onDayInChange() {
+  if (this.student.dayin) {
+    const inDate = new Date(this.student.dayin);
+    const outDate = new Date(inDate);
+    outDate.setDate(outDate.getDate() + 65);
+    this.student.dayout = outDate.toISOString();
+  }
+}
+
 
  resetForm(form?: NgForm) {
   this.student = {
@@ -98,6 +108,7 @@ onSubmit(form: NgForm) {
     counselor: '',
     program: '',
     dayin: '',
+    dayout: '',
     isFelon: false,
     onProbation: false,
     usesNicotine: false,

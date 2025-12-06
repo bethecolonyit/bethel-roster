@@ -15,6 +15,7 @@ db.prepare(`
     counselor TEXT,
     program TEXT,
     dayin DATE,
+    dayout DATE,
     isFelon BOOLEAN,
     onProbation BOOLEAN,
     usesNicotine BOOLEAN,
