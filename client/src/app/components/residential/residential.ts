@@ -196,7 +196,7 @@ export class Residential implements OnInit {
     this.studentSearchControl.valueChanges.subscribe((value) => {
       const term = (value || '').toLowerCase();
       this.filteredStudents = this.students.filter((s: StudentOption) => {
-        const label = `${s.lastName}, ${s.firstName} (${s.idNumber})`.toLowerCase();
+        const label = `${s.lastName}, ${s.firstName}`.toLowerCase();
         return label.includes(term);
       });
       this.cdr.detectChanges();
@@ -206,7 +206,7 @@ export class Residential implements OnInit {
   onStudentSelected(student: StudentOption): void {
     this.selectedStudent = student;
 
-    const label = `${student.lastName}, ${student.firstName} (${student.idNumber})`;
+    const label = `${student.lastName}, ${student.firstName} (${student.id})`;
     this.studentSearchControl.setValue(label, { emitEvent: false });
   }
 
@@ -246,7 +246,7 @@ export class Residential implements OnInit {
     const { building, room, bed } = this.assigningContext;
     const student = this.selectedStudent;
 
-    const studentLabel = `${student.lastName}, ${student.firstName} (${student.idNumber})`;
+    const studentLabel = `${student.firstName} ${student.lastName}`;
     const roomNumber = room.roomNumber;
     const bedLetter = bed.bedLetter;
 

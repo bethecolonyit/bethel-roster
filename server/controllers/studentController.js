@@ -15,26 +15,59 @@ app.get('/students', ensureAuthenticated, (req, res) => {
   }
 });
 
+app.get('/students/simple', ensureAuthenticated, (req, res) => {
+  try {
+    const stmt = db.prepare(`SELECT id, firstName, lastName FROM students`);
+    const students = stmt.all();
+    res.json(students);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database read error' });
+  }
+});
 
-  // GET /students/simple
-  app.get('/students/simple', ensureAuthenticated, (req, res) => {
-    try {
-      const rows = db
-        .prepare(
-          `
-        SELECT id, firstName, lastName, idNumber
-        FROM students
-        ORDER BY lastName COLLATE NOCASE, firstName COLLATE NOCASE;
-      `
-        )
-        .all();
+// students.controller.js (or wherever your routes live)
+app.get('/students-with-rooms', (req, res) => {
+  try {
+    const stmt = db.prepare(`
+      SELECT
+        s.id,
+        s.firstName,
+        s.lastName,
+        s.program,
+        s.idNumber,
+        s.counselor,
+        s.dayIn,
+        s.dayOut,
+        s.isFelon,
+        s.onProbation,
+        s.usesNicotine,
+        s.hasDriverLicense,
+        s.foodAllergies,
+        s.beeAllergies,
+        r.roomNumber AS roomNumber,
+        b.bedLetter  AS bedLetter,
+        bu.buildingName AS buildingName
+      FROM students s
+      LEFT JOIN bed_assignments ba
+        ON ba.student_id = s.id
+        AND ba.end_date IS NULL
+      LEFT JOIN beds b
+        ON b.id = ba.bed_id
+      LEFT JOIN rooms r
+        ON r.id = b.roomId
+      LEFT JOIN buildings bu
+        ON bu.id = r.buildingId
+      ORDER BY s.lastName, s.firstName
+    `);
 
-      res.json(rows);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Failed to fetch students list' });
-    }
-  });
+    const rows = stmt.all();
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching students with room info', err);
+    res.status(500).json({ error: 'Failed to load students' });
+  }
+});
 
   // POST /students
 app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
