@@ -67,4 +67,7 @@ onStudentCreated() {
 
   editStudent(student: Student) { /* implement later */ }
   deleteStudent(student: Student) { /* implement later */ }
+  onViewStudentDetails(student: Student) { /* implement later */  }
+  onCreateStudentNote(student: Student) { /* implement later */  }  
+  onCreateStudentWriteUp(student: Student) { /* implement later */  } 
 }

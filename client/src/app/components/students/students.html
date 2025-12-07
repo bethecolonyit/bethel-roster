@@ -52,6 +52,9 @@
         <app-student-card
           *ngFor="let student of students"
           [student]="student"
+          (viewDetails)="onViewStudentDetails($event)"
+          (createNote)="onCreateStudentNote($event)"
+          (createWriteUp)="onCreateStudentWriteUp($event)"
         ></app-student-card>
 </div>
 

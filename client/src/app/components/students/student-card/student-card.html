@@ -1,4 +1,29 @@
 <div class="student-card">
+      <div class="card-menu">
+            <button
+            mat-icon-button
+            [matMenuTriggerFor]="cardMenu"
+            (click)="$event.stopPropagation()"
+            aria-label="Student options"
+            >
+            <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #cardMenu="matMenu">
+            <button mat-menu-item (click)="onViewDetails()">
+                <mat-icon>visibility</mat-icon>
+                <span>View details</span>
+            </button>
+            <button mat-menu-item (click)="onCreateNote()">
+                <mat-icon>note_add</mat-icon>
+                <span>Create note</span>
+            </button>
+            <button mat-menu-item (click)="onCreateWriteUp()">
+                <mat-icon>report</mat-icon>
+                <span>Create write-up</span>
+            </button>
+            </mat-menu>
+        </div>
     <!-- Top: large photo -->
     <div class="student-photo-wrapper">
       <img
@@ -16,7 +41,7 @@
 
       <div class="student-meta">
         <div class="meta-row">
-          <span class="meta-label">Program:</span>
+          <span class="meta-label">Program: </span>
           <span class="meta-value">{{ student.program }}</span>
         </div>
         <div class="meta-row">

@@ -5,6 +5,7 @@
   border-radius: 22px;
   overflow: hidden;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  position: relative
 }
 
 /* Top image area */
@@ -13,6 +14,22 @@
   padding-top: 75%; // 4:3-ish ratio
   position: relative;
   overflow: hidden;
+}
+.card-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2; // above photo
+
+  button[mat-icon-button] {
+    width: 40px;
+    height: 40px;
+    color: white;
+  }
+
+  mat-icon {
+    font-size: 28px;
+  }
 }
 
 .student-photo {
@@ -30,6 +47,7 @@
 }
 
 .student-name {
+  text-align: center;
   font-weight: 600;
   font-size: 1.1rem;
   margin-bottom: 6px;
@@ -43,7 +61,7 @@
 
 .meta-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   gap: 6px;
 }
 
@@ -53,12 +71,12 @@
 }
 
 .meta-value {
-  text-align: right;
+  font-weight: 400;
 }
-
 /* Boolean flags row */
 .student-flags {
   display: flex;
+  justify-content: center;
   gap: 8px;
   margin-top: 4px;
 }
