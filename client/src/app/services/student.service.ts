@@ -14,6 +14,6 @@ export class StudentService {
     return this.http.post(`${this.api}`, formData, { withCredentials: true });
   }
     getStudents(): Observable<Student[]> {
-        return this.http.get<Student[]>(`${this.api}`, {withCredentials: true});
+        return this.http.get<Student[]>(`${this.api}-with-rooms`, {withCredentials: true});
     }
 }

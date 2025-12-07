@@ -13,4 +13,9 @@ export interface Student {
   hasDriverLicense: boolean;
   foodAllergies: boolean;
   beeAllergies: boolean;
+
+  roomNumber?: string;
+  bedLetter?: string;
+
+
 }
