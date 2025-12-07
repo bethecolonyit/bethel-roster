@@ -8,6 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CreateStudentComponent } from './create-student/create-student';
 import { StudentService } from '../../services/student.service';
 import { Student } from '../../models/student';
+import { StudentList } from './student-list/student-list';
 
 @Component({
   selector: 'app-students',
@@ -25,6 +26,7 @@ import { Student } from '../../models/student';
     MatTableModule,
     MatTooltipModule,
     CreateStudentComponent,
+    StudentList
   ]
 })
 export class Students implements OnInit {
@@ -63,7 +65,7 @@ onStudentCreated() {
     return `http://localhost:3000/uploads/students/${idNumber}.jpg`;
   }
 
-  viewStudent(student: Student) { /* view profile later */ }
+
   editStudent(student: Student) { /* implement later */ }
   deleteStudent(student: Student) { /* implement later */ }
 }

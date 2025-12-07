@@ -125,36 +125,11 @@
 </div>
 
       <!-- LIST VIEW -->
-      <table class="students-table mat-elevation-z2" *ngIf="viewMode === 'list' && students.length > 0">
-        <thead>
-          <tr>
-            <th>Last Name</th>
-            <th>First Name</th>
-            <th>File Number</th>
-            <th>Program</th>
-            <th>Day In</th>
-            <th>Day Out</th>
-            <th class="actions-col">View</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr *ngFor="let student of students">
-            <td>{{ student.lastName }}</td>
-            <td>{{ student.firstName }}</td>
-            <td>{{ student.idNumber }}</td>
-            <td>{{ student.program }}</td>
-            <td>{{ student.dayin | date }}</td>
-            <td>{{ student.dayout | date }}</td>
-
-            <td class="actions-col">
-              <button mat-icon-button color="primary" (click)="viewStudent(student)">
-                <mat-icon>visibility</mat-icon>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <app-student-list
+        *ngIf="viewMode === 'list'"
+        [students]="students"
+        [viewMode]="viewMode"
+      ></app-student-list>
 
       <!-- Empty state -->
       <div class="empty-state" *ngIf="students.length === 0">
