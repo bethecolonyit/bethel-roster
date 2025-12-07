@@ -1,0 +1,70 @@
+.student-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--mat-sys-surface);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+/* Top image area */
+.student-photo-wrapper {
+  width: 100%;
+  padding-top: 75%; // 4:3-ish ratio
+  position: relative;
+  overflow: hidden;
+}
+
+.student-photo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Bottom info area */
+.student-body {
+  padding: 14px 16px 16px;
+}
+
+.student-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.student-meta {
+  font-size: 0.86rem;
+  color: var(--mat-sys-on-surface-variant);
+  margin-bottom: 10px;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.meta-label {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.meta-value {
+  text-align: right;
+}
+
+/* Boolean flags row */
+.student-flags {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.student-flags mat-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}

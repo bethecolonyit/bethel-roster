@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, NgIf, NgFor, DatePipe } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +9,7 @@ import { CreateStudentComponent } from './create-student/create-student';
 import { StudentService } from '../../services/student.service';
 import { Student } from '../../models/student';
 import { StudentList } from './student-list/student-list';
+import { StudentCard } from './student-card/student-card';
 
 @Component({
   selector: 'app-students',
@@ -19,14 +20,14 @@ import { StudentList } from './student-list/student-list';
     CommonModule,
     NgIf,
     NgFor,
-    DatePipe,
     MatCardModule,
     MatIconModule,
     MatButtonModule,
     MatTableModule,
     MatTooltipModule,
     CreateStudentComponent,
-    StudentList
+    StudentList,
+    StudentCard
   ]
 })
 export class Students implements OnInit {
@@ -61,9 +62,7 @@ onStudentCreated() {
     this.viewMode = this.viewMode === 'grid' ? 'list' : 'grid';
   }
 
-  getStudentPhoto(idNumber: string) {
-    return `http://localhost:3000/uploads/students/${idNumber}.jpg`;
-  }
+  
 
 
   editStudent(student: Student) { /* implement later */ }
