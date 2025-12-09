@@ -14,6 +14,55 @@ app.get('/students', ensureAuthenticated, (req, res) => {
     res.status(500).json({ error: 'Database read error' });
   }
 });
+app.get('/students/:id', ensureAuthenticated, (req, res) => {
+   try {
+    const { id } = req.params;
+
+    const stmt = db.prepare(`
+      SELECT
+        s.id,
+        s.firstName,
+        s.lastName,
+        s.program,
+        s.idNumber,
+        s.counselor,
+        s.dayIn,
+        s.dayOut,
+        s.isFelon,
+        s.onProbation,
+        s.usesNicotine,
+        s.hasDriverLicense,
+        s.foodAllergies,
+        s.beeAllergies,
+        r.roomNumber    AS roomNumber,
+        b.bedLetter     AS bedLetter,
+        bu.buildingName AS buildingName
+      FROM students s
+      LEFT JOIN bed_assignments ba
+        ON ba.student_id = s.id
+        AND ba.end_date IS NULL
+      LEFT JOIN beds b
+        ON b.id = ba.bed_id
+      LEFT JOIN rooms r
+        ON r.id = b.roomId
+      LEFT JOIN buildings bu
+        ON bu.id = r.buildingId
+      WHERE s.id = ?
+      LIMIT 1
+    `);
+
+    const row = stmt.get(id);
+
+    if (!row) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    res.json(row);
+  } catch (err) {
+    console.error('Error fetching student with room info', err);
+    res.status(500).json({ error: 'Failed to load student' });
+  }
+});
 
 app.get('/students/simple', ensureAuthenticated, (req, res) => {
   try {
@@ -145,43 +194,74 @@ app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
 });
 
 
-  // POST /edit
-  app.post('/edit', ensureOffice, (req, res) => {
-    try {
-      const {
-        idNumber,
-        roomNumber,
-        firstName,
-        lastName,
-        counselor,
-        program,
-        dayin,
-        dayout
-      } = req.body;
+  // PUT /edit
+ app.put('/students/:id', ensureOffice, (req, res) => {
+  try {
+    const { id } = req.params; // ← primary key (number as a string)
 
-      const stmt = db.prepare(`
-        UPDATE students
-        SET roomNumber = ?, firstName = ?, lastName = ?, counselor = ?, program = ?, dayin = ?, dayout = ?
-        WHERE idNumber = ?
-      `);
+    const {
+      idNumber,
+      firstName,
+      lastName,
+      counselor,
+      program,
+      dayin,
+      dayout,
+      isFelon,
+      onProbation,
+      usesNicotine,
+      hasDriverLicense,
+      foodAllergies,
+      beeAllergies,
+    } = req.body;
 
-      stmt.run(
-        roomNumber,
-        firstName,
-        lastName,
-        counselor,
-        program,
-        dayin,
-        dayout,
-        idNumber
-      );
+    const stmt = db.prepare(`
+      UPDATE students
+      SET
+        firstName      = ?,
+        lastName       = ?,
+        counselor      = ?,
+        program        = ?,
+        dayin          = ?,
+        dayout         = ?,
+        isFelon        = ?,
+        onProbation    = ?,
+        usesNicotine   = ?,
+        hasDriverLicense = ?,
+        foodAllergies  = ?,
+        beeAllergies   = ?,
+        idNumber       = ?
+      WHERE id = ?
+    `);
 
-      res.send('success');
-    } catch (err) {
-      console.error(err);
-      res.status(500).send('Database update error');
+    const result = stmt.run(
+      firstName,
+      lastName,
+      counselor,
+      program,
+      dayin,
+      dayout,
+      isFelon ? 1 : 0,
+      onProbation ? 1 : 0,
+      usesNicotine ? 1 : 0,
+      hasDriverLicense ? 1 : 0,
+      foodAllergies ? 1 : 0,
+      beeAllergies ? 1 : 0,
+      idNumber,
+      id            // ← WHERE id = ?
+    );
+
+    if (result.changes === 0) {
+      return res.status(404).send('Student not found');
     }
-  });
+
+    res.send('success');
+  } catch (err) {
+    console.error('Database update error', err);
+    res.status(500).send('Database update error');
+  }
+});
+
 
   // DELETE /students
   app.delete('/students', ensureOffice, (req, res) => {

@@ -10,7 +10,7 @@
             </button>
 
             <mat-menu #cardMenu="matMenu">
-            <button mat-menu-item (click)="onViewDetails()">
+            <button mat-menu-item [routerLink]="['/students/view/', student.id]">
                 <mat-icon>visibility</mat-icon>
                 <span>View details</span>
             </button>

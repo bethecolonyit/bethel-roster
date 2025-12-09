@@ -5,10 +5,11 @@ import { DatePipe, CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-student-card',
-  imports: [MatIcon, DatePipe, CommonModule, MatTooltipModule, MatMenuModule, MatButtonModule],
+  imports: [MatIcon, DatePipe, CommonModule, MatTooltipModule, MatMenuModule, MatButtonModule, RouterLink],
   templateUrl: './student-card.html',
   styleUrl: './student-card.scss',
   standalone: true,

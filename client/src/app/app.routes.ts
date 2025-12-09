@@ -6,6 +6,7 @@ import { authGuard } from './guards/auth-guard';
 import { UsersComponent } from './components/users/users'; 
 import { adminGuard } from './guards/admin-guard';           
 import { Residential } from './components/residential/residential';
+import { ViewStudent } from './components/students/view-student/view-student';
 
 export const appRoutes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -31,6 +32,11 @@ export const appRoutes: Routes = [
     path: 'residential',
     component: Residential,
     canActivate: [adminGuard],  
+  },
+  {
+    path: 'students/view/:id',
+    component: ViewStudent,
+    canActivate: [authGuard],
   },
 
   { path: '**', redirectTo: 'login' },

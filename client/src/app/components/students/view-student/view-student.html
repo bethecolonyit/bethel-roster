@@ -1,0 +1,141 @@
+<div class="section-container">
+  <mat-card class="student-detail-card">
+    <mat-card-header>
+      <div mat-card-avatar class="student-avatar">
+        <mat-icon>article_person</mat-icon>
+      </div>
+      <mat-card-title>Student Detail Page</mat-card-title>
+      <mat-card-subtitle>View and manage student details</mat-card-subtitle>
+      <span class="flex-spacer"></span>
+    </mat-card-header>
+
+    <mat-card-content>
+        <div class="grid-container">
+            <app-student-card [student]="student"></app-student-card>
+        </div>
+        
+    </mat-card-content>
+  </mat-card>
+</div>
+<div class="section-container">
+  <mat-card class="student-detail-card has-edit-icon">
+    <!-- Edit / Close icon in the top-right -->
+    <button
+      mat-icon-button
+      color="accent"
+      class="edit-icon"
+      (click)="toggleEditBasic()"
+    >
+      <mat-icon>{{ isEditingBasic ? 'close' : 'edit' }}</mat-icon>
+    </button>
+
+    <mat-card-header>
+      <div mat-card-avatar class="student-avatar">
+        <mat-icon>article_person</mat-icon>
+      </div>
+      <mat-card-title>Basic Info</mat-card-title>
+      <mat-card-subtitle>
+        View and manage student basic info details
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+       <form #form="ngForm" (ngSubmit)="onSubmitBasic(form)" enctype="multipart/form-data">
+
+    <div class="row">
+      <mat-form-field appearance="fill">
+        <mat-label>First Name</mat-label>
+        <input matInput name="firstName" [(ngModel)]="student.firstName" required  [disabled]="!isEditingBasic">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Last Name</mat-label>
+        <input matInput name="lastName" [(ngModel)]="student.lastName" required [disabled]="!isEditingBasic">
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field appearance="fill">
+        <mat-label>Bethel ID Number</mat-label>
+        <input matInput name="idNumber" [(ngModel)]="student.idNumber" required [disabled]="!isEditingBasic">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Program</mat-label>
+        <mat-select name="program" [(ngModel)]="student.program" required [disabled]="!isEditingBasic">
+          <mat-option value="65 Day">65 Day</mat-option>
+          <mat-option value="30 Day">30 Day</mat-option>
+          <mat-option value="VSP">VSP</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field appearance="fill">
+        <mat-label>Counselor</mat-label>
+        <mat-select name="counselor" [(ngModel)]="student.counselor" required [disabled]="!isEditingBasic">
+          <mat-option value="Pastor Frye">Pastor Frye</mat-option>
+          <mat-option value="Pastor Starnes">Pastor Starnes</mat-option>
+          <mat-option value="Pastor Benfield">Pastor Benfield</mat-option>
+          <mat-option value="Pastor Alphin">Pastor Alphin</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Day In</mat-label>
+        <input matInput [matDatepicker]="picker" name="dayin" [(ngModel)]="student.dayin" required [disabled]="!isEditingBasic">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Day Out</mat-label>
+        <input matInput [matDatepicker]="picker2" name="dayout" [(ngModel)]="student.dayout" required [disabled]="!isEditingBasic">
+        <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+        <mat-datepicker #picker2></mat-datepicker>
+      </mat-form-field>
+    </div>
+    <!-- Boolean Fields -->
+    <div class="boolean-grid">
+      <mat-checkbox [(ngModel)]="student.isFelon" name="felon" [disabled]="!isEditingBasic">Felon</mat-checkbox>
+      <mat-checkbox [(ngModel)]="student.onProbation" name="probation" [disabled]="!isEditingBasic">On Probation</mat-checkbox>
+      <mat-checkbox [(ngModel)]="student.usesNicotine" name="nicotine" [disabled]="!isEditingBasic">Uses Nicotine</mat-checkbox>
+      <mat-checkbox [(ngModel)]="student.hasDriverLicense" name="license" [disabled]="!isEditingBasic">Driver License</mat-checkbox>
+      <mat-checkbox [(ngModel)]="student.foodAllergies" name="foodAllergies" [disabled]="!isEditingBasic">Food Allergies</mat-checkbox>
+      <mat-checkbox [(ngModel)]="student.beeAllergies" name="beeAllergies" [disabled]="!isEditingBasic">Bee Allergies</mat-checkbox>
+    </div>
+
+    <button mat-raised-button color="primary" [disabled]="!isEditingBasic">Submit Changes</button>
+
+  </form>
+        
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<div class="section-container">
+  <mat-card class="student-detail-card has-edit-icon">
+    <!-- Edit / Close icon in the top-right -->
+    <button
+      mat-icon-button
+      color="accent"
+      class="edit-icon"
+      (click)="toggleEditMedical()"
+    >
+      <mat-icon>{{ isEditingMedical ? 'close' : 'edit' }}</mat-icon>
+    </button>
+
+    <mat-card-header>
+      <div mat-card-avatar class="student-avatar">
+        <mat-icon>article_person</mat-icon>
+      </div>
+      <mat-card-title>Medical Info</mat-card-title>
+      <mat-card-subtitle>
+        View and manage student medical info details
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+     
+    </mat-card-content>
+  </mat-card>
+</div>

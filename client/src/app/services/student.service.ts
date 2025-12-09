@@ -16,4 +16,10 @@ export class StudentService {
     getStudents(): Observable<Student[]> {
         return this.http.get<Student[]>(`${this.api}-with-rooms`, {withCredentials: true});
     }
+    getStudentById(id: number): Observable<Student> {
+        return this.http.get<Student>(`${this.api}/${id}`, {withCredentials: true});
+    }
+    updateStudent(id: number, studentData: Partial<Student>): Observable<any> {
+        return this.http.put(`${this.api}/${id}`, studentData, {withCredentials: true});
+    }
 }
