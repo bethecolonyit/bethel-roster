@@ -10,6 +10,9 @@ import { StudentService } from '../../services/student.service';
 import { Student } from '../../models/student';
 import { StudentList } from './student-list/student-list';
 import { StudentCard } from './student-card/student-card';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-students',
@@ -27,13 +30,18 @@ import { StudentCard } from './student-card/student-card';
     MatTooltipModule,
     CreateStudentComponent,
     StudentList,
-    StudentCard
+    StudentCard,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule
   ]
 })
 export class Students implements OnInit {
 
   students: Student[] = [];
   error: string | null = null;
+  filteredStudents: Student[] = [];
+  searchTerm: string = '';
 
   showCreateForm = false;
   viewMode: 'list' | 'grid' = 'grid';
@@ -46,10 +54,43 @@ export class Students implements OnInit {
 
   loadStudents() {
     this.studentService.getStudents().subscribe({
-      next: (data) => { this.students = data; this.cdr.detectChanges(); },
+      next: (data) => { 
+        this.students = data; 
+        this.filteredStudents = [...this.students];
+        this.cdr.detectChanges(); 
+      },
       error: () => this.error = 'Error loading students'
     });
   }
+
+ onSearchTermChange(term: string) {
+    this.searchTerm = term;
+    this.applyFilter();
+  }
+
+  private applyFilter() {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      this.filteredStudents = [...this.students];
+      return;
+    }
+
+    this.filteredStudents = this.students.filter((s) => {
+      const first = (s.firstName || '').toLowerCase();
+      const last = (s.lastName || '').toLowerCase();
+      const fullName = `${first} ${last}`.trim();
+      const idNumber = (s.idNumber || '').toLowerCase();
+
+      return (
+        first.includes(term) ||
+        last.includes(term) ||
+        fullName.includes(term) ||
+        idNumber.includes(term)
+      );
+    });
+  }
+
 onStudentCreated() {
   this.loadStudents();  
   this.showCreateForm = false;

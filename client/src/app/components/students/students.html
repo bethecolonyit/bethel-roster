@@ -7,7 +7,7 @@
 
       <mat-card-title>Student Dashboard</mat-card-title>
       <mat-card-subtitle>View and manage enrolled students</mat-card-subtitle>
-
+      
       <span class="flex-spacer"></span>
 
       <!-- View toggle button -->
@@ -32,6 +32,19 @@
       >
         <mat-icon>{{ showCreateForm ? 'close' : 'add' }}</mat-icon>
       </button>
+      <!-- Search box -->
+      <mat-form-field
+        class="students-search"
+        appearance="outline"
+      >
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          placeholder="Search by name or file #"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchTermChange($event)"
+        />
+      </mat-form-field>
     </mat-card-header>
 
     <mat-card-content>
@@ -48,9 +61,9 @@
       </div>
 
       <!-- GRID VIEW -->
-      <div class="grid-container" *ngIf="viewMode === 'grid' && students.length > 0">
+      <div class="grid-container" *ngIf="viewMode === 'grid' && filteredStudents.length > 0">
         <app-student-card
-          *ngFor="let student of students"
+          *ngFor="let student of filteredStudents"
           [student]="student"
           (viewDetails)="onViewStudentDetails($event)"
           (createNote)="onCreateStudentNote($event)"
@@ -61,7 +74,7 @@
       <!-- LIST VIEW -->
       <app-student-list
         *ngIf="viewMode === 'list'"
-        [students]="students"
+        [students]="filteredStudents"
         [viewMode]="viewMode"
       ></app-student-list>
 
