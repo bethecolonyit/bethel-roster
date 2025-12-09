@@ -18,7 +18,20 @@ import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-view-student',
-  imports: [StudentCard, MatIcon, MatCardModule, CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatDatepickerModule, MatCheckboxModule, MatSelectModule, MatMenuModule, MatButtonModule],
+  imports: [
+    StudentCard, 
+    MatIcon, 
+    MatCardModule, 
+    CommonModule, 
+    FormsModule, 
+    MatFormFieldModule, 
+    MatInputModule, 
+    MatDatepickerModule, 
+    MatCheckboxModule, 
+    MatSelectModule, 
+    MatMenuModule, 
+    MatButtonModule
+  ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './view-student.html',
   styleUrl: './view-student.scss',
@@ -69,12 +82,14 @@ export class ViewStudent {
   this.studentService.updateStudent(this.student.id!, payload)
     .subscribe({
       next: () => {
-        // handle success (snackbar, turn off editing, etc.)
         this.isEditingBasic = false;
+        console.log(`isEditingBasic set to ${this.isEditingBasic}`);
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Update failed', err);
       }
+      
     });
 }
   toggleEditBasic() {

@@ -1,6 +1,7 @@
 // controllers/studentController.js
 const fs = require('fs');
 const { ensureAuthenticated, ensureOffice } = require('../middleware/auth');
+const { json } = require('stream/consumers');
 
 function registerStudentRoutes(app, db, upload) {
   // GET /students
@@ -255,7 +256,7 @@ app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
       return res.status(404).send('Student not found');
     }
 
-    res.send('success');
+    res.status(200).json({ success: true });
   } catch (err) {
     console.error('Database update error', err);
     res.status(500).send('Database update error');
