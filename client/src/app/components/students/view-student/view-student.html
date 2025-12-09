@@ -1,8 +1,35 @@
 <div class="section-container">
+    
   <mat-card class="student-detail-card">
+    <div class="card-menu">
+            <button
+            mat-icon-button
+            class="menu-button"
+            [matMenuTriggerFor]="cardMenu"
+            (click)="$event.stopPropagation()"
+            aria-label="Student options"
+            >
+            <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #cardMenu="matMenu">
+            <button mat-menu-item (click)="emptyFunction()">
+                <mat-icon>visibility</mat-icon>
+                <span>Reassign Room</span>
+            </button>
+            <button mat-menu-item (click)="emptyFunction()">
+                <mat-icon>note_add</mat-icon>
+                <span>Create note</span>
+            </button>
+            <button mat-menu-item (click)="emptyFunction()">
+                <mat-icon>report</mat-icon>
+                <span>Create write-up</span>
+            </button>
+            </mat-menu>
+        </div>
     <mat-card-header>
-      <div mat-card-avatar class="student-avatar">
-        <mat-icon>article_person</mat-icon>
+      <div mat-card-avatar class="title-icon-container">
+        <mat-icon class="title-icon">assignment_ind</mat-icon>
       </div>
       <mat-card-title>Student Detail Page</mat-card-title>
       <mat-card-subtitle>View and manage student details</mat-card-subtitle>
@@ -11,7 +38,7 @@
 
     <mat-card-content>
         <div class="grid-container">
-            <app-student-card [student]="student"></app-student-card>
+            <app-student-card class="student-card" [student]="student" [menuHidden]="true"></app-student-card>
         </div>
         
     </mat-card-content>
@@ -30,8 +57,8 @@
     </button>
 
     <mat-card-header>
-      <div mat-card-avatar class="student-avatar">
-        <mat-icon>article_person</mat-icon>
+      <div mat-card-avatar class="title-icon-container">
+        <mat-icon class="title-icon">description</mat-icon>
       </div>
       <mat-card-title>Basic Info</mat-card-title>
       <mat-card-subtitle>
@@ -104,7 +131,7 @@
       <mat-checkbox [(ngModel)]="student.beeAllergies" name="beeAllergies" [disabled]="!isEditingBasic">Bee Allergies</mat-checkbox>
     </div>
 
-    <button mat-raised-button color="primary" [disabled]="!isEditingBasic">Submit Changes</button>
+    <button class="submit-button" mat-raised-button color="primary" [disabled]="!isEditingBasic">Submit Changes</button>
 
   </form>
         
@@ -125,8 +152,8 @@
     </button>
 
     <mat-card-header>
-      <div mat-card-avatar class="student-avatar">
-        <mat-icon>article_person</mat-icon>
+      <div mat-card-avatar class="title-icon-container">
+        <mat-icon class="title-icon">medical_services</mat-icon>
       </div>
       <mat-card-title>Medical Info</mat-card-title>
       <mat-card-subtitle>

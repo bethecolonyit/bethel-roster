@@ -1,6 +1,7 @@
 <div class="student-card">
       <div class="card-menu">
             <button
+            *ngIf="!menuHidden"
             mat-icon-button
             [matMenuTriggerFor]="cardMenu"
             (click)="$event.stopPropagation()"

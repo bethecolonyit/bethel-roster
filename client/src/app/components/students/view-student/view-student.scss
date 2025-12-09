@@ -7,7 +7,7 @@
 }
 .student-detail-card {
   width: 100%;
-  max-width: 960px;
+  max-width: 75%;
   border-radius: 18px;
 
   /* This makes it pop off the background in dark mode */
@@ -46,3 +46,38 @@
     opacity: 0.75;
 }
 }
+.student-card {
+  width: 100%;
+  max-width: 300px;
+}
+.card-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2; // above photo
+}
+.menu-button {
+  width: 40px;
+  height: 40px;
+  background-color: transparent;
+  border-radius: 25%;
+  border: none;
+   &:hover {
+    background-color: rgba(0, 0, 0, 0.1);   }
+}
+.title-icon-container {
+  background-color: var(--mat-sys-primary-container);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.title-icon {
+  font-size: fill-available;
+}
+.submit-button {
+  margin-top: 16px;
+}
+

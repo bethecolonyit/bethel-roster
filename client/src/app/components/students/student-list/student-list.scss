@@ -2,3 +2,18 @@
   text-align: left;
   padding-right: 2rem;
 }
+.view-button {
+  margin-right: 8px;
+  border: none;
+  border-radius: 100%;
+  background-color: transparent;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);   }
+}
+
+.student-row {
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);   }
+}

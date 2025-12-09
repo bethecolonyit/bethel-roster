@@ -12,7 +12,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let student of students">
+          <tr class="student-row" *ngFor="let student of students">
             <td>{{ student.lastName }}</td>
             <td>{{ student.firstName }}</td>
             <td>{{ student.idNumber }}</td>
@@ -21,8 +21,8 @@
             <td>{{ student.dayout | date }}</td>
 
             <td class="actions-col">
-              <button mat-icon-button color="primary" (click)="viewStudent(student)">
-                <mat-icon>visibility</mat-icon>
+              <button class="view-button" mat-icon-button color="primary" routerLink="/students/view/{{student.id}}" (click)="$event.stopPropagation()">
+                <mat-icon>edit</mat-icon>
               </button>
             </td>
           </tr>

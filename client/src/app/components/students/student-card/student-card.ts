@@ -16,6 +16,8 @@ import { RouterLink } from '@angular/router';
 })
 export class StudentCard {
   @Input()
+  menuHidden: boolean = false;
+  @Input()
   student!: Student;
 
    @Output() viewDetails = new EventEmitter<Student>();

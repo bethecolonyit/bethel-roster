@@ -13,10 +13,12 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { provideNativeDateAdapter } from '@angular/material/core';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-view-student',
-  imports: [StudentCard, MatIcon, MatCardModule, CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatDatepickerModule, MatCheckboxModule, MatSelectModule],
+  imports: [StudentCard, MatIcon, MatCardModule, CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatDatepickerModule, MatCheckboxModule, MatSelectModule, MatMenuModule, MatButtonModule],
   providers: [provideNativeDateAdapter()],
   templateUrl: './view-student.html',
   styleUrl: './view-student.scss',
@@ -81,5 +83,9 @@ export class ViewStudent {
   toggleEditMedical() {
   this.isEditingMedical = !this.isEditingMedical;
 }
+
+  emptyFunction() {
+    // Placeholder function
+  }
  
 }
