@@ -272,7 +272,7 @@ app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
       const stmt = db.prepare(`DELETE FROM students WHERE id = ?`);
       stmt.run(id);
 
-      const path = `./public/images/${idNumber}.jpg`;
+      const path = `./uploads/students/${idNumber}.jpg`;
 
       fs.unlink(path, err => {
         if (err) {
