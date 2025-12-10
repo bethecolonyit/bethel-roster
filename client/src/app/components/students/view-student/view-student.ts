@@ -15,6 +15,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-view-student',
@@ -47,7 +49,13 @@ export class ViewStudent {
 
 
 
-  constructor(private route: ActivatedRoute, private studentService: StudentService, private cdr: ChangeDetectorRef) {
+  constructor(
+    private route: ActivatedRoute, 
+    private studentService: StudentService, 
+    private cdr: ChangeDetectorRef, 
+    private snack: MatSnackBar,
+    private router: Router,
+  ) {
     this.student = {} as Student;
   }
 
@@ -103,19 +111,27 @@ export class ViewStudent {
     // Placeholder function
   }
 
-  onDeleteStudent(student: Student) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${student.firstName} ${student.lastName}?  This action cannot be undone.`
-    );
-    if (!confirmed) return;
-    this.studentService.deleteStudent(student.id!, student.idNumber).subscribe({
-    next: msg => {
-      console.log(msg); // "123 was successfully deleted"
-      // refresh list, show snackbar, etc.
+onDeleteStudent(student: Student) {
+  const confirmed = window.confirm(
+    `Are you sure you want to delete ${student.firstName} ${student.lastName}?  This action cannot be undone.`
+  );
+  if (!confirmed) return;
+
+  this.studentService.deleteStudent(student.id!, student.idNumber).subscribe({
+    next: () => {
+      // Navigate first
+      this.router.navigate(['/students']).then(() => {
+        // Show snack AFTER navigation completes
+        this.snack.open('Student Successfully Deleted', 'Close', {
+          duration: 3000
+        });
+      });
     },
-    error: err => {
+    error: (err) => {
       console.error('Delete failed', err);
-      // show error snackbar, etc.
+      this.snack.open('Failed to Delete Student', 'Close', {
+        duration: 3000
+      });
     }
   });
 }
