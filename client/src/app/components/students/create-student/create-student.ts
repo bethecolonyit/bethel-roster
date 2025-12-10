@@ -57,9 +57,33 @@ export class CreateStudentComponent {
     private cdr: ChangeDetectorRef
   ) {}
 
-  onFileSelected(event: any) {
-    this.selectedFile = event.target.files[0] ?? null;
+onFileSelected(event: any) {
+  const file: File = event.target.files[0];
+
+  if (!file) {
+    this.selectedFile = null;
+    return;
   }
+
+  // Ensure EXTENSION is exactly ".jpg"
+  const fileName = file.name.toLowerCase();
+  const hasJpgExtension = fileName.endsWith('.jpg');
+
+  // Ensure MIME TYPE is correct for a jpg file
+  const isJpgMime = file.type === 'image/jpeg'; // JPG files use image/jpeg MIME
+
+  if (!hasJpgExtension || !isJpgMime) {
+    this.selectedFile = null;
+    this.snack.open('Only .jpg files are allowed.', 'Close', { duration: 3000 });
+
+    // Reset the file input
+    event.target.value = null;
+
+    return;
+  }
+
+  this.selectedFile = file;
+}
 
 onSubmit(form: NgForm) {
   const formData = new FormData();
@@ -71,6 +95,12 @@ onSubmit(form: NgForm) {
   } else {
     this.snack.open('Please upload a student photo', 'Close', { duration: 3000 });
     return;
+  }
+  if (!this.selectedFile || 
+    !this.selectedFile.name.toLowerCase().endsWith('.jpg') ||
+    this.selectedFile.type !== 'image/jpeg') {
+  this.snack.open('Invalid file. Only .jpg files are accepted.', 'Close', { duration: 3000 });
+  return;
   }
 
   this.studentService.createStudent(formData).subscribe({
