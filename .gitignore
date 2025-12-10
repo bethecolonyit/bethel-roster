@@ -24,6 +24,4 @@ Thumbs.db
 .idea/
 
 # Database files
-./server/mydb.sqlite
 server/mydb.sqlite
-../server/mydb.sqlite
