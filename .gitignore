@@ -22,3 +22,8 @@
 Thumbs.db
 .vscode/
 .idea/
+
+# Database files
+**/.sqlite
+**/.sqlite.*
+
