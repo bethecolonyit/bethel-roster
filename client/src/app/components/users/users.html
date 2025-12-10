@@ -68,8 +68,14 @@
           <mat-form-field appearance="outline" class="inline-field">
             <mat-label>Role</mat-label>
             <mat-select [(ngModel)]="editModel.role" name="editRole-{{ user.id }}">
-              <mat-option value="user">User</mat-option>
-              <mat-option value="admin">Admin</mat-option>
+                <mat-option value="user">User</mat-option>
+                <mat-option value="admin">Admin</mat-option>
+                <mat-option value="counselor">Counselor</mat-option>
+                <mat-option value="project_manager">Project Manager</mat-option>
+                <mat-option value="office_student">Office Student</mat-option>
+                <mat-option value="vsp">VSP</mat-option>
+                <mat-option value="ministry">Ministry</mat-option>
+                <mat-option value="student">Student</mat-option>
             </mat-select>
           </mat-form-field>
         </ng-container>
@@ -233,6 +239,12 @@
               >
                 <mat-option value="user">User</mat-option>
                 <mat-option value="admin">Admin</mat-option>
+                <mat-option value="counselor">Counselor</mat-option>
+                <mat-option value="project_manager">Project Manager</mat-option>
+                <mat-option value="office_student">Office Student</mat-option>
+                <mat-option value="vsp">VSP</mat-option>
+                <mat-option value="ministry">Ministry</mat-option>
+                <mat-option value="student">Student</mat-option>
               </mat-select>
             </mat-form-field>
           </div>
