@@ -15,6 +15,16 @@ app.get('/students', ensureAuthenticated, (req, res) => {
     res.status(500).json({ error: 'Database read error' });
   }
 });
+app.get('/students/simple', ensureAuthenticated, (req, res) => {
+  try {
+    const stmt = db.prepare(`SELECT id, firstName, lastName FROM students`);
+    const students = stmt.all();
+    res.json(students);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database read error' });
+  }
+});
 app.get('/students/:id', ensureAuthenticated, (req, res) => {
    try {
     const { id } = req.params;
@@ -65,16 +75,7 @@ app.get('/students/:id', ensureAuthenticated, (req, res) => {
   }
 });
 
-app.get('/students/simple', ensureAuthenticated, (req, res) => {
-  try {
-    const stmt = db.prepare(`SELECT id, firstName, lastName FROM students`);
-    const students = stmt.all();
-    res.json(students);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Database read error' });
-  }
-});
+
 
 // students.controller.js (or wherever your routes live)
 app.get('/students-with-rooms', (req, res) => {
