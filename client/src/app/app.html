@@ -16,43 +16,102 @@
     </mat-toolbar>
 
     <!-- NAV LINKS -->
-    <mat-nav-list>
-      <a
-        mat-list-item
-        routerLink="/dashboard"
-        routerLinkActive="active-link"
-        [routerLinkActiveOptions]="{ exact: true }"
-      >
-        <mat-icon matListItemIcon>dashboard</mat-icon>
-        <span class="menu-label">Dashboard</span>
-      </a>
-      <a
-        mat-list-item
-        routerLink="/students"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>groups</mat-icon>
-        <span class="menu-label">Students</span>
-      </a>
-      <a
-        mat-list-item
-        routerLink="/residential"
-        routerLinkActive="active-link"
-        *ngIf="auth.isAdmin"
-      >
-        <mat-icon matListItemIcon>apartment</mat-icon>
-        <span class="menu-label">Residential</span>
-      </a>
-      <a
-        mat-list-item
-        routerLink="/users"
-        routerLinkActive="active-link"
-        *ngIf="auth.isAdmin"
-      >
-        <mat-icon matListItemIcon>badge</mat-icon>
-        <span class="menu-label">Users</span>
-      </a>
-    </mat-nav-list>
+<mat-nav-list>
+  <a
+    mat-list-item
+    routerLink="/dashboard"
+    routerLinkActive="active-link"
+    [routerLinkActiveOptions]="{ exact: true }"
+  >
+    <mat-icon matListItemIcon>dashboard</mat-icon>
+    <span class="menu-label">Dashboard</span>
+  </a>
+
+  <a
+    mat-list-item
+    routerLink="/students"
+    routerLinkActive="active-link"
+  >
+    <mat-icon matListItemIcon>groups</mat-icon>
+    <span class="menu-label">Students</span>
+  </a>
+
+  <a
+    mat-list-item
+    routerLink="/residential"
+    routerLinkActive="active-link"
+    *ngIf="auth.isAdmin"
+  >
+    <mat-icon matListItemIcon>apartment</mat-icon>
+    <span class="menu-label">Residential</span>
+  </a>
+
+  <a
+    mat-list-item
+    routerLink="/users"
+    routerLinkActive="active-link"
+    *ngIf="auth.isAdmin"
+  >
+    <mat-icon matListItemIcon>badge</mat-icon>
+    <span class="menu-label">Users</span>
+  </a>
+
+  <!-- PARENT: Departments -->
+  <button
+    class="nav-button"
+    mat-list-item
+    type="button"
+    (click)="departmentsOpen = !departmentsOpen"
+    *ngIf="auth.isAdmin"
+    [class.expanded]="departmentsOpen"
+  >
+    <mat-icon matListItemIcon>business</mat-icon>
+    <span class="menu-label">Departments</span>
+
+    <!-- spacer to push expand icon to the right -->
+    <span class="menu-spacer"></span>
+
+    <mat-icon class="expand-icon">
+      {{ departmentsOpen ? 'expand_less' : 'expand_more' }}
+    </mat-icon>
+  </button>
+
+  <!-- CHILD LINKS: only visible when open -->
+  <div *ngIf="departmentsOpen" class="sub-nav">
+    <a
+      mat-list-item
+      routerLink="/departments/c-coord-dashboard"
+      routerLinkActive="active-link"
+    >
+      <span class="sub-label">Counseling Coordinator</span>
+    </a>
+
+    <a
+      mat-list-item
+      routerLink="/departments/counseling"
+      routerLinkActive="active-link"
+    >
+      <span class="sub-label">Counseling</span>
+    </a>
+
+    <a
+      mat-list-item
+      routerLink="/departments/office"
+      routerLinkActive="active-link"
+    >
+      <span class="sub-label">Office</span>
+    </a>
+
+    <a
+      mat-list-item
+      routerLink="/departments/project-office"
+      routerLinkActive="active-link"
+    >
+      <span class="sub-label">Project Office</span>
+    </a>
+  </div>
+</mat-nav-list>
+
   </mat-sidenav>
 
   <!-- MAIN CONTENT -->

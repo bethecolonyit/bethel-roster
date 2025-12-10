@@ -107,3 +107,35 @@ mat-sidenav-content {
   color: var(--mat-sys-on-surface);
   transition: background-color 250ms ease, color 250ms ease;
 }
+.menu-label {
+  font-size: 14px;
+}
+
+.expand-icon {
+  /* Reset anything we might have set before */
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+
+  /* Very small downward nudge */
+  transform: translateY(4px); // try 1px first
+
+  font-size: 20px;
+}
+
+.sub-nav {
+  padding-left: 32px; // indent child links under Departments
+}
+
+.sub-nav .mat-mdc-list-item {
+  height: 36px; // slightly smaller than main items if you prefer
+}
+
+.sub-label {
+  font-size: 13px;
+}
+.nav-button {
+  width: 100%;
+  text-align: left;
+  border: none;
+}
