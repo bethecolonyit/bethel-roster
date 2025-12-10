@@ -49,6 +49,7 @@ export class App {
   isHandset$!: Observable<boolean>;
   isCollapsed = false;
   isDarkMode = false;
+  departmentsOpen = false;
 
   constructor(
     private breakpointObserver: BreakpointObserver,
