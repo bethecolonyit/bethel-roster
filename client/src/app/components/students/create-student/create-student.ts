@@ -94,10 +94,17 @@ onDayInChange() {
   if (this.student.dayin) {
     const inDate = new Date(this.student.dayin);
     const outDate = new Date(inDate);
+    if (this.student.program === '65-day') {
     outDate.setDate(outDate.getDate() + 65);
     this.student.dayout = outDate.toISOString();
+    } else if (this.student.program === '30-day') {
+    outDate.setDate(outDate.getDate() + 30);
+    this.student.dayout = outDate.toISOString();
+    }
+    else {
+      throw new Error('Invalid program type');
   }
-}
+}}
 
 
  resetForm(form?: NgForm) {
