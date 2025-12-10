@@ -5,7 +5,6 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -59,6 +58,36 @@ export class Residential implements OnInit {
   buildings: ResidentialBuilding[] = [];
   loading = false;
   error: string | null = null;
+
+  // -------------------------
+  // ACCORDION EXPANSION STATE
+  // -------------------------
+  private expandedBuildingIds = new Set<number>();
+  private expandedRoomIds = new Set<number>();
+
+  isBuildingExpanded(id: number): boolean {
+    return this.expandedBuildingIds.has(id);
+  }
+
+  onBuildingOpened(id: number): void {
+    this.expandedBuildingIds.add(id);
+  }
+
+  onBuildingClosed(id: number): void {
+    this.expandedBuildingIds.delete(id);
+  }
+
+  isRoomExpanded(id: number): boolean {
+    return this.expandedRoomIds.has(id);
+  }
+
+  onRoomOpened(id: number): void {
+    this.expandedRoomIds.add(id);
+  }
+
+  onRoomClosed(id: number): void {
+    this.expandedRoomIds.delete(id);
+  }
 
   // -------------------------
   // CREATE BUILDING
@@ -144,7 +173,7 @@ export class Residential implements OnInit {
     this.loading = true;
     this.error = null;
     this.cdr.detectChanges();
-    console.log('Loading residential structure...');
+    console.log('Loading residential structure.');
 
     this.residentialService.getStructure().subscribe({
       next: (buildings) => {
@@ -468,6 +497,9 @@ export class Residential implements OnInit {
     );
     if (!confirmed) return;
 
+    // Remove from expanded set so we do not track a deleted building
+    this.expandedBuildingIds.delete(building.id);
+
     this.residentialService.deleteBuilding(building.id).subscribe({
       next: () => {
         this.loadStructure();
@@ -603,6 +635,9 @@ export class Residential implements OnInit {
     );
     if (!confirmed) return;
 
+    // Remove from expanded room set
+    this.expandedRoomIds.delete(room.id);
+
     this.residentialService.deleteRoom(room.id).subscribe({
       next: () => {
         this.loadStructure();
@@ -673,7 +708,6 @@ export class Residential implements OnInit {
     this.bedFormError = null;
 
     if (this.bedFormMode === 'create') {
-      // Adjust payload/signature to your backend
       this.residentialService
         .createBed({
           buildingId: building.id,

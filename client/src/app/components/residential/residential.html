@@ -8,7 +8,7 @@
       <mat-card-subtitle>
         Buildings • Rooms • Beds • Occupancy
       </mat-card-subtitle>
-       <!-- spacer to push the icon to the right -->
+      <!-- spacer to push the icon to the right -->
       <span class="header-spacer"></span>
 
       <!--  Add building button -->
@@ -21,6 +21,7 @@
         <mat-icon>add</mat-icon>
       </button>
     </mat-card-header>
+
     <!-- Create building form -->
     <div *ngIf="showCreateBuilding" class="create-building-panel">
       <form
@@ -77,7 +78,7 @@
 
     <mat-card-content>
       <div *ngIf="loading">
-        Loading residential structure...
+        Loading residential structure.
       </div>
 
       <div *ngIf="error" class="error">
@@ -100,6 +101,9 @@
             *ngFor="let building of buildings"
             class="building-panel"
             #buildingPanel="matExpansionPanel"
+            [expanded]="isBuildingExpanded(building.id)"
+            (opened)="onBuildingOpened(building.id)"
+            (closed)="onBuildingClosed(building.id)"
           >
             <mat-expansion-panel-header>
               <mat-panel-title>
@@ -129,10 +133,11 @@
                 [disabled]="building.occupiedBeds > 0"
                 (click)="$event.stopPropagation(); onDeleteBuilding(building)"
               >
-      <mat-icon>delete</mat-icon>
-    </button>
+                <mat-icon>delete</mat-icon>
+              </button>
             </mat-expansion-panel-header>
-             <!-- 🔹 Shared Room form (create + edit) now at BUILDING level -->
+
+            <!-- 🔹 Shared Room form (create + edit) now at BUILDING level -->
             <div
               *ngIf="roomFormBuildingId === building.id"
               class="room-form-panel"
@@ -188,6 +193,7 @@
                 </div>
               </form>
             </div>
+
             <!-- ROOMS -->
             <div *ngIf="building.rooms.length === 0" class="empty-msg">
               No rooms defined for this building.
@@ -202,6 +208,9 @@
                 *ngFor="let room of building.rooms"
                 class="room-panel"
                 #roomPanel="matExpansionPanel"
+                [expanded]="isRoomExpanded(room.id)"
+                (opened)="onRoomOpened(room.id)"
+                (closed)="onRoomClosed(room.id)"
               >
                 <mat-expansion-panel-header>
                   <mat-panel-title>
@@ -211,40 +220,41 @@
                     {{ room.occupiedBeds }}/{{ room.totalBeds }} occupied •
                     {{ room.availableBeds }} available
                   </mat-panel-description>
-                    <span class="header-spacer"></span>
-                <!-- EDIT (collapsed only) -->
-                <button
-                  *ngIf="!roomPanel.expanded"
-                  mat-icon-button
-                  matTooltip="Edit room"
-                  (click)="openEditRoom(building, room)"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
+                  <span class="header-spacer"></span>
 
-                <!-- DELETE (collapsed only) -->
-                <button
-                  *ngIf="!roomPanel.expanded"
-                  mat-icon-button
-                  color="warn"
-                  matTooltip="Delete room"
-                  [disabled]="room.occupiedBeds > 0"
-                  (click)="$event.stopPropagation(); onDeleteRoom(building, room)"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
+                  <!-- EDIT (collapsed only) -->
+                  <button
+                    *ngIf="!roomPanel.expanded"
+                    mat-icon-button
+                    matTooltip="Edit room"
+                    (click)="openEditRoom(building, room)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
 
-                <!-- ADD room (expanded only) –> opens same form in create mode -->
-                <button
-                  *ngIf="roomPanel.expanded"
-                  mat-icon-button
-                  matTooltip="Add bed"
-                  (click)="openCreateBed(room, $event)"
-                >
-                  <mat-icon>add</mat-icon>
-                </button>
+                  <!-- DELETE (collapsed only) -->
+                  <button
+                    *ngIf="!roomPanel.expanded"
+                    mat-icon-button
+                    color="warn"
+                    matTooltip="Delete room"
+                    [disabled]="room.occupiedBeds > 0"
+                    (click)="$event.stopPropagation(); onDeleteRoom(building, room)"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
 
+                  <!-- ADD bed (expanded only) -->
+                  <button
+                    *ngIf="roomPanel.expanded"
+                    mat-icon-button
+                    matTooltip="Add bed"
+                    (click)="openCreateBed(room, $event)"
+                  >
+                    <mat-icon>add</mat-icon>
+                  </button>
                 </mat-expansion-panel-header>
+
                 <!-- 🔹 Shared Bed form (create + edit) at ROOM level -->
                 <div *ngIf="bedFormRoomId === room.id" class="bed-form-panel">
                   <form
@@ -303,130 +313,125 @@
 
                 <!-- BEDS -->
                 <div class="beds-list">
-                  ...
+                  <div class="bed-row" *ngFor="let bed of room.beds">
+                    <div class="bed-row-main">
+                      <div class="bed-row-header">
+                        <div class="bed-header-left">
+                          <mat-icon class="bed-icon">
+                            {{ bed.occupancy ? 'person' : 'single_bed' }}
+                          </mat-icon>
+
+                          <div class="bed-title">
+                            Bed {{ bed.bedLetter }}
+                          </div>
+                        </div>
+
+                        <div class="bed-actions">
+                          <!-- Checkout button for occupied beds -->
+                          <button
+                            mat-icon-button
+                            color="warn"
+                            *ngIf="bed.occupancy"
+                            (click)="onCheckoutClick(building, room, bed, $event)"
+                            matTooltip="Checkout / unassign"
+                          >
+                            <mat-icon>logout</mat-icon>
+                          </button>
+
+                          <!-- Assign button for available beds -->
+                          <button
+                            mat-icon-button
+                            color="primary"
+                            *ngIf="!bed.occupancy"
+                            (click)="onAssignClick(building, room, bed, $event)"
+                            matTooltip="Assign student to this bed"
+                          >
+                            <mat-icon>person_add</mat-icon>
+                          </button>
+                          <button
+                            mat-icon-button
+                            color="warn"
+                            *ngIf="!bed.occupancy"
+                            (click)="onDeleteBed(building, room, bed, $event)"
+                            matTooltip="Delete bed"
+                          >
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="bed-row-body">
+                        <div
+                          class="bed-line"
+                          *ngIf="bed.occupancy && bed.occupancy.student"
+                        >
+                          {{ bed.occupancy.student.firstName }}
+                          {{ bed.occupancy.student.lastName }}
+                          <span class="since">
+                            • since {{ bed.occupancy.startDate | date: 'MMM d, y' }}
+                          </span>
+                        </div>
+
+                        <div class="bed-line" *ngIf="!bed.occupancy">
+                          <span class="available-label">Available</span>
+                        </div>
+
+                        <!-- Inline assign panel for THIS bed -->
+                        <div
+                          *ngIf="assigningContext && assigningContext.bedId === bed.id"
+                          class="assign-inline-panel"
+                        >
+                          <p class="assign-subtitle">
+                            Assigning to Room {{ room.roomNumber }} ({{ room.roomType }}) •
+                            Bed {{ bed.bedLetter }}
+                          </p>
+
+                          <div *ngIf="studentsLoading">
+                            Loading students.
+                          </div>
+
+                          <div *ngIf="!studentsLoading && studentsLoaded">
+                            <mat-form-field appearance="outline" class="assign-field">
+                              <mat-label>Search student</mat-label>
+                              <input
+                                type="text"
+                                matInput
+                                [formControl]="studentSearchControl"
+                                [matAutocomplete]="studentAuto"
+                              />
+                            </mat-form-field>
+
+                            <mat-autocomplete
+                              #studentAuto="matAutocomplete"
+                              (optionSelected)="onStudentSelected($event.option.value)"
+                            >
+                              <mat-option
+                                *ngFor="let s of filteredStudents"
+                                [value]="s"
+                              >
+                                {{ s.lastName }}, {{ s.firstName }} ({{ s.id }})
+                              </mat-option>
+                            </mat-autocomplete>
+
+                            <div class="assign-actions">
+                              <button
+                                mat-raised-button
+                                color="primary"
+                                (click)="confirmAssign()"
+                                [disabled]="!selectedStudent"
+                              >
+                                Assign
+                              </button>
+                              <button mat-button type="button" (click)="cancelAssign()">
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                <!-- BEDS -->
-<div class="beds-list">
-  <div class="bed-row" *ngFor="let bed of room.beds">
-    <div class="bed-row-main">
-      <div class="bed-row-header">
-        <div class="bed-header-left">
-          <mat-icon class="bed-icon">
-            {{ bed.occupancy ? 'person' : 'single_bed' }}
-          </mat-icon>
-
-          <div class="bed-title">
-            Bed {{ bed.bedLetter }}
-          </div>
-        </div>
-
-        <div class="bed-actions">
-          <!-- Checkout button for occupied beds -->
-          <button
-            mat-icon-button
-            color="warn"
-            *ngIf="bed.occupancy"
-            (click)="onCheckoutClick(building, room, bed, $event)"
-            matTooltip="Checkout / unassign"
-          >
-            <mat-icon>logout</mat-icon>
-          </button>
-
-          <!-- Assign button for available beds -->
-          <button
-            mat-icon-button
-            color="primary"
-            *ngIf="!bed.occupancy"
-            (click)="onAssignClick(building, room, bed, $event)"
-            matTooltip="Assign student to this bed"
-          >
-            <mat-icon>person_add</mat-icon>
-          </button>
-          <button
-            mat-icon-button
-            color="warn"
-            *ngIf="!bed.occupancy"
-            (click)="onDeleteBed(building, room, bed, $event)"
-            matTooltip="Delete bed"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
-      </div>
-
-      <div class="bed-row-body">
-        <div
-          class="bed-line"
-          *ngIf="bed.occupancy && bed.occupancy.student"
-        >
-          {{ bed.occupancy.student.firstName }}
-          {{ bed.occupancy.student.lastName }}
-          <span class="since">
-            • since {{ bed.occupancy.startDate | date: 'MMM d, y' }}
-          </span>
-        </div>
-
-        <div class="bed-line" *ngIf="!bed.occupancy">
-          <span class="available-label">Available</span>
-        </div>
-
-        <!-- Inline assign panel for THIS bed -->
-        <div
-          *ngIf="assigningContext && assigningContext.bedId === bed.id"
-          class="assign-inline-panel"
-        >
-          <p class="assign-subtitle">
-            Assigning to Room {{ room.roomNumber }} ({{ room.roomType }}) •
-            Bed {{ bed.bedLetter }}
-          </p>
-
-          <div *ngIf="studentsLoading">
-            Loading students.
-          </div>
-
-          <div *ngIf="!studentsLoading && studentsLoaded">
-            <mat-form-field appearance="outline" class="assign-field">
-              <mat-label>Search student</mat-label>
-              <input
-                type="text"
-                matInput
-                [formControl]="studentSearchControl"
-                [matAutocomplete]="studentAuto"
-              />
-            </mat-form-field>
-
-            <mat-autocomplete
-              #studentAuto="matAutocomplete"
-              (optionSelected)="onStudentSelected($event.option.value)"
-            >
-              <mat-option
-                *ngFor="let s of filteredStudents"
-                [value]="s"
-              >
-                {{ s.lastName }}, {{ s.firstName }} ({{ s.id }})
-              </mat-option>
-            </mat-autocomplete>
-
-            <div class="assign-actions">
-              <button
-                mat-raised-button
-                color="primary"
-                (click)="confirmAssign()"
-                [disabled]="!selectedStudent"
-              >
-                Assign
-              </button>
-              <button mat-button type="button" (click)="cancelAssign()">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
               </mat-expansion-panel>
             </mat-accordion>
           </mat-expansion-panel>
