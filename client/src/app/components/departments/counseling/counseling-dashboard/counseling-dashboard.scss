@@ -1,0 +1,77 @@
+.grid-container {
+  display: flex;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+.section-card {
+  width: 100%;
+  max-width: 75%;
+  border-radius: 18px;
+
+  /* This makes it pop off the background in dark mode */
+  background-color: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transition: background-color 200ms ease, color 200ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+.section-container {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card-detail.has-edit-icon {
+  position: relative;
+}
+
+.card-detail.has-edit-icon .edit-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+   top: 8px;
+  right: 8px;
+  font-size: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--mat-sys-primary); // uses theme color automatically
+  user-select: none;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.75;
+}
+}
+
+.card-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2; // above photo
+}
+.menu-button {
+  width: 40px;
+  height: 40px;
+  background-color: transparent;
+  border-radius: 25%;
+  border: none;
+   &:hover {
+    background-color: rgba(0, 0, 0, 0.1);   }
+}
+.title-icon-container {
+  background-color: var(--mat-sys-primary-container);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.title-icon {
+  font-size: fill-available;
+}
+

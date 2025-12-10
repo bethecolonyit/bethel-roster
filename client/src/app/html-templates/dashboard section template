@@ -15,19 +15,19 @@
             <mat-menu #cardMenu="matMenu">
             <button mat-menu-item (click)="emptyFunction()">
                 <mat-icon>visibility</mat-icon>
-                <span>Reassign Room</span>
+                <span>Link</span>
             </button>
             <button mat-menu-item (click)="emptyFunction()">
                 <mat-icon>note_add</mat-icon>
-                <span>Create note</span>
+                <span>Link</span>
             </button>
             <button mat-menu-item (click)="emptyFunction()">
                 <mat-icon>report</mat-icon>
-                <span>Create write-up</span>
+                <span>Link</span>
             </button>
              <button mat-menu-item (click)="emptyFunction()">
                 <mat-icon>delete</mat-icon>
-                <span>Delete Student</span>
+                <span>Link</span>
             </button>
             </mat-menu>
         </div>
@@ -35,8 +35,8 @@
       <div mat-card-avatar class="title-icon-container">
         <mat-icon class="title-icon">assignment_ind</mat-icon>
       </div>
-      <mat-card-title>Counseling Dashboard</mat-card-title>
-      <mat-card-subtitle></mat-card-subtitle>
+      <mat-card-title>TITLE</mat-card-title>
+      <mat-card-subtitle>Subtitle</mat-card-subtitle>
       <span class="flex-spacer"></span>
     </mat-card-header>
 
