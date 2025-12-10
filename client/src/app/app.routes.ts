@@ -7,6 +7,11 @@ import { UsersComponent } from './components/users/users';
 import { adminGuard } from './guards/admin-guard';           
 import { Residential } from './components/residential/residential';
 import { ViewStudent } from './components/students/view-student/view-student';
+import { CCoordDashboard } from './components/departments/c-coord/c-coord-dashboard/c-coord-dashboard';
+import { counselorGuard } from './guards/counselor-guard';
+import { ProjectOfficeDashboard } from './components/departments/project_office/project-office-dashboard/project-office-dashboard';
+import { OfficeDashboard } from './components/departments/office/office-dashboard/office-dashboard';
+import { CounselingDashboard } from './components/departments/counseling/counseling-dashboard/counseling-dashboard';
 
 export const appRoutes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -24,6 +29,11 @@ export const appRoutes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'students/view/:id',
+    component: ViewStudent,
+    canActivate: [authGuard],
+  },
+  {
     path: 'users',
     component: UsersComponent,
     canActivate: [adminGuard],   // only admins
@@ -34,9 +44,24 @@ export const appRoutes: Routes = [
     canActivate: [adminGuard],  
   },
   {
-    path: 'students/view/:id',
-    component: ViewStudent,
-    canActivate: [authGuard],
+    path: 'departments/c-coord-dashboard',
+    component: CCoordDashboard,
+    canActivate: [counselorGuard],
+  },
+  {
+    path: 'departments/counseling',
+    component: CounselingDashboard,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'departments/project-office',
+    component: ProjectOfficeDashboard,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'departments/office',
+    component: OfficeDashboard,
+    canActivate: [adminGuard],
   },
 
   { path: '**', redirectTo: 'login' },
