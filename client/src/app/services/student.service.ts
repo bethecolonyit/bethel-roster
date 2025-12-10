@@ -22,4 +22,12 @@ export class StudentService {
     updateStudent(id: number, studentData: Partial<Student>): Observable<any> {
         return this.http.put(`${this.api}/${id}`, studentData, {withCredentials: true});
     }
+    deleteStudent(id: number, idNumber: string): Observable<string> {
+       
+        return this.http.delete(this.api, {
+          body: { id, idNumber },
+          responseType: 'text', // backend sends plain text (e.g. "5 was successfully deleted")
+          withCredentials: true
+        });
+      }
 }

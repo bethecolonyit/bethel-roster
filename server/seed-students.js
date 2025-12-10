@@ -1,106 +1,114 @@
-// seed-students.js
-const Database = require("better-sqlite3");
-const db = new Database("./mydb.sqlite");
 
-// -----------------------------
-// Utility functions
-// -----------------------------
-function randomBoolInt() {
-  // SQLite prefers numbers for BOOLEAN fields (0/1)
-  return Math.random() < 0.5 ? 1 : 0;
+
+const fs = require('fs');
+const path = require('path');
+const db = require('./database/db'); // your existing better-sqlite3 db setup
+
+// ---- Helpers to keep date math stable ----
+
+/**
+ * Takes a "YYYY-MM-DD" string and returns an ISO string in UTC.
+ * e.g. "2025-11-10" -> "2025-11-10T00:00:00.000Z"
+ */
+function toISOFromYMD(ymd) {
+  if (!ymd) return null;
+  const [year, month, day] = ymd.split('-').map(Number);
+  const dt = new Date(Date.UTC(year, month - 1, day));
+  return dt.toISOString();
 }
 
-function randomDate(start, end) {
-  const date = new Date(
-    start.getTime() + Math.random() * (end.getTime() - start.getTime())
-  );
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
+/**
+ * Takes a "YYYY-MM-DD" string and returns an ISO string
+ * that is `daysToAdd` days later.
+ */
+function addDaysISO(ymd, daysToAdd) {
+  if (!ymd) return null;
+  const [year, month, day] = ymd.split('-').map(Number);
+  const dt = new Date(Date.UTC(year, month - 1, day));
+  dt.setUTCDate(dt.getUTCDate() + daysToAdd);
+  return dt.toISOString();
 }
 
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+// ---- Load students.json ----
 
-// -----------------------------
-// Seed Data
-// -----------------------------
-const firstNames = [
-  "John", "Michael", "David", "James", "Daniel", "Chris", "Robert", "Joseph",
-  "Anthony", "Matthew", "Andrew", "Joshua", "Ethan", "Logan", "Noah", "Caleb",
-  "Ryan", "Alex", "Tyler", "Zachary"
-];
+const studentsPath = path.join(__dirname, 'students.json');
+const raw = fs.readFileSync(studentsPath, 'utf8');
+const students = JSON.parse(raw);
 
-const lastNames = [
-  "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis",
-  "Garcia", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez",
-  "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"
-];
+console.log(`Loaded ${students.length} students from students.json`);
 
-const counselors = [
-  "Pastor Frye", "Pastor Starnes", "Pastor Benfield", "Pastor Alphin"
-];
+// ---- Prepare INSERT statement ----
+// Schema (from db.js):
+//   firstName, lastName, idNumber, counselor, program,
+//   dayin, dayout,
+//   isFelon, onProbation, usesNicotine, hasDriverLicense,
+//   foodAllergies, beeAllergies
 
-const programs = [
-  "65 Day", "30 Day", "VSP"
-];
-
-// -----------------------------
-// Create Table
-// -----------------------------
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS students (
-    id INTEGER PRIMARY KEY,
-    firstName TEXT,
-    lastName TEXT,
-    idNumber TEXT,
-    counselor TEXT,
-    program TEXT,
-    dayin DATE,
-    isFelon BOOLEAN,
-    onProbation BOOLEAN,
-    usesNicotine BOOLEAN,
-    hasDriverLicense BOOLEAN,
-    foodAllergies BOOLEAN,
-    beeAllergies BOOLEAN
-  )
-`).run();
-
-// -----------------------------
-// Clear existing data
-// -----------------------------
-db.prepare("DELETE FROM students").run();
-
-// -----------------------------
-// Insert Students
-// -----------------------------
-const insert = db.prepare(`
+const insertStmt = db.prepare(`
   INSERT INTO students (
-    firstName, lastName, idNumber, counselor, program, dayin,
-    isFelon, onProbation, usesNicotine, hasDriverLicense,
-    foodAllergies, beeAllergies
+    firstName,
+    lastName,
+    idNumber,
+    counselor,
+    program,
+    dayin,
+    dayout,
+    isFelon,
+    onProbation,
+    usesNicotine,
+    hasDriverLicense,
+    foodAllergies,
+    beeAllergies
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
-for (let i = 1; i <= 40; i++) {
-  const first = pickRandom(firstNames);
-  const last = pickRandom(lastNames);
+// Optional: uncomment this if you want to clear existing students first
+// console.log('Clearing existing students table...');
+// db.prepare('DELETE FROM students').run();
 
-  insert.run(
-    first,
-    last,
-    `STU-${1000 + i}`,                                // idNumber
-    pickRandom(counselors),
-    pickRandom(programs),
-    randomDate(new Date(2023, 0, 1), new Date()),     // dayin
-    randomBoolInt(),                                  // isFelon
-    randomBoolInt(),                                  // onProbation
-    randomBoolInt(),                                  // usesNicotine
-    randomBoolInt(),                                  // hasDriverLicense
-    randomBoolInt(),                                  // foodAllergies
-    randomBoolInt()                                   // beeAllergies
-  );
-}
+// ---- Wrap inserts in a transaction for speed & safety ----
 
-console.log("✔ Seeded 40 students successfully!");
-db.close();
+const insertMany = db.transaction((rows) => {
+  for (const s of rows) {
+    try {
+      const dayInISO = toISOFromYMD(s.dayin);
+      const dayOutISO = addDaysISO(s.dayin, 65);
+
+      if (!dayInISO || !dayOutISO) {
+        console.warn(
+          `Skipping student ${s.firstName} ${s.lastName} (idNumber: ${s.idNumber}) due to invalid date:`,
+          s.dayin
+        );
+        continue;
+      }
+
+      insertStmt.run(
+        s.firstName,
+        s.lastName,
+        s.idNumber,
+        s.counselor,
+        s.program,
+        dayInISO,
+        dayOutISO,
+        0, // isFelon
+        0, // onProbation
+        0, // usesNicotine
+        0, // hasDriverLicense
+        0, // foodAllergies
+        0  // beeAllergies
+      );
+    } catch (err) {
+      console.error(
+        `Error inserting student ${s.firstName} ${s.lastName} (idNumber: ${s.idNumber}):`,
+        err.message
+      );
+    }
+  }
+});
+
+// ---- Run it ----
+
+insertMany(students);
+
+console.log('Seeding complete!');

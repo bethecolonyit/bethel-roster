@@ -265,12 +265,12 @@ app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
 
 
   // DELETE /students
-  app.delete('/students', ensureOffice, (req, res) => {
+  app.delete('/students/', ensureOffice, (req, res) => {
     try {
-      const { idNumber } = req.body;
+      const { id, idNumber } = req.body;
 
-      const stmt = db.prepare(`DELETE FROM students WHERE idNumber = ?`);
-      stmt.run(idNumber);
+      const stmt = db.prepare(`DELETE FROM students WHERE id = ?`);
+      stmt.run(id);
 
       const path = `./public/images/${idNumber}.jpg`;
 
@@ -280,7 +280,7 @@ app.post('/students', ensureOffice, upload.single('photo'), (req, res) => {
         }
       });
 
-      res.send(`${idNumber} was successfully deleted`);
+      res.send(`${id} was successfully deleted`);
     } catch (err) {
       console.error(err);
       res.status(500).send('Database delete error');

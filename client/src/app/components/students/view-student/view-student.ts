@@ -102,5 +102,21 @@ export class ViewStudent {
   emptyFunction() {
     // Placeholder function
   }
- 
+
+  onDeleteStudent(student: Student) {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${student.firstName} ${student.lastName}?  This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    this.studentService.deleteStudent(student.id!, student.idNumber).subscribe({
+    next: msg => {
+      console.log(msg); // "123 was successfully deleted"
+      // refresh list, show snackbar, etc.
+    },
+    error: err => {
+      console.error('Delete failed', err);
+      // show error snackbar, etc.
+    }
+  });
+}
 }

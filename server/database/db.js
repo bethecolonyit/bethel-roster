@@ -70,7 +70,7 @@ db.prepare(`
     start_date  TEXT NOT NULL,
     end_date    TEXT,
     FOREIGN KEY (bed_id) REFERENCES beds(id),
-    FOREIGN KEY (student_id) REFERENCES students(id)
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
   );
 `).run();
 
