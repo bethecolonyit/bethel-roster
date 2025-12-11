@@ -57,8 +57,8 @@ export class LoginComponent {
     this.auth.login(email!, password!).subscribe({
       next: () => {
         this.loading = false;
-        // ✅ Go directly to the dashboard after login
-        this.router.navigateByUrl('/dashboard');
+        // ✅ Go directly to the students page after login
+        this.router.navigateByUrl('/students');
       },
       error: (err) => {
         this.loading = false;
