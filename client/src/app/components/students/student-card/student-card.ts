@@ -6,6 +6,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-student-card',
@@ -25,7 +26,7 @@ export class StudentCard {
   @Output() createWriteUp = new EventEmitter<Student>();
 
   getStudentPhoto(idNumber: string) {
-    return `http://localhost:3000/uploads/students/${idNumber}.jpg`;
+    return `${environment.apiBaseUrl}/uploads/students/${idNumber}.jpg`;
   }
    onViewDetails() {
     this.viewDetails.emit(this.student);
