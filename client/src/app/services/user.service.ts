@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface User {
   id: number;
@@ -29,7 +30,7 @@ export interface ResetPasswordDto {
 })
 export class UserService {
   // Adjust to environment later if you want
-  private baseUrl = 'http://localhost:3000/auth/users';
+  private baseUrl = `${environment.apiBaseUrl}/auth/users`;
 
   constructor(private http: HttpClient) {}
 

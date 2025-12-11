@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 
 
@@ -56,7 +57,7 @@ export class ResidentialService {
   private http = inject(HttpClient);
 
   // Same base URL pattern as your AuthService
-  private apiUrl = 'http://localhost:3000';
+  private apiUrl = environment.apiBaseUrl;
 
   /** Load full residential tree: buildings → rooms → beds + current occupancy */
   getStructure(): Observable<ResidentialBuilding[]> {

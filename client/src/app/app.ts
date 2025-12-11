@@ -23,6 +23,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay, take } from 'rxjs/operators';
 
 import { AuthService } from './services/auth';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -56,6 +57,8 @@ export class App {
     public auth: AuthService,
     private router: Router
   ) {
+    console.log('API BASE URL:', environment.apiBaseUrl);
+    console.log('PRODUCTION FLAG:', environment.production);
     // Restore logged-in user from session cookie on app start
     this.auth.loadMe().subscribe();
 
