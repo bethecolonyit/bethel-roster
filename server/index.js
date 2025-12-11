@@ -106,14 +106,17 @@ app.use(
 // ----------------------
 // Register controllers (API routes)
 // ----------------------
-registerAuthRoutes(app, db);
-registerStudentRoutes(app, db, upload);
-registerBuildingRoutes(app, db);
-registerRoomRoutes(app, db);
-registerBedRoutes(app, db);
-registerBedAssignmentRoutes(app, db);
-registerResidentialStructureRoutes(app, db);
 
+const api = express.Router();
+
+registerAuthRoutes(api, db);
+registerStudentRoutes(api, db, upload);
+registerBuildingRoutes(api, db);
+registerRoomRoutes(api, db);
+registerBedRoutes(api, db);
+registerBedAssignmentRoutes(api, db);
+registerResidentialStructureRoutes(api, db);
+app.use('/api', api);
 // ----------------------
 // Angular dist (production build)
 // ----------------------

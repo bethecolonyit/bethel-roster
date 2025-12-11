@@ -62,12 +62,12 @@ export class ResidentialService {
   /** Load full residential tree: buildings → rooms → beds + current occupancy */
   getStructure(): Observable<ResidentialBuilding[]> {
     return this.http.get<ResidentialBuilding[]>(
-      `${this.apiUrl}/residential/structure`,
+      `${this.apiUrl}/api/residential/structure`,
       { withCredentials: true }
     );
   }
    getStudents(): Observable<StudentOption[]> {
-    return this.http.get<StudentOption[]>(`${this.apiUrl}/students/simple`, { withCredentials: true });
+    return this.http.get<StudentOption[]>(`${this.apiUrl}/api/students/simple`, { withCredentials: true });
   }
 
   /** Assign a student to a bed */
@@ -82,7 +82,7 @@ export class ResidentialService {
     }
 
     return this.http.post(
-      `${this.apiUrl}/residential/bed-assignments`,
+      `${this.apiUrl}/api/residential/bed-assignments`,
       body,
       { withCredentials: true } 
     );
@@ -95,7 +95,7 @@ export class ResidentialService {
     }
 
     return this.http.post(
-      `${this.apiUrl}/residential/bed-assignments/${assignmentId}/checkout`,
+      `${this.apiUrl}/api/residential/bed-assignments/${assignmentId}/checkout`,
       body,
       { withCredentials: true }
     );
@@ -103,7 +103,7 @@ export class ResidentialService {
   createBuilding(payload: { buildingName: string }): Observable<any> {
   // Adjust the URL to match your backend route
   return this.http.post<any>(
-    `${this.apiUrl}/residential/buildings`,
+    `${this.apiUrl}/api/residential/buildings`,
     payload,  { withCredentials: true }
   );
 }
@@ -112,14 +112,14 @@ createRoom(payload: {
   roomNumber: string;
   roomType?: string | null;
 }): Observable<any> {
-  return this.http.post<any>(`${this.apiUrl}/residential/rooms`, payload, { withCredentials: true });
+  return this.http.post<any>(`${this.apiUrl}/api/residential/rooms`, payload, { withCredentials: true });
 }
 createBed(payload: {
   buildingId: number;
   roomId: number;
   bedLetter: string;
 }): Observable<any> {
-  return this.http.post<any>(`${this.apiUrl}/residential/beds`, payload, { withCredentials: true });
+  return this.http.post<any>(`${this.apiUrl}/api/residential/beds`, payload, { withCredentials: true });
   }
   updateBed(
     id: number,
@@ -128,25 +128,25 @@ createBed(payload: {
   roomId: number;
   bedLetter: string;
 }): Observable<any> {
-  return this.http.put<any>(`${this.apiUrl}/residential/beds/${id}`, payload, { withCredentials: true });
+  return this.http.put<any>(`${this.apiUrl}/api/residential/beds/${id}`, payload, { withCredentials: true });
   }
 deleteBuilding(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/residential/buildings/${id}`, { withCredentials: true });
+    return this.http.delete<void>(`${this.apiUrl}/api/residential/buildings/${id}`, { withCredentials: true });
   }
 
   deleteRoom(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/residential/rooms/${id}`, { withCredentials: true });
+    return this.http.delete<void>(`${this.apiUrl}/api/residential/rooms/${id}`, { withCredentials: true });
   }
 
   deleteBed(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/residential/beds/${id}`, { withCredentials: true });
+    return this.http.delete<void>(`${this.apiUrl}/api/residential/beds/${id}`, { withCredentials: true });
   }
   updateRoom(
   id: number,
   payload: { buildingId: number; roomNumber: string; roomType: string | null }
 ) {
   return this.http.put<any>(
-    `${this.apiUrl}/residential/rooms/${id}`,
+    `${this.apiUrl}/api/residential/rooms/${id}`,
     payload,
     { withCredentials: true }
   );
