@@ -48,7 +48,7 @@ db.prepare(`
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     buildingId  INTEGER NOT NULL,
     roomNumber  TEXT NOT NULL,
-    roomType    TEXT NOT NULL CHECK (roomType IN ('student', 'staff', 'vsp')),
+    roomType    TEXT NOT NULL CHECK (roomType IN ('student', 'staff', 'vsp', 'kitchen')),
     FOREIGN KEY (buildingId) REFERENCES buildings(id) ON DELETE CASCADE
   );
 `).run();
