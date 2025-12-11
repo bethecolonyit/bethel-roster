@@ -17,9 +17,11 @@ const registerBedAssignmentRoutes = require('./controllers/bedAssignmentsControl
 const registerResidentialStructureRoutes = require('./controllers/residentialStructureController');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
+// ----------------------
 // Multer storage for images
+// ----------------------
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, './uploads/students/');
@@ -30,7 +32,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// ----------------------
 // Session
+// ----------------------
 app.use(
   session({
     secret: 'JesusLoves',
@@ -40,7 +44,10 @@ app.use(
   })
 );
 
-// HTML access guard (login redirect)
+// ----------------------
+// HTML access guard (legacy HTML pages)
+// This only affects *.html requests, not Angular routes (which are path-based).
+// ----------------------
 app.use((req, res, next) => {
   const openPaths = ['/login.html', '/auth/login', '/auth/logout'];
 
@@ -66,19 +73,39 @@ app.use((req, res, next) => {
   next();
 });
 
-// Static files
+// ----------------------
+// Static files (uploads, etc.)
+// ----------------------
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ----------------------
 // Body & CORS
+// ----------------------
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Allow both dev (localhost:4200) and prod (same-origin 10.0.0.217:3000)
+const allowedOrigins = [
+  'http://localhost:4200',
+  'http://10.0.0.217:3000',
+];
+
 app.use(
   cors({
-    origin: 'http://localhost:4200',
+    origin: function (origin, callback) {
+      // Allow requests with no origin (e.g. curl, Postman) or from allowed list
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   })
 );
 
-// Register controllers
+// ----------------------
+// Register controllers (API routes)
+// ----------------------
 registerAuthRoutes(app, db);
 registerStudentRoutes(app, db, upload);
 registerBuildingRoutes(app, db);
@@ -87,6 +114,24 @@ registerBedRoutes(app, db);
 registerBedAssignmentRoutes(app, db);
 registerResidentialStructureRoutes(app, db);
 
-app.listen(port, () => {
+// ----------------------
+// Angular dist (production build)
+// ----------------------
+// Path to Angular's production build output
+const angularDistPath = path.join(__dirname, '../client/dist/client/browser');
+
+// Serve static Angular files
+app.use(express.static(angularDistPath));
+
+// Catch-all: for any route NOT handled above (i.e., non-API routes),
+// send back Angular's index.html so the SPA router can handle it.
+app.use((req, res) => {
+  res.sendFile(path.join(angularDistPath, 'index.html'));
+});
+
+// ----------------------
+// Start server
+// ----------------------
+app.listen(port, '0.0.0.0', () => {
   console.log(`App listening on port ${port}`);
 });
