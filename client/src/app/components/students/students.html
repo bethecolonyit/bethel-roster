@@ -33,6 +33,7 @@
       mat-icon-button
       color="primary"
       type="button"
+      *ngIf="auth.isAdmin"
       (click)="toggleCreateStudent()"
       [attr.aria-label]="showCreateForm ? 'Hide create student form' : 'Show create student form'"
     >

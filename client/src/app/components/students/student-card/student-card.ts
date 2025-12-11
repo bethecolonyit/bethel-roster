@@ -7,6 +7,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../../services/auth';
 
 @Component({
   selector: 'app-student-card',
@@ -25,6 +26,7 @@ export class StudentCard {
   @Output() createNote = new EventEmitter<Student>();
   @Output() createWriteUp = new EventEmitter<Student>();
 
+  constructor(public auth: AuthService) {}
   getStudentPhoto(idNumber: string) {
     return `${environment.apiBaseUrl}/uploads/students/${idNumber}.jpg`;
   }

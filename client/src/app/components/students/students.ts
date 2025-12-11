@@ -13,6 +13,7 @@ import { StudentCard } from './student-card/student-card';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-students',
@@ -46,7 +47,7 @@ export class Students implements OnInit {
   showCreateForm = false;
   viewMode: 'list' | 'grid' = 'grid';
 
-  constructor(private studentService: StudentService, private cdr: ChangeDetectorRef) {}
+  constructor(private studentService: StudentService, private cdr: ChangeDetectorRef, public auth: AuthService) {}
 
   ngOnInit() {
     this.loadStudents();
