@@ -45,6 +45,9 @@ const registerRoomRoutes = require('./controllers/roomsController');
 const registerBedRoutes = require('./controllers/bedsController');
 const registerBedAssignmentRoutes = require('./controllers/bedAssignmentsController');
 const registerResidentialStructureRoutes = require('./controllers/residentialStructureController');
+const registerWritingAssignmentRoutes = require('./controllers/writingAssignmentsController');
+
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -65,12 +68,22 @@ const upload = multer({ storage });
 // ----------------------
 // Session
 // ----------------------
+if (!process.env.SESSION_SECRET) {
+  console.error('SESSION_SECRET is not set');
+  process.exit(1);
+}
+
 app.use(
   session({
-    secret: 'JesusLoves',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 2 }, // 2 hours
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 2,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    },
   })
 );
 
@@ -111,13 +124,15 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // ----------------------
 // Body & CORS
 // ----------------------
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Allow both dev (localhost:4200) and prod (same-origin 10.0.0.217:3000)
 const allowedOrigins = [
   'http://localhost:4200',
   'http://10.0.0.217:3000',
+  'http://bethel',
+  'http://bethel:3000',
 ];
 
 app.use(
@@ -146,6 +161,7 @@ registerRoomRoutes(api, db);
 registerBedRoutes(api, db);
 registerBedAssignmentRoutes(api, db);
 registerResidentialStructureRoutes(api, db);
+registerWritingAssignmentRoutes(api, db);
 app.use('/api', api);
 // ----------------------
 // Angular dist (production build)
@@ -158,7 +174,8 @@ app.use(express.static(angularDistPath));
 
 // Catch-all: for any route NOT handled above (i.e., non-API routes),
 // send back Angular's index.html so the SPA router can handle it.
-app.use((req, res) => {
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
   res.sendFile(path.join(angularDistPath, 'index.html'));
 });
 
