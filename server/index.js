@@ -66,23 +66,33 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ----------------------
-// Session
+// Session (cookie-based auth)
 // ----------------------
 if (!process.env.SESSION_SECRET) {
   console.error('SESSION_SECRET is not set');
   process.exit(1);
 }
 
+// If you are behind a reverse proxy later (nginx), keep this enabled.
+// It does not break non-proxy HTTP in typical setups.
+app.set('trust proxy', 1);
+
 app.use(
   session({
+    name: 'bethel.sid',
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 2,
+      maxAge: 1000 * 60 * 60 * 2, // 2 hours
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+
+      // IMPORTANT: you are currently using http:// (not https://)
+      // secure MUST be false or the browser will drop the cookie and you'll get 401s.
+      secure: false,
+
+      // Works well for SPA + API on the same site.
+      sameSite: 'lax',
     },
   })
 );
