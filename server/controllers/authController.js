@@ -1,10 +1,12 @@
-// controllers/authController.js
+// controllers/authController.js (MSSQL)
 const bcrypt = require('bcrypt');
 const { ensureAuthenticated, ensureAdmin } = require('../middleware/auth');
 
 function registerAuthRoutes(app, db) {
+  const { sql, query } = db;
+
   // POST /auth/login
-  app.post('/auth/login', (req, res) => {
+  app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -12,34 +14,25 @@ function registerAuthRoutes(app, db) {
     }
 
     try {
-      const stmt = db.prepare(
-        'SELECT id, email, password_hash, role FROM users WHERE email = ?'
+      const r = await query(
+        `SELECT TOP (1) id, email, password_hash, role
+         FROM app.users
+         WHERE email = @email`,
+        { email: { type: sql.NVarChar(255), value: email } }
       );
-      const user = stmt.get(email);
 
-      if (!user) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
+      const user = r.recordset[0];
+      if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
       bcrypt.compare(password, user.password_hash, (bcryptErr, same) => {
-        if (bcryptErr) {
-          console.error(bcryptErr);
-          return res.status(500).json({ error: 'Error checking password' });
-        }
-
-        if (!same) {
-          return res.status(401).json({ error: 'Invalid credentials' });
-        }
+        if (bcryptErr) return res.status(500).json({ error: 'Error checking password' });
+        if (!same) return res.status(401).json({ error: 'Invalid credentials' });
 
         req.session.userId = user.id;
         req.session.role = user.role;
         req.session.email = user.email;
 
-        return res.json({
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        });
+        return res.json({ id: user.id, email: user.email, role: user.role });
       });
     } catch (err) {
       console.error(err);
@@ -49,22 +42,13 @@ function registerAuthRoutes(app, db) {
 
   // POST /auth/logout
   app.post('/auth/logout', (req, res) => {
-    req.session.destroy(() => {
-      res.json({ message: 'Logged out' });
-    });
+    req.session.destroy(() => res.json({ message: 'Logged out' }));
   });
 
   // GET /auth/me
   app.get('/auth/me', (req, res) => {
-    if (!req.session || !req.session.userId) {
-      return res.status(200).json(null);
-    }
-
-    res.json({
-      id: req.session.userId,
-      email: req.session.email,
-      role: req.session.role,
-    });
+    if (!req.session || !req.session.userId) return res.status(200).json(null);
+    res.json({ id: req.session.userId, email: req.session.email, role: req.session.role });
   });
 
   // POST /auth/users (admin only)
@@ -72,52 +56,45 @@ function registerAuthRoutes(app, db) {
     const { email, password, role } = req.body;
 
     if (!email || !password || !role) {
-      return res
-        .status(400)
-        .json({ error: 'Email, password, and role are required' });
+      return res.status(400).json({ error: 'Email, password, and role are required' });
     }
-
     if (!['admin', 'user'].includes(role)) {
       return res.status(400).json({ error: 'Role must be admin or user' });
     }
 
-    bcrypt.hash(password, 10, (hashErr, hash) => {
-      if (hashErr) {
-        console.error(hashErr);
-        return res.status(500).json({ error: 'Error hashing password' });
-      }
+    bcrypt.hash(password, 10, async (hashErr, hash) => {
+      if (hashErr) return res.status(500).json({ error: 'Error hashing password' });
 
       try {
-        const stmt = db.prepare(
-          'INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)'
+        const r = await query(
+          `INSERT INTO app.users (email, password_hash, role)
+           OUTPUT INSERTED.id, INSERTED.email, INSERTED.role
+           VALUES (@email, @password_hash, @role)`,
+          {
+            email: { type: sql.NVarChar(255), value: email },
+            password_hash: { type: sql.NVarChar(255), value: hash },
+            role: { type: sql.NVarChar(50), value: role },
+          }
         );
-        const info = stmt.run(email, hash, role);
 
-        res.status(201).json({
-          id: info.lastInsertRowid,
-          email,
-          role,
-        });
+        res.status(201).json(r.recordset[0]);
       } catch (err) {
         console.error(err);
-        if (err.message && err.message.includes('UNIQUE')) {
+        if (err.number === 2627 || err.number === 2601) {
           return res.status(409).json({ error: 'Email already in use' });
         }
-        return res
-          .status(500)
-          .json({ error: 'Database error creating user' });
+        return res.status(500).json({ error: 'Database error creating user' });
       }
     });
   });
 
   // GET /auth/users (admin only)
-  app.get('/auth/users', ensureAuthenticated, ensureAdmin, (req, res) => {
+  app.get('/auth/users', ensureAuthenticated, ensureAdmin, async (req, res) => {
     try {
-      const stmt = db.prepare(
-        'SELECT id, email, role, created_at FROM users ORDER BY email ASC'
+      const r = await query(
+        `SELECT id, email, role, created_at FROM app.users ORDER BY email ASC`
       );
-      const users = stmt.all();
-      res.json(users);
+      res.json(r.recordset);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Database error fetching users' });
@@ -125,45 +102,51 @@ function registerAuthRoutes(app, db) {
   });
 
   // PUT /auth/users/:id (admin only)
-  app.put('/auth/users/:id', ensureAuthenticated, ensureAdmin, (req, res) => {
-    const { id } = req.params;
+  app.put('/auth/users/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {
+    const id = Number(req.params.id);
     const { email, role, password } = req.body;
 
-    if (!email || !role) {
-      return res.status(400).json({ error: 'Email and role are required' });
-    }
+    if (!email || !role) return res.status(400).json({ error: 'Email and role are required' });
+    if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: 'Role must be admin or user' });
 
-    if (!['admin', 'user'].includes(role)) {
-      return res.status(400).json({ error: 'Role must be admin or user' });
-    }
-
-    const updateUser = (passwordHash = null) => {
+    const doUpdate = async (passwordHash = null) => {
       try {
-        let stmt;
         if (passwordHash) {
-          stmt = db.prepare(`
-            UPDATE users
-            SET email = ?, role = ?, password_hash = ?
-            WHERE id = ?
-          `);
-          stmt.run(email, role, passwordHash, id);
+          await query(
+            `UPDATE app.users
+             SET email=@email, role=@role, password_hash=@password_hash
+             WHERE id=@id`,
+            {
+              id: { type: sql.Int, value: id },
+              email: { type: sql.NVarChar(255), value: email },
+              role: { type: sql.NVarChar(50), value: role },
+              password_hash: { type: sql.NVarChar(255), value: passwordHash },
+            }
+          );
         } else {
-          stmt = db.prepare(`
-            UPDATE users
-            SET email = ?, role = ?
-            WHERE id = ?
-          `);
-          stmt.run(email, role, id);
+          await query(
+            `UPDATE app.users
+             SET email=@email, role=@role
+             WHERE id=@id`,
+            {
+              id: { type: sql.Int, value: id },
+              email: { type: sql.NVarChar(255), value: email },
+              role: { type: sql.NVarChar(50), value: role },
+            }
+          );
         }
 
-        const selectStmt = db.prepare(
-          'SELECT id, email, role, created_at FROM users WHERE id = ?'
+        const r = await query(
+          `SELECT id, email, role, created_at FROM app.users WHERE id=@id`,
+          { id: { type: sql.Int, value: id } }
         );
-        const user = selectStmt.get(id);
+
+        const user = r.recordset[0];
+        if (!user) return res.status(404).json({ error: 'User not found' });
         res.json(user);
       } catch (err) {
         console.error(err);
-        if (err.message && err.message.includes('UNIQUE')) {
+        if (err.number === 2627 || err.number === 2601) {
           return res.status(409).json({ error: 'Email already in use' });
         }
         res.status(500).json({ error: 'Database error updating user' });
@@ -172,89 +155,67 @@ function registerAuthRoutes(app, db) {
 
     if (password) {
       bcrypt.hash(password, 10, (hashErr, hash) => {
-        if (hashErr) {
-          console.error(hashErr);
-          return res.status(500).json({ error: 'Error hashing password' });
-        }
-        updateUser(hash);
+        if (hashErr) return res.status(500).json({ error: 'Error hashing password' });
+        doUpdate(hash);
       });
     } else {
-      updateUser();
+      doUpdate();
     }
   });
 
   // POST /auth/users/:id/reset-password (admin only)
-  app.post(
-    '/auth/users/:id/reset-password',
-    ensureAuthenticated,
-    ensureAdmin,
-    (req, res) => {
-      const { id } = req.params;
-      const { password } = req.body;
+  app.post('/auth/users/:id/reset-password', ensureAuthenticated, ensureAdmin, (req, res) => {
+    const id = Number(req.params.id);
+    const { password } = req.body;
 
-      if (
-        !password ||
-        typeof password !== 'string' ||
-        password.trim().length < 6
-      ) {
-        return res.status(400).json({
-          error: 'A password of at least 6 characters is required',
-        });
-      }
-
-      bcrypt.hash(password, 10, (hashErr, hash) => {
-        if (hashErr) {
-          console.error(hashErr);
-          return res.status(500).json({ error: 'Error hashing password' });
-        }
-
-        try {
-          const stmt = db.prepare(`
-            UPDATE users
-            SET password_hash = ?
-            WHERE id = ?
-          `);
-
-          const info = stmt.run(hash, id);
-
-          if (info.changes === 0) {
-            return res.status(404).json({ error: 'User not found' });
-          }
-
-          return res.json({ message: 'Password reset successfully' });
-        } catch (err) {
-          console.error(err);
-          return res
-            .status(500)
-            .json({ error: 'Database error resetting password' });
-        }
-      });
+    if (!password || typeof password !== 'string' || password.trim().length < 6) {
+      return res.status(400).json({ error: 'A password of at least 6 characters is required' });
     }
-  );
 
-  // DELETE /auth/users/:id (admin only)
-  app.delete(
-    '/auth/users/:id',
-    ensureAuthenticated,
-    ensureAdmin,
-    (req, res) => {
-      const { id } = req.params;
+    bcrypt.hash(password, 10, async (hashErr, hash) => {
+      if (hashErr) return res.status(500).json({ error: 'Error hashing password' });
 
       try {
-        const stmt = db.prepare('DELETE FROM users WHERE id = ?');
-        const info = stmt.run(id);
+        const r = await query(
+          `UPDATE app.users SET password_hash=@password_hash WHERE id=@id`,
+          {
+            id: { type: sql.Int, value: id },
+            password_hash: { type: sql.NVarChar(255), value: hash },
+          }
+        );
 
-        if (info.changes === 0) {
+        if (!r.rowsAffected || r.rowsAffected[0] === 0) {
           return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json({ message: 'User deleted' });
+        res.json({ message: 'Password reset successfully' });
       } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Database error deleting user' });
+        res.status(500).json({ error: 'Database error resetting password' });
       }
+    });
+  });
+
+  // DELETE /auth/users/:id (admin only)
+  app.delete('/auth/users/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+
+    try {
+      const r = await query(
+        `DELETE FROM app.users WHERE id=@id`,
+        { id: { type: sql.Int, value: id } }
+      );
+
+      if (!r.rowsAffected || r.rowsAffected[0] === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      res.json({ message: 'User deleted' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Database error deleting user' });
     }
-  );
+  });
 }
 
 module.exports = registerAuthRoutes;

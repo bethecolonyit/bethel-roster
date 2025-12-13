@@ -1,11 +1,41 @@
 // index.js
-const fs = require('fs');
 const path = require('path');
+
+const envFile =
+  process.env.NODE_ENV === 'production'
+    ? '.env.production'
+    : '.env.development';
+
+require('dotenv').config({ path: path.join(__dirname, envFile) });
+const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const multer = require('multer');
 const session = require('express-session');
+
+// ----------------------
+// Startup safety guard (DEV vs PROD DB protection)
+// ----------------------
+const nodeEnv = process.env.NODE_ENV || 'development';
+const dbName = process.env.DB_NAME || '';
+
+if (nodeEnv !== 'production' && dbName && !dbName.toLowerCase().endsWith('_dev')) {
+  console.error(' REFUSING TO START');
+  console.error(`NODE_ENV=${nodeEnv} but DB_NAME=${dbName}`);
+  console.error('Non-production environment must use a *_dev database.');
+  process.exit(1);
+}
+
+if (nodeEnv === 'production' && dbName.toLowerCase().endsWith('_dev')) {
+  console.error(' REFUSING TO START');
+  console.error(`NODE_ENV=production but DB_NAME=${dbName}`);
+  console.error('Production environment must NOT use a *_dev database.');
+  process.exit(1);
+}
+// ----------------------
+// END SECTION
+// ----------------------
 
 const db = require('./database/db'); // <--- new db module
 const registerAuthRoutes = require('./controllers/authController');

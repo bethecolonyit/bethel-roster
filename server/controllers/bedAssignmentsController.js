@@ -1,153 +1,186 @@
-// controllers/bedAssignmentsController.js
-const { ensureAuthenticated, ensureOffice} = require('../middleware/auth');
+// controllers/bedAssignmentsController.js (MSSQL)
+const { ensureAuthenticated, ensureOffice } = require('../middleware/auth');
+
 function registerBedAssignmentRoutes(app, db) {
+  const { sql, query, getPool } = db;
+
   // POST /residential/bed-assignments
-  app.post('/residential/bed-assignments', ensureOffice, (req, res) => {
+  app.post('/residential/bed-assignments', ensureOffice, async (req, res) => {
     try {
       const { bedId, studentId, startDate } = req.body;
 
       if (!bedId || !studentId) {
-        return res
-          .status(400)
-          .json({ error: 'bedId and studentId are required' });
+        return res.status(400).json({ error: 'bedId and studentId are required' });
       }
 
-      const bed = db
-        .prepare('SELECT id, roomId FROM beds WHERE id = ?;')
-        .get(bedId);
-      if (!bed) {
-        return res.status(400).json({ error: 'Bed not found' });
+      const bedIdNum = Number(bedId);
+      const studentIdNum = Number(studentId);
+      const isoDate = (startDate && String(startDate).slice(0, 10)) || new Date().toISOString().slice(0, 10);
+
+      const pool = await getPool();
+      const tx = new sql.Transaction(pool);
+      await tx.begin();
+
+      try {
+        // Validate bed
+        const bedR = await new sql.Request(tx)
+          .input('bedId', sql.Int, bedIdNum)
+          .query(`SELECT id, roomId FROM app.beds WHERE id = @bedId;`);
+        if (bedR.recordset.length === 0) {
+          await tx.rollback();
+          return res.status(400).json({ error: 'Bed not found' });
+        }
+
+        // Validate student
+        const studentR = await new sql.Request(tx)
+          .input('studentId', sql.Int, studentIdNum)
+          .query(`SELECT id FROM app.students WHERE id = @studentId;`);
+        if (studentR.recordset.length === 0) {
+          await tx.rollback();
+          return res.status(400).json({ error: 'Student not found' });
+        }
+
+        // Bed already occupied?
+        const bedOccR = await new sql.Request(tx)
+          .input('bedId', sql.Int, bedIdNum)
+          .query(`
+            SELECT TOP (1) id
+            FROM app.bed_assignments
+            WHERE bed_id = @bedId AND end_date IS NULL;
+          `);
+        if (bedOccR.recordset.length > 0) {
+          await tx.rollback();
+          return res.status(400).json({ error: 'This bed is already occupied' });
+        }
+
+        // Student already assigned?
+        const studOccR = await new sql.Request(tx)
+          .input('studentId', sql.Int, studentIdNum)
+          .query(`
+            SELECT TOP (1) id, bed_id
+            FROM app.bed_assignments
+            WHERE student_id = @studentId AND end_date IS NULL;
+          `);
+        if (studOccR.recordset.length > 0) {
+          await tx.rollback();
+          return res.status(400).json({
+            error: 'Student already has an active bed assignment',
+            currentAssignmentId: studOccR.recordset[0].id,
+            currentBedId: studOccR.recordset[0].bed_id,
+          });
+        }
+
+        // Insert assignment
+        const insR = await new sql.Request(tx)
+          .input('bedId', sql.Int, bedIdNum)
+          .input('studentId', sql.Int, studentIdNum)
+          .input('startDate', sql.Date, isoDate)
+          .query(`
+            INSERT INTO app.bed_assignments (bed_id, student_id, start_date, end_date)
+            OUTPUT INSERTED.id
+            VALUES (@bedId, @studentId, @startDate, NULL);
+          `);
+
+        const newId = insR.recordset[0].id;
+
+        // Return assignment detail (same shape you had)
+        const outR = await new sql.Request(tx)
+          .input('id', sql.Int, newId)
+          .query(`
+            SELECT
+              ba.*,
+              s.firstName AS studentFirstName,
+              s.lastName  AS studentLastName,
+              b.bedLetter,
+              r.roomNumber,
+              r.roomType,
+              bl.buildingName
+            FROM app.bed_assignments ba
+            JOIN app.students   s  ON ba.student_id = s.id
+            JOIN app.beds       b  ON ba.bed_id = b.id
+            JOIN app.rooms      r  ON b.roomId = r.id
+            JOIN app.buildings  bl ON r.buildingId = bl.id
+            WHERE ba.id = @id;
+          `);
+
+        await tx.commit();
+        res.status(201).json(outR.recordset[0]);
+      } catch (inner) {
+        try { await tx.rollback(); } catch {}
+        throw inner;
       }
-
-      const student = db
-        .prepare('SELECT id FROM students WHERE id = ?;')
-        .get(studentId);
-      if (!student) {
-        return res.status(400).json({ error: 'Student not found' });
-      }
-
-      const currentBedAssignment = db
-        .prepare(`
-          SELECT id
-          FROM bed_assignments
-          WHERE bed_id = ? AND end_date IS NULL;
-        `)
-        .get(bedId);
-
-      if (currentBedAssignment) {
-        return res
-          .status(400)
-          .json({ error: 'This bed is already occupied' });
-      }
-
-      const currentStudentAssignment = db
-        .prepare(`
-          SELECT ba.id, ba.bed_id
-          FROM bed_assignments ba
-          WHERE ba.student_id = ? AND ba.end_date IS NULL;
-        `)
-        .get(studentId);
-
-      if (currentStudentAssignment) {
-        return res.status(400).json({
-          error: 'Student already has an active bed assignment',
-          currentAssignmentId: currentStudentAssignment.id,
-          currentBedId: currentStudentAssignment.bed_id,
-        });
-      }
-
-      const isoDate = startDate || new Date().toISOString().slice(0, 10);
-
-      const insert = db.prepare(`
-        INSERT INTO bed_assignments (bed_id, student_id, start_date, end_date)
-        VALUES (?, ?, ?, NULL);
-      `);
-
-      const info = insert.run(bedId, studentId, isoDate);
-
-      const assignment = db
-        .prepare(`
-          SELECT
-            ba.*,
-            s.firstName AS studentFirstName,
-            s.lastName  AS studentLastName,
-            b.bedLetter,
-            r.roomNumber,
-            r.roomType,
-            bl.buildingName
-          FROM bed_assignments ba
-          JOIN students   s  ON ba.student_id = s.id
-          JOIN beds       b  ON ba.bed_id = b.id
-          JOIN rooms      r  ON b.roomId = r.id
-          JOIN buildings  bl ON r.buildingId = bl.id
-          WHERE ba.id = ?;
-        `)
-        .get(info.lastInsertRowid);
-
-      res.status(201).json(assignment);
     } catch (err) {
       console.error(err);
-      if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      // unique violations (if you created filtered unique indexes)
+      if (err.number === 2601 || err.number === 2627) {
         return res.status(400).json({
-          error:
-            'Either this bed or this student already has an active assignment',
+          error: 'Either this bed or this student already has an active assignment',
         });
       }
-
       res.status(500).json({ error: 'Failed to create bed assignment' });
     }
   });
 
   // POST /residential/bed-assignments/:id/checkout
-  app.post('/residential/bed-assignments/:id/checkout', ensureOffice, (req, res) => {
+  app.post('/residential/bed-assignments/:id/checkout', ensureOffice, async (req, res) => {
     try {
       const { endDate } = req.body || {};
-      const id = req.params.id;
+      const id = Number(req.params.id);
+      const isoDate = (endDate && String(endDate).slice(0, 10)) || new Date().toISOString().slice(0, 10);
 
-      const current = db
-        .prepare(`
-          SELECT *
-          FROM bed_assignments
-          WHERE id = ? AND end_date IS NULL;
-        `)
-        .get(id);
+      const pool = await getPool();
+      const tx = new sql.Transaction(pool);
+      await tx.begin();
 
-      if (!current) {
-        return res
-          .status(404)
-          .json({ error: 'Active bed assignment not found' });
+      try {
+        // Ensure active assignment exists
+        const curR = await new sql.Request(tx)
+          .input('id', sql.Int, id)
+          .query(`
+            SELECT *
+            FROM app.bed_assignments
+            WHERE id = @id AND end_date IS NULL;
+          `);
+
+        if (curR.recordset.length === 0) {
+          await tx.rollback();
+          return res.status(404).json({ error: 'Active bed assignment not found' });
+        }
+
+        await new sql.Request(tx)
+          .input('id', sql.Int, id)
+          .input('endDate', sql.Date, isoDate)
+          .query(`
+            UPDATE app.bed_assignments
+            SET end_date = @endDate
+            WHERE id = @id;
+          `);
+
+        const outR = await new sql.Request(tx)
+          .input('id', sql.Int, id)
+          .query(`
+            SELECT
+              ba.*,
+              s.firstName AS studentFirstName,
+              s.lastName  AS studentLastName,
+              b.bedLetter,
+              r.roomNumber,
+              r.roomType,
+              bl.buildingName
+            FROM app.bed_assignments ba
+            JOIN app.students   s  ON ba.student_id = s.id
+            JOIN app.beds       b  ON ba.bed_id = b.id
+            JOIN app.rooms      r  ON b.roomId = r.id
+            JOIN app.buildings  bl ON r.buildingId = bl.id
+            WHERE ba.id = @id;
+          `);
+
+        await tx.commit();
+        res.json(outR.recordset[0]);
+      } catch (inner) {
+        try { await tx.rollback(); } catch {}
+        throw inner;
       }
-
-      const isoDate = endDate || new Date().toISOString().slice(0, 10);
-
-      const update = db.prepare(`
-        UPDATE bed_assignments
-        SET end_date = ?
-        WHERE id = ?;
-      `);
-
-      update.run(isoDate, id);
-
-      const updated = db
-        .prepare(`
-          SELECT
-            ba.*,
-            s.firstName AS studentFirstName,
-            s.lastName  AS studentLastName,
-            b.bedLetter,
-            r.roomNumber,
-            r.roomType,
-            bl.buildingName
-          FROM bed_assignments ba
-          JOIN students   s  ON ba.student_id = s.id
-          JOIN beds       b  ON ba.bed_id = b.id
-          JOIN rooms      r  ON b.roomId = r.id
-          JOIN buildings  bl ON r.buildingId = bl.id
-          WHERE ba.id = ?;
-        `)
-        .get(id);
-
-      res.json(updated);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Failed to end bed assignment' });
@@ -155,7 +188,7 @@ function registerBedAssignmentRoutes(app, db) {
   });
 
   // GET /residential/bed-assignments
-  app.get('/residential/bed-assignments', ensureAuthenticated, (req, res) => {
+  app.get('/residential/bed-assignments', ensureAuthenticated, async (req, res) => {
     try {
       const {
         current = 'true',
@@ -166,39 +199,35 @@ function registerBedAssignmentRoutes(app, db) {
       } = req.query;
 
       const filters = [];
-      const params = [];
+      const params = {};
 
-      if (current === 'true') {
-        filters.push('ba.end_date IS NULL');
-      } else if (current === 'false') {
-        filters.push('ba.end_date IS NOT NULL');
-      }
+      if (current === 'true') filters.push('ba.end_date IS NULL');
+      else if (current === 'false') filters.push('ba.end_date IS NOT NULL');
 
       if (studentId) {
-        filters.push('ba.student_id = ?');
-        params.push(studentId);
+        filters.push('ba.student_id = @studentId');
+        params.studentId = { type: sql.Int, value: Number(studentId) };
       }
 
       if (bedId) {
-        filters.push('ba.bed_id = ?');
-        params.push(bedId);
+        filters.push('ba.bed_id = @bedId');
+        params.bedId = { type: sql.Int, value: Number(bedId) };
       }
 
       if (roomId) {
-        filters.push('b.roomId = ?');
-        params.push(roomId);
+        filters.push('b.roomId = @roomId');
+        params.roomId = { type: sql.Int, value: Number(roomId) };
       }
 
       if (buildingId) {
-        filters.push('r.buildingId = ?');
-        params.push(buildingId);
+        filters.push('r.buildingId = @buildingId');
+        params.buildingId = { type: sql.Int, value: Number(buildingId) };
       }
 
-      const whereClause = filters.length
-        ? `WHERE ${filters.join(' AND ')}`
-        : '';
+      const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 
-      const stmt = db.prepare(`
+      const r = await query(
+        `
         SELECT
           ba.*,
           s.firstName AS studentFirstName,
@@ -207,17 +236,18 @@ function registerBedAssignmentRoutes(app, db) {
           r.roomNumber,
           r.roomType,
           bl.buildingName
-        FROM bed_assignments ba
-        JOIN students   s  ON ba.student_id = s.id
-        JOIN beds       b  ON ba.bed_id = b.id
-        JOIN rooms      r  ON b.roomId = r.id
-        JOIN buildings  bl ON r.buildingId = bl.id
+        FROM app.bed_assignments ba
+        JOIN app.students   s  ON ba.student_id = s.id
+        JOIN app.beds       b  ON ba.bed_id = b.id
+        JOIN app.rooms      r  ON b.roomId = r.id
+        JOIN app.buildings  bl ON r.buildingId = bl.id
         ${whereClause}
         ORDER BY bl.buildingName, r.roomNumber, b.bedLetter, ba.start_date;
-      `);
+        `,
+        params
+      );
 
-      const rows = stmt.all(...params);
-      res.json(rows);
+      res.json(r.recordset);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Failed to fetch bed assignments' });
@@ -225,33 +255,32 @@ function registerBedAssignmentRoutes(app, db) {
   });
 
   // GET /residential/available-beds
-  app.get('/residential/available-beds', ensureAuthenticated, (req, res) => {
+  app.get('/residential/available-beds', ensureAuthenticated, async (req, res) => {
     try {
       const { buildingId, roomId, roomType } = req.query;
 
       const filters = [];
-      const params = [];
+      const params = {};
 
       if (roomId) {
-        filters.push('r.id = ?');
-        params.push(roomId);
+        filters.push('r.id = @roomId');
+        params.roomId = { type: sql.Int, value: Number(roomId) };
       }
 
       if (buildingId) {
-        filters.push('bl.id = ?');
-        params.push(buildingId);
+        filters.push('bl.id = @buildingId');
+        params.buildingId = { type: sql.Int, value: Number(buildingId) };
       }
 
       if (roomType) {
-        filters.push('r.roomType = ?');
-        params.push(roomType);
+        filters.push('r.roomType = @roomType');
+        params.roomType = { type: sql.NVarChar(20), value: String(roomType) };
       }
 
-      const whereClause = filters.length
-        ? `AND ${filters.join(' AND ')}`
-        : '';
+      const whereClause = filters.length ? `AND ${filters.join(' AND ')}` : '';
 
-      const stmt = db.prepare(`
+      const r = await query(
+        `
         SELECT
           b.id         AS bedId,
           b.bedLetter,
@@ -260,18 +289,19 @@ function registerBedAssignmentRoutes(app, db) {
           r.roomType,
           bl.id        AS buildingId,
           bl.buildingName
-        FROM beds b
-        JOIN rooms      r  ON b.roomId = r.id
-        JOIN buildings  bl ON r.buildingId = bl.id
-        LEFT JOIN bed_assignments ba
+        FROM app.beds b
+        JOIN app.rooms      r  ON b.roomId = r.id
+        JOIN app.buildings  bl ON r.buildingId = bl.id
+        LEFT JOIN app.bed_assignments ba
           ON ba.bed_id = b.id AND ba.end_date IS NULL
         WHERE ba.id IS NULL
         ${whereClause}
         ORDER BY bl.buildingName, r.roomNumber, b.bedLetter;
-      `);
+        `,
+        params
+      );
 
-      const rows = stmt.all(...params);
-      res.json(rows);
+      res.json(r.recordset);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Failed to fetch available beds' });
@@ -279,32 +309,30 @@ function registerBedAssignmentRoutes(app, db) {
   });
 
   // GET /residential/students/:id/current-bed
-  app.get('/residential/students/:id/current-bed', ensureAuthenticated, (req, res) => {
+  app.get('/residential/students/:id/current-bed', ensureAuthenticated, async (req, res) => {
     try {
-      const studentId = req.params.id;
+      const studentId = Number(req.params.id);
 
-      const row = db
-        .prepare(`
-          SELECT
-            ba.*,
-            b.bedLetter,
-            r.roomNumber,
-            r.roomType,
-            bl.buildingName
-          FROM bed_assignments ba
-          JOIN beds      b  ON ba.bed_id = b.id
-          JOIN rooms     r  ON b.roomId = r.id
-          JOIN buildings bl ON r.buildingId = bl.id
-          WHERE ba.student_id = ?
-            AND ba.end_date IS NULL;
-        `)
-        .get(studentId);
+      const r = await query(
+        `
+        SELECT TOP (1)
+          ba.*,
+          b.bedLetter,
+          r.roomNumber,
+          r.roomType,
+          bl.buildingName
+        FROM app.bed_assignments ba
+        JOIN app.beds      b  ON ba.bed_id = b.id
+        JOIN app.rooms     r  ON b.roomId = r.id
+        JOIN app.buildings bl ON r.buildingId = bl.id
+        WHERE ba.student_id = @studentId
+          AND ba.end_date IS NULL;
+        `,
+        { studentId: { type: sql.Int, value: studentId } }
+      );
 
-      if (!row) {
-        return res.json(null);
-      }
-
-      res.json(row);
+      const row = r.recordset[0];
+      res.json(row || null);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Failed to fetch current bed' });

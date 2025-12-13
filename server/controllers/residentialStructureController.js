@@ -1,43 +1,45 @@
-// controllers/residentialStructureController.js
+// controllers/residentialStructureController.js (MSSQL)
 const { ensureAuthenticated } = require('../middleware/auth');
+
 function registerResidentialStructureRoutes(app, db) {
+  const { query } = db;
+
   // GET /residential/structure
-  app.get('/residential/structure', ensureAuthenticated, (req, res) => {
+  app.get('/residential/structure', ensureAuthenticated, async (req, res) => {
     try {
-      const rows = db
-        .prepare(`
-          SELECT
-            bl.id          AS buildingId,
-            bl.buildingName,
+      const r = await query(`
+        SELECT
+          bl.id          AS buildingId,
+          bl.buildingName,
 
-            r.id           AS roomId,
-            r.roomNumber,
-            r.roomType,
+          rm.id          AS roomId,
+          rm.roomNumber,
+          rm.roomType,
 
-            b.id           AS bedId,
-            b.bedLetter,
+          bd.id          AS bedId,
+          bd.bedLetter,
 
-            ba.id          AS assignmentId,
-            ba.start_date  AS assignmentStartDate,
-            ba.end_date    AS assignmentEndDate,
+          ba.id          AS assignmentId,
+          ba.start_date  AS assignmentStartDate,
+          ba.end_date    AS assignmentEndDate,
 
-            s.id           AS studentId,
-            s.firstName    AS studentFirstName,
-            s.lastName     AS studentLastName,
-            s.idNumber     AS studentCode
-          FROM buildings bl
-          LEFT JOIN rooms r
-            ON r.buildingId = bl.id
-          LEFT JOIN beds b
-            ON b.roomId = r.id
-          LEFT JOIN bed_assignments ba
-            ON ba.bed_id = b.id AND ba.end_date IS NULL
-          LEFT JOIN students s
-            ON s.id = ba.student_id
-          ORDER BY bl.buildingName, r.roomNumber, b.bedLetter;
-        `)
-        .all();
+          s.id           AS studentId,
+          s.firstName    AS studentFirstName,
+          s.lastName     AS studentLastName,
+          s.idNumber     AS studentCode
+        FROM app.buildings bl
+        LEFT JOIN app.rooms rm
+          ON rm.buildingId = bl.id
+        LEFT JOIN app.beds bd
+          ON bd.roomId = rm.id
+        LEFT JOIN app.bed_assignments ba
+          ON ba.bed_id = bd.id AND ba.end_date IS NULL
+        LEFT JOIN app.students s
+          ON s.id = ba.student_id
+        ORDER BY bl.buildingName, rm.roomNumber, bd.bedLetter;
+      `);
 
+      const rows = r.recordset;
       const buildingsMap = new Map();
 
       for (const row of rows) {
@@ -56,7 +58,7 @@ function registerResidentialStructureRoutes(app, db) {
 
         if (!row.roomId) continue;
 
-        let room = building.rooms.find(r => r.id === row.roomId);
+        let room = building.rooms.find(rr => rr.id === row.roomId);
         if (!room) {
           room = {
             id: row.roomId,
@@ -108,8 +110,7 @@ function registerResidentialStructureRoutes(app, db) {
         for (const room of building.rooms) {
           room.availableBeds = room.totalBeds - room.occupiedBeds;
         }
-        building.availableBeds =
-          building.totalBeds - building.occupiedBeds;
+        building.availableBeds = building.totalBeds - building.occupiedBeds;
       }
 
       res.json(Array.from(buildingsMap.values()));

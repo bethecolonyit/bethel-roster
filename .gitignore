@@ -25,3 +25,5 @@ Thumbs.db
 
 # Database files
 server/mydb.sqlite
+server/.env.development
+server/.env.production
