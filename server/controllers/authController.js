@@ -58,10 +58,6 @@ function registerAuthRoutes(app, db) {
     if (!email || !password || !role) {
       return res.status(400).json({ error: 'Email, password, and role are required' });
     }
-    if (!['admin', 'user'].includes(role)) {
-      return res.status(400).json({ error: 'Role must be admin or user' });
-    }
-
     bcrypt.hash(password, 10, async (hashErr, hash) => {
       if (hashErr) return res.status(500).json({ error: 'Error hashing password' });
 
@@ -107,8 +103,6 @@ function registerAuthRoutes(app, db) {
     const { email, role, password } = req.body;
 
     if (!email || !role) return res.status(400).json({ error: 'Email and role are required' });
-    if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: 'Role must be admin or user' });
-
     const doUpdate = async (passwordHash = null) => {
       try {
         if (passwordHash) {
