@@ -141,8 +141,8 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
   'http://localhost:4200',
   'http://10.0.0.217:3000',
-  'http://bethel',
-  'http://bethel:3000',
+  'http://bethel-app',
+  'http://bethel-app:3000',
 ];
 
 app.use(
