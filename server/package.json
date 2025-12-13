@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+     "migrate:dev": "NODE_ENV=development node ./scripts/migrate.js",
+    "migrate:prod": "NODE_ENV=production node ./scripts/migrate.js"
   },
   "keywords": [],
   "author": "",
