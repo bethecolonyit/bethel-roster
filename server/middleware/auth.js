@@ -20,8 +20,8 @@ function ensureAdmin(req, res, next) {
   return res.status(403).json({ error: 'Admin only' });
 }
 
-function ensureOffice(req, res, next) {
-  if (req.session && (req.session.role === 'admin' || req.session.role === 'office')) {
+function ensureCounselor(req, res, next) {
+  if (req.session && (req.session.role === 'admin' || req.session.role === 'counselor')) {
     return next();
   }
   return res.status(403).json({ error: 'Admin only' });
@@ -31,4 +31,5 @@ module.exports = {
   ensureAuthenticated,
   ensureAdmin,
   ensureOffice,
+  ensureCounselor
 };
