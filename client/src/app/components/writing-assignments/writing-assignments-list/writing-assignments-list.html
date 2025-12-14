@@ -1,0 +1,83 @@
+<mat-card class="section-card">
+    <div class="card-menu">
+            <button
+            mat-icon-button
+            class="menu-button"
+            [matMenuTriggerFor]="cardMenu"
+            (click)="$event.stopPropagation()"
+            aria-label="dashboard options"
+            >
+            <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #cardMenu="matMenu">
+            <button mat-menu-item (click)="emptyFunction()">
+                <mat-icon>visibility</mat-icon>
+                <span>Menu Item</span>
+            </button>
+            <button mat-menu-item (click)="emptyFunction()">
+                <mat-icon>note_add</mat-icon>
+                <span>Menu Item</span>
+            </button>
+            <button mat-menu-item (click)="emptyFunction()">
+                <mat-icon>report</mat-icon>
+                <span>Menu Item</span>
+            </button>
+             <button mat-menu-item (click)="emptyFunction()">
+                <mat-icon>delete</mat-icon>
+                <span>Menu Item</span>
+            </button>
+            </mat-menu>
+        </div>
+    <mat-card-header>
+      <div mat-card-avatar class="title-icon-container">
+        <mat-icon class="title-icon">assignment_ind</mat-icon>
+      </div>
+      <mat-card-title>Writing Assignments</mat-card-title>
+      <mat-card-subtitle>Incomplete Writing Assignments</mat-card-subtitle>
+      <span class="flex-spacer"></span>
+    </mat-card-header>
+
+    <mat-card-content>
+         <table class="assignment-table mat-elevation-z2">
+        <thead>
+          <tr class="table-row">
+            <th>Student</th>
+            <th>Assignment</th>
+            <th>Issued By</th>
+            <th>Date Issued</th>
+            <th>Date Due</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+            <tr class="table-row" *ngFor="let assignment of assignmentsDue">
+                <td>{{assignment.firstName}} {{ assignment.lastName }}</td>
+                <td>{{ assignment.scripture }}</td>
+                <td>{{ assignment.issuedBy }}</td>
+                <td>{{ assignment.dateIssued | date }}</td>
+                <td>{{ assignment.dateDue | date }}</td>
+                <td class="actions-col">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  matTooltip="Mark assignment complete"
+                  aria-label="Mark assignment complete"
+                  (click)="onMarkAssignmentComplete(assignment)">
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+
+                <button
+                  mat-icon-button
+                  color="primary"
+                  matTooltip="Extend due date"
+                  aria-label="Extend due date"
+                  (click)="onExtendDueDate(assignment)">
+                  <mat-icon>schedule</mat-icon>
+                </button>
+              </td>
+            </tr>
+            </tbody>
+        </table>
+    </mat-card-content>
+  </mat-card>

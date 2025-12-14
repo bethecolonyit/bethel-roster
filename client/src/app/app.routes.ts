@@ -12,6 +12,7 @@ import { counselorGuard } from './guards/counselor-guard';
 import { ProjectOfficeDashboard } from './components/departments/project_office/project-office-dashboard/project-office-dashboard';
 import { OfficeDashboard } from './components/departments/office/office-dashboard/office-dashboard';
 import { CounselingDashboard } from './components/departments/counseling/counseling-dashboard/counseling-dashboard';
+import { CreateWritingAssignment } from './components/writing-assignments/create-writing-assignment/create-writing-assignment';
 
 export const appRoutes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -26,6 +27,11 @@ export const appRoutes: Routes = [
   {
     path: 'students',
     component: Students,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'students/create-writing-assignment/:id',
+    component: CreateWritingAssignment,
     canActivate: [authGuard],
   },
   {

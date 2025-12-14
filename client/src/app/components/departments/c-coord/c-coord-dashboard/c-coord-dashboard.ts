@@ -2,12 +2,14 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltip } from '@angular/material/tooltip';
 import { StudentService } from '../../../../services/student.service';
 import { Student } from '../../../../models/student';
 import { CommonModule } from '@angular/common';
+import { WritingAssignmentsList } from '../../../writing-assignments/writing-assignments-list/writing-assignments-list';
 @Component({
   selector: 'app-counseling-dashboard',
-  imports: [CommonModule, MatCardModule, MatMenuModule, MatIconModule],
+  imports: [CommonModule, MatCardModule, MatMenuModule, MatIconModule, MatTooltip, WritingAssignmentsList],
   templateUrl: './c-coord-dashboard.html',
   styleUrl: './c-coord-dashboard.scss',
   standalone: true,

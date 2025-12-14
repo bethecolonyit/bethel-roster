@@ -1,4 +1,5 @@
 <div class="section-container">
+  
     
   <mat-card class="section-card">
     <div class="card-menu">
@@ -106,7 +107,14 @@
                 <td>{{ student.idNumber }}</td>
                 <td>{{ student.dayin | date }}</td>
                 <td class="actions-col">
-                <button mat-button color="primary" (click)="onAssignCounselor(student)">Assign Counselor</button>
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    matTooltip="Assign counselor"
+                    aria-label="Assign counselor"
+                    (click)="onAssignCounselor(student)">
+                    <mat-icon>person_add</mat-icon>
+                  </button>
                 </td>
             </tr>
             </tbody>
@@ -114,3 +122,10 @@
     </mat-card-content>
   </mat-card>
 </div>
+<div class="section-container">
+  <app-writing-assignments-list></app-writing-assignments-list>
+</div>
+
+
+
+

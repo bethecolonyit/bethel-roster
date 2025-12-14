@@ -19,7 +19,7 @@
                 <mat-icon>note_add</mat-icon>
                 <span>Create note</span>
             </button>
-            <button mat-menu-item (click)="onCreateWriteUp()">
+            <button mat-menu-item [routerLink]="['/students/create-writing-assignment/', student.id]">
                 <mat-icon>report</mat-icon>
                 <span>Create write-up</span>
             </button>
