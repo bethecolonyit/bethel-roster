@@ -46,6 +46,7 @@ const registerBedRoutes = require('./controllers/bedsController');
 const registerBedAssignmentRoutes = require('./controllers/bedAssignmentsController');
 const registerResidentialStructureRoutes = require('./controllers/residentialStructureController');
 const registerWritingAssignmentRoutes = require('./controllers/writingAssignmentsController');
+const registerEmployeeRoutes = require('./controllers/employeeController');
 
 
 
@@ -172,6 +173,8 @@ registerBedRoutes(api, db);
 registerBedAssignmentRoutes(api, db);
 registerResidentialStructureRoutes(api, db);
 registerWritingAssignmentRoutes(api, db);
+registerEmployeeRoutes(api, db);
+
 app.use('/api', api);
 // ----------------------
 // Angular dist (production build)

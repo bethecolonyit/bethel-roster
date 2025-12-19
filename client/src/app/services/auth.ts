@@ -13,6 +13,10 @@ export interface LoginPayload {
   email: string;
   password: string;
 }
+export interface UserLookup {
+  id: number;
+  email:string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -78,4 +82,12 @@ export class AuthService {
   get isAdmin(): boolean {
     return this.currentUser?.role === 'admin';
   }
+
+  getUsersLookup(includeUserId?: number) {
+  const url =
+    includeUserId != null
+      ? `${this.apiUrl}/api/auth/users/lookup/?includeUserId=${includeUserId}`
+      : `${this.apiUrl}/api/auth/users/lookup`;
+  return this.http.get<UserLookup[]>(url, { withCredentials: true });
+}
 }

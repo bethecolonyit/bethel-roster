@@ -13,6 +13,7 @@ import { ProjectOfficeDashboard } from './components/departments/project_office/
 import { OfficeDashboard } from './components/departments/office/office-dashboard/office-dashboard';
 import { CounselingDashboard } from './components/departments/counseling/counseling-dashboard/counseling-dashboard';
 import { CreateWritingAssignment } from './components/writing-assignments/create-writing-assignment/create-writing-assignment';
+import { ManageEmployees } from './components/employees/manage-employees/manage-employees';
 
 export const appRoutes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -67,6 +68,11 @@ export const appRoutes: Routes = [
   {
     path: 'departments/office',
     component: OfficeDashboard,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'employees',
+    component: ManageEmployees,
     canActivate: [adminGuard],
   },
 

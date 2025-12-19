@@ -2,6 +2,7 @@
 const bcrypt = require('bcrypt');
 const { ensureAuthenticated, ensureAdmin } = require('../middleware/auth');
 
+
 function registerAuthRoutes(app, db) {
   const { sql, query } = db;
 
@@ -96,6 +97,33 @@ function registerAuthRoutes(app, db) {
       res.status(500).json({ error: 'Database error fetching users' });
     }
   });
+   // returns just what the employee form needs
+// returns unassigned users, and optionally includes one assigned user (useful during edit)
+app.get('/auth/users/lookup', ensureAdmin, async (req, res) => {
+  const includeUserId = req.query.includeUserId ? Number(req.query.includeUserId) : null;
+
+  try {
+    const r = await query(
+      `
+      SELECT u.id, u.email
+      FROM app.users u
+      LEFT JOIN app.employees e ON e.userId = u.id
+      WHERE e.userId IS NULL
+         OR (@includeUserId IS NOT NULL AND u.id = @includeUserId)
+      ORDER BY u.email ASC
+      `,
+      {
+        includeUserId: { type: db.sql.Int, value: includeUserId },
+      }
+    );
+
+    res.json(r.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error fetching users lookup' });
+  }
+});
+
 
   // PUT /auth/users/:id (admin only)
   app.put('/auth/users/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {
@@ -210,6 +238,9 @@ function registerAuthRoutes(app, db) {
       res.status(500).json({ error: 'Database error deleting user' });
     }
   });
+
+
+ 
 }
 
 module.exports = registerAuthRoutes;
