@@ -5,8 +5,8 @@ export interface Student {
   idNumber: string;
   counselor: string;
   program: string;
-  dayin: string; // ISO date string
-  dayout: string; // ISO date string
+  dayin: string; 
+  dayout: string;
   isFelon: boolean;
   onProbation: boolean;
   usesNicotine: boolean;

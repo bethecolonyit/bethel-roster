@@ -2,57 +2,93 @@
   <mat-card class="students-card">
     <mat-card-header class="students-header">
 
-  <!-- Title + Subtitle + Icon -->
-  <div class="students-title">
-    <div class="students-title-icon">
-      <mat-icon>school</mat-icon>
-    </div>
+      <!-- Title + Subtitle + Icon -->
+      <div class="students-title">
+        <div class="students-title-icon">
+          <mat-icon>school</mat-icon>
+        </div>
 
-    <div class="students-title-text">
-      <mat-card-title>Student Dashboard</mat-card-title>
-      <mat-card-subtitle>View and manage enrolled students</mat-card-subtitle>
-    </div>
-  </div>
+        <div class="students-title-text">
+          <mat-card-title>Student Dashboard</mat-card-title>
+          <mat-card-subtitle>View and manage enrolled students</mat-card-subtitle>
+        </div>
+      </div>
 
-  <!-- Action Buttons -->
-  <div class="students-header-actions">
-    <!-- View toggle button -->
-    <button
-      mat-icon-button
-      color="primary"
-      (click)="toggleViewMode()"
-      [attr.aria-label]="viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'"
-    >
-      <mat-icon>
-        {{ viewMode === 'grid' ? 'view_list' : 'grid_view' }}
-      </mat-icon>
-    </button>
+      <!-- Action Buttons -->
+      <div class="students-header-actions">
 
-    <!-- Add / Close button -->
-    <button
-      mat-icon-button
-      color="primary"
-      type="button"
-      *ngIf="auth.isAdmin"
-      (click)="toggleCreateStudent()"
-      [attr.aria-label]="showCreateForm ? 'Hide create student form' : 'Show create student form'"
-    >
-      <mat-icon>{{ showCreateForm ? 'close' : 'add' }}</mat-icon>
-    </button>
-  </div>
+        <!-- View toggle button -->
+        <button
+          mat-icon-button
+          color="primary"
+          (click)="toggleViewMode()"
+          [attr.aria-label]="viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'"
+          matTooltip="Toggle view"
+        >
+          <mat-icon>
+            {{ viewMode === 'grid' ? 'view_list' : 'grid_view' }}
+          </mat-icon>
+        </button>
 
-  <!-- Search Box -->
-  <mat-form-field class="students-search" appearance="outline">
-    <mat-icon matPrefix>search</mat-icon>
-    <input
-      matInput
-      placeholder="Search by name or file #"
-      [(ngModel)]="searchTerm"
-      (ngModelChange)="onSearchTermChange($event)"
-    />
-  </mat-form-field>
+        <!-- NEW: Sort button -->
+        <button
+          mat-icon-button
+          color="primary"
+          [matMenuTriggerFor]="sortMenu"
+          aria-label="Sort options"
+          matTooltip="{{ getSortLabel() }}"
+        >
+          <mat-icon>sort</mat-icon>
+        </button>
 
-</mat-card-header>
+        <mat-menu #sortMenu="matMenu">
+          <button mat-menu-item (click)="setSort('alpha')">
+            <mat-icon>sort_by_alpha</mat-icon>
+            <span>Sort Alphabetical</span>
+          </button>
+
+          <button mat-menu-item (click)="setSort('dayIn')">
+            <mat-icon>schedule</mat-icon>
+            <span>Sort by Day-In (most recent first)</span>
+          </button>
+
+          <button mat-menu-item (click)="setSort('dayOut')">
+            <mat-icon>event</mat-icon>
+            <span>Sort by DayOut (soonest first)</span>
+          </button>
+
+          <button mat-menu-item (click)="setSort('program')">
+            <mat-icon>category</mat-icon>
+            <span>Sort by Program</span>
+          </button>
+        </mat-menu>
+
+        <!-- Add / Close button -->
+        <button
+          mat-icon-button
+          color="primary"
+          type="button"
+          *ngIf="auth.isAdmin"
+          (click)="toggleCreateStudent()"
+          [attr.aria-label]="showCreateForm ? 'Hide create student form' : 'Show create student form'"
+          matTooltip="{{ showCreateForm ? 'Close' : 'Add student' }}"
+        >
+          <mat-icon>{{ showCreateForm ? 'close' : 'add' }}</mat-icon>
+        </button>
+      </div>
+
+      <!-- Search Box -->
+      <mat-form-field class="students-search" appearance="outline">
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          placeholder="Search by name or file #"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchTermChange($event)"
+        />
+      </mat-form-field>
+
+    </mat-card-header>
 
     <mat-card-content>
 
@@ -76,7 +112,7 @@
           (createNote)="onCreateStudentNote($event)"
           (createWriteUp)="onCreateStudentWriteUp($event)"
         ></app-student-card>
-</div>
+      </div>
 
       <!-- LIST VIEW -->
       <app-student-list
