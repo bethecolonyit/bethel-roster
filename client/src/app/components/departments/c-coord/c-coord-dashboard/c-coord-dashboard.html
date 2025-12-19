@@ -107,14 +107,33 @@
                 <td>{{ student.idNumber }}</td>
                 <td>{{ student.dayin | date }}</td>
                 <td class="actions-col">
-                  <button
-                    mat-icon-button
-                    color="primary"
-                    matTooltip="Assign counselor"
-                    aria-label="Assign counselor"
-                    (click)="onAssignCounselor(student)">
-                    <mat-icon>person_add</mat-icon>
-                  </button>
+    <div class="menu">
+            <button
+            mat-icon-button
+            class="add-button"
+            matTooltip="Assign Counselor"
+            [matMenuTriggerFor]="cardMenu"
+            (click)="$event.stopPropagation()"
+            aria-label="dashboard options"
+            >
+            <mat-icon>person_add</mat-icon>
+            </button>
+
+            <mat-menu #cardMenu="matMenu">
+            <button mat-menu-item (click)="onAssignCounselor(student, 'Pastor Starnes')">
+                <span>Pastor Starnes</span>
+            </button>
+            <button mat-menu-item (click)="onAssignCounselor(student, 'Pastor Benfield')">
+                <span>Pastor Benfield</span>
+            </button>
+            <button mat-menu-item (click)="onAssignCounselor(student, 'Pastor Alphin')">
+                <span>Pastor Alphin</span>
+            </button>
+             <button mat-menu-item (click)="onAssignCounselor(student, 'Pastor Frye')">
+                <span>Pastor Frye</span>
+            </button>
+            </mat-menu>
+        </div>
                 </td>
             </tr>
             </tbody>

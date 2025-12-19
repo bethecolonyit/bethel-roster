@@ -17,6 +17,9 @@ export class WritingAssignmentService {
     getAllWritingAssignments(): Observable<WritingAssignmentListItem[]> {
         return this.http.get<WritingAssignmentListItem[]>(`${this.api}`, {withCredentials: true});
     }
+    getAllWritingAssignmentsDue(): Observable<WritingAssignmentListItem[]> {
+        return this.http.get<WritingAssignmentListItem[]>(`${this.api}?isComplete=false`, {withCredentials: true});
+    }
     getWritingAssignmentsByStudentId(id: number): Observable<WritingAssignmentListItem[]> {
         return this.http.get<WritingAssignmentListItem[]>(`${this.api}/${id}`, {withCredentials: true});
     }

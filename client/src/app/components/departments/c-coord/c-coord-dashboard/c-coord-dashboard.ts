@@ -7,6 +7,7 @@ import { StudentService } from '../../../../services/student.service';
 import { Student } from '../../../../models/student';
 import { CommonModule } from '@angular/common';
 import { WritingAssignmentsList } from '../../../writing-assignments/writing-assignments-list/writing-assignments-list';
+import { MatSnackBar } from '@angular/material/snack-bar';
 @Component({
   selector: 'app-counseling-dashboard',
   imports: [CommonModule, MatCardModule, MatMenuModule, MatIconModule, MatTooltip, WritingAssignmentsList],
@@ -21,7 +22,7 @@ export class CCoordDashboard {
   filteredStudents: Student[] = []
   error: string | null = null;
 
-  constructor(private studentService: StudentService, private cdr: ChangeDetectorRef) {
+  constructor(private studentService: StudentService, private cdr: ChangeDetectorRef, private snack: MatSnackBar) {
     this.loadStudents();
 
   }
@@ -43,6 +44,20 @@ export class CCoordDashboard {
   }
 
   emptyFunction() { } // Placeholder for future functionality
-  onAssignCounselor(student: Student) { } // Placeholder for future functionality 
+  onAssignCounselor(student: Student, counselor: string) {
+    const confirmed = window.confirm(
+      `Are you sure you want to assign ${student.firstName} ${student.lastName} to ${counselor}?`
+    );
+    if (!confirmed) return;
+      student.counselor = counselor;
+      this.studentService.updateStudent(student.id!, student).subscribe({
+        next: () => {
+          this.snack.open(`${student.firstName} ${student.lastName} has been assigned to ${student.counselor}`, 'close', {
+            duration : 3000
+          })
+          this.loadStudents();
+        }
+      })
+  } 
 
 }
