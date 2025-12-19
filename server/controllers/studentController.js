@@ -9,7 +9,11 @@ function registerStudentRoutes(app, db, upload) {
   // GET /students
   app.get('/students', ensureAuthenticated, async (req, res) => {
     try {
-      const r = await query(`SELECT * FROM app.students`);
+      const r = await query(`
+        SELECT * 
+        FROM app.students
+        ORDER BY firstName ASC
+        `);
       res.json(r.recordset);
     } catch (err) {
       console.error(err);
@@ -110,7 +114,7 @@ function registerStudentRoutes(app, db, upload) {
           ON r.id = b.roomId
         LEFT JOIN app.buildings bu
           ON bu.id = r.buildingId
-        ORDER BY s.lastName, s.firstName
+        ORDER BY s.firstName, s.lastName
         `
       );
 
