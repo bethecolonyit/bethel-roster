@@ -88,6 +88,17 @@ onFileSelected(event: any) {
 onSubmit(form: NgForm) {
   const formData = new FormData();
 
+  console.log('dayin typeof:', typeof this.student.dayin);
+console.log('dayin value:', this.student.dayin);
+try {
+  // will work if it's a Date
+  // @ts-ignore
+  console.log('dayin toISOString:', this.student.dayin?.toISOString?.());
+} catch {}
+
+console.log('payload JSON:', JSON.stringify(this.student));
+
+
   formData.append('data', JSON.stringify(this.student));
 
   if (this.selectedFile) {

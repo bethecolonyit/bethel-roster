@@ -64,13 +64,13 @@
         <div class="meta-row">
           <span class="meta-label">Day In:</span>
           <span class="meta-value">
-            {{ student.dayin | date:'MM/dd/yyyy' }}
+            {{ formatDateOnly(student.dayin) }}
           </span>
         </div>
         <div class="meta-row">
           <span class="meta-label">Day Out:</span>
           <span class="meta-value">
-            {{ student.dayout | date:'MM/dd/yyyy' }}
+            {{ formatDateOnly(student.dayout) }}
           </span>
         </div>
       </div>

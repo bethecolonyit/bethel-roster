@@ -3,6 +3,56 @@ const fs = require('fs');
 const path = require('path');
 const { ensureAuthenticated, ensureOffice } = require('../middleware/auth');
 
+/**
+ * Convert incoming date-ish values to a DATE-ONLY string "YYYY-MM-DD".
+ * Accepts:
+ *  - JS Date object
+ *  - "YYYY-MM-DD"
+ *  - ISO string "YYYY-MM-DDTHH:mm:ss.sssZ" (or with offset)
+ *
+ * IMPORTANT: If the input contains a timezone / time component (ISO),
+ * we extract the UTC calendar date to avoid server-local timezone shifts.
+ */
+function toDateOnlyString(value) {
+  if (value == null || value === '') return null;
+
+  // JS Date
+  if (value instanceof Date) {
+    if (!Number.isFinite(value.getTime())) return null;
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, '0');
+    const d = String(value.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  if (typeof value !== 'string') {
+    // try coercion
+    const d = new Date(value);
+    if (!Number.isFinite(d.getTime())) return null;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  const s = value.trim();
+  if (!s) return null;
+
+  // Already date-only
+  const m1 = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (m1) return s;
+
+  // ISO / datetime string: extract UTC date to avoid local TZ shifting
+  // This is the key change vs your previous attempt.
+  const d = new Date(s);
+  if (!Number.isFinite(d.getTime())) return null;
+
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function registerStudentRoutes(app, db, upload) {
   const { sql, query } = db;
 
@@ -13,7 +63,7 @@ function registerStudentRoutes(app, db, upload) {
         SELECT * 
         FROM app.students
         ORDER BY firstName ASC
-        `);
+      `);
       res.json(r.recordset);
     } catch (err) {
       console.error(err);
@@ -156,6 +206,16 @@ function registerStudentRoutes(app, db, upload) {
       const newPath = path.join(uploadsDir, newFilename);
       fs.renameSync(req.file.path, newPath);
 
+      // ✅ Convert to date-only strings (timezone-proof)
+      const dayinDateOnly = toDateOnlyString(dayin);
+      const dayoutDateOnly = toDateOnlyString(dayout);
+
+      // Optional: temporary diagnostics (remove once confirmed)
+      // console.log('Incoming dayin raw:', dayin);
+      // console.log('Incoming dayin dateOnly:', dayinDateOnly);
+      // console.log('Incoming dayout raw:', dayout);
+      // console.log('Incoming dayout dateOnly:', dayoutDateOnly);
+
       await query(
         `
         INSERT INTO app.students (
@@ -164,7 +224,8 @@ function registerStudentRoutes(app, db, upload) {
           foodAllergies, beeAllergies
         )
         VALUES (
-          @firstName, @lastName, @idNumber, @counselor, @program, @dayin, @dayout,
+          @firstName, @lastName, @idNumber, @counselor, @program,
+          CAST(@dayin AS date), CAST(@dayout AS date),
           @isFelon, @onProbation, @usesNicotine, @hasDriverLicense,
           @foodAllergies, @beeAllergies
         )
@@ -175,8 +236,11 @@ function registerStudentRoutes(app, db, upload) {
           idNumber: { type: sql.NVarChar(50), value: idNumber ?? null },
           counselor: { type: sql.NVarChar(100), value: counselor ?? null },
           program: { type: sql.NVarChar(100), value: program ?? null },
-          dayin: { type: sql.Date, value: dayin ?? null },
-          dayout: { type: sql.Date, value: dayout ?? null },
+
+          // ✅ bind as text; SQL does the date conversion
+          dayin: { type: sql.NVarChar(10), value: dayinDateOnly },
+          dayout: { type: sql.NVarChar(10), value: dayoutDateOnly },
+
           isFelon: { type: sql.Bit, value: !!isFelon },
           onProbation: { type: sql.Bit, value: !!onProbation },
           usesNicotine: { type: sql.Bit, value: !!usesNicotine },
@@ -214,6 +278,9 @@ function registerStudentRoutes(app, db, upload) {
         beeAllergies,
       } = req.body;
 
+      const dayinDateOnly = toDateOnlyString(dayin);
+      const dayoutDateOnly = toDateOnlyString(dayout);
+
       const r = await query(
         `
         UPDATE app.students
@@ -222,8 +289,8 @@ function registerStudentRoutes(app, db, upload) {
           lastName=@lastName,
           counselor=@counselor,
           program=@program,
-          dayin=@dayin,
-          dayout=@dayout,
+          dayin=CAST(@dayin AS date),
+          dayout=CAST(@dayout AS date),
           isFelon=@isFelon,
           onProbation=@onProbation,
           usesNicotine=@usesNicotine,
@@ -239,8 +306,11 @@ function registerStudentRoutes(app, db, upload) {
           lastName: { type: sql.NVarChar(100), value: lastName ?? null },
           counselor: { type: sql.NVarChar(100), value: counselor ?? null },
           program: { type: sql.NVarChar(100), value: program ?? null },
-          dayin: { type: sql.Date, value: dayin ?? null },
-          dayout: { type: sql.Date, value: dayout ?? null },
+
+          // ✅ bind as text; SQL does the date conversion
+          dayin: { type: sql.NVarChar(10), value: dayinDateOnly },
+          dayout: { type: sql.NVarChar(10), value: dayoutDateOnly },
+
           isFelon: { type: sql.Bit, value: !!isFelon },
           onProbation: { type: sql.Bit, value: !!onProbation },
           usesNicotine: { type: sql.Bit, value: !!usesNicotine },
