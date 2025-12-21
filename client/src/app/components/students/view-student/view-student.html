@@ -104,7 +104,8 @@
     <div class="row">
       <mat-form-field appearance="fill">
         <mat-label>Counselor</mat-label>
-        <mat-select name="counselor" [(ngModel)]="student.counselor" required [disabled]="!isEditingBasic">
+        <mat-select name="counselor" [(ngModel)]="student.counselor"  [disabled]="!isEditingBasic">
+          <mat-option value="">Unassigned</mat-option>
           <mat-option value="Pastor Frye">Pastor Frye</mat-option>
           <mat-option value="Pastor Starnes">Pastor Starnes</mat-option>
           <mat-option value="Pastor Benfield">Pastor Benfield</mat-option>
