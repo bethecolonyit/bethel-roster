@@ -87,18 +87,6 @@ onFileSelected(event: any) {
 
 onSubmit(form: NgForm) {
   const formData = new FormData();
-
-  console.log('dayin typeof:', typeof this.student.dayin);
-console.log('dayin value:', this.student.dayin);
-try {
-  // will work if it's a Date
-  // @ts-ignore
-  console.log('dayin toISOString:', this.student.dayin?.toISOString?.());
-} catch {}
-
-console.log('payload JSON:', JSON.stringify(this.student));
-
-
   formData.append('data', JSON.stringify(this.student));
 
   if (this.selectedFile) {
@@ -135,10 +123,10 @@ onDayInChange() {
   if (this.student.dayin) {
     const inDate = new Date(this.student.dayin);
     const outDate = new Date(inDate);
-    if (this.student.program === '65-day') {
+    if (this.student.program === '65 Day') {
     outDate.setDate(outDate.getDate() + 65);
     this.student.dayout = outDate.toISOString();
-    } else if (this.student.program === '30-day') {
+    } else if (this.student.program === '30 Day') {
     outDate.setDate(outDate.getDate() + 30);
     this.student.dayout = outDate.toISOString();
     }
