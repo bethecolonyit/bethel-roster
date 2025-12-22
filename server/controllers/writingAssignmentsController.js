@@ -108,7 +108,7 @@ function registerWritingAssignmentRoutes(app, db) {
 const multer = require('multer');
 const upload = multer();
 
-app.post('/writing-assignments', ensureOffice, upload.none(), async (req, res) => {
+app.post('/writing-assignments', ensureAuthenticated, upload.none(), async (req, res) => {
   try {
     // Secure userId from session (do NOT trust client)
     const sessionUserId = req.session?.userId;
