@@ -1,6 +1,44 @@
 // controllers/writingAssignmentsController.js (MSSQL)
 const { ensureAuthenticated, ensureOffice } = require('../middleware/auth');
 
+function toDateOnlyString(value) {
+  if (value == null || value === '') return null;
+
+  // JS Date
+  if (value instanceof Date) {
+    if (!Number.isFinite(value.getTime())) return null;
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, '0');
+    const d = String(value.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  if (typeof value !== 'string') {
+    const d = new Date(value);
+    if (!Number.isFinite(d.getTime())) return null;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  const s = value.trim();
+  if (!s) return null;
+
+  // Already date-only
+  const m1 = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (m1) return s;
+
+  // ISO / datetime string: extract UTC date to avoid local TZ shifting
+  const d = new Date(s);
+  if (!Number.isFinite(d.getTime())) return null;
+
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function registerWritingAssignmentRoutes(app, db) {
   const { sql, query } = db;
 
@@ -83,7 +121,7 @@ function registerWritingAssignmentRoutes(app, db) {
     }
   });
 
-  // GET /api/writing-assignments/:studentId  (matches your Angular getWritingAssignmentsByStudentId)
+  // GET /api/writing-assignments/:studentId
   app.get('/writing-assignments/:studentId', ensureAuthenticated, async (req, res) => {
     try {
       const studentId = Number(req.params.studentId);
@@ -105,93 +143,98 @@ function registerWritingAssignmentRoutes(app, db) {
 
   // POST /api/writing-assignments
   // Returns created WritingAssignmentListItem
-const multer = require('multer');
-const upload = multer();
+  const multer = require('multer');
+  const upload = multer();
 
-app.post('/writing-assignments', ensureAuthenticated, upload.none(), async (req, res) => {
-  try {
-    // Secure userId from session (do NOT trust client)
-    const sessionUserId = req.session?.userId;
-    if (!sessionUserId) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-
-    const {
-      studentId,
-      dateIssued,
-      dateDue,
-      infraction,
-      scripture,
-      demerits,
-      isComplete
-    } = req.body ?? {};
-
-    if (!studentId || !dateIssued || !dateDue) {
-      return res
-        .status(400)
-        .json({ error: 'studentId, dateIssued, and dateDue are required' });
-    }
-
-    const issued = new Date(dateIssued);
-    const due = new Date(dateDue);
-    if (Number.isNaN(issued.getTime()) || Number.isNaN(due.getTime())) {
-      return res.status(400).json({ error: 'dateIssued/dateDue must be valid dates' });
-    }
-
-    const parsedStudentId = Number(studentId);
-    if (!Number.isFinite(parsedStudentId)) {
-      return res.status(400).json({ error: 'studentId must be a number' });
-    }
-
-    const parsedDemerits = Number(demerits);
-    const safeDemerits = Number.isFinite(parsedDemerits) ? parsedDemerits : 0;
-
-    // multipart/form-data sends strings; avoid !!"false" === true
-    const safeIsComplete =
-      isComplete === true ||
-      isComplete === 'true' ||
-      isComplete === '1' ||
-      isComplete === 1;
-
-    const insertResult = await query(
-      `
-      INSERT INTO app.writing_assignments (
-        userId, studentId, dateIssued, dateDue, infraction, scripture, demerits, isComplete
-      )
-      OUTPUT INSERTED.id
-      VALUES (
-        @userId, @studentId, @dateIssued, @dateDue, @infraction, @scripture, @demerits, @isComplete
-      )
-      `,
-      {
-        userId: { type: sql.Int, value: Number(sessionUserId) },
-        studentId: { type: sql.Int, value: parsedStudentId },
-        dateIssued: { type: sql.DateTime2, value: issued },
-        dateDue: { type: sql.DateTime2, value: due },
-        infraction: { type: sql.NVarChar(sql.MAX), value: infraction ?? null },
-        scripture: { type: sql.NVarChar(sql.MAX), value: scripture ?? null },
-        demerits: { type: sql.Int, value: safeDemerits },
-        isComplete: { type: sql.Bit, value: safeIsComplete }
+  app.post('/writing-assignments', ensureAuthenticated, upload.none(), async (req, res) => {
+    try {
+      // Secure userId from session (do NOT trust client)
+      const sessionUserId = req.session?.userId;
+      if (!sessionUserId) {
+        return res.status(401).json({ error: 'Not authenticated' });
       }
-    );
 
-    const newId = insertResult.recordset?.[0]?.id;
-    if (!newId) return res.status(500).json({ error: 'Insert succeeded but no id returned' });
+      const {
+        studentId,
+        dateIssued,
+        dateDue,
+        infraction,
+        scripture,
+        demerits,
+        isComplete
+      } = req.body ?? {};
 
-    const r = await query(
-      baseSelect('WHERE wa.id = @id'),
-      { id: { type: sql.Int, value: Number(newId) } }
-    );
+      if (!studentId || !dateIssued || !dateDue) {
+        return res
+          .status(400)
+          .json({ error: 'studentId, dateIssued, and dateDue are required' });
+      }
 
-    const row = r.recordset?.[0];
-    if (!row) return res.status(500).json({ error: 'Created row not found' });
+      const parsedStudentId = Number(studentId);
+      if (!Number.isFinite(parsedStudentId)) {
+        return res.status(400).json({ error: 'studentId must be a number' });
+      }
 
-    res.status(201).json(toListItem(row));
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Database insert error' });
-  }
-});
+      const issuedDateOnly = toDateOnlyString(dateIssued);
+      const dueDateOnly = toDateOnlyString(dateDue);
+
+      if (!issuedDateOnly || !dueDateOnly) {
+        return res.status(400).json({ error: 'dateIssued/dateDue must be valid dates' });
+      }
+
+      const parsedDemerits = Number(demerits);
+      const safeDemerits = Number.isFinite(parsedDemerits) ? parsedDemerits : 0;
+
+      // multipart/form-data sends strings; avoid !!"false" === true
+      const safeIsComplete =
+        isComplete === true ||
+        isComplete === 'true' ||
+        isComplete === '1' ||
+        isComplete === 1;
+
+      const insertResult = await query(
+        `
+        INSERT INTO app.writing_assignments (
+          userId, studentId, dateIssued, dateDue, infraction, scripture, demerits, isComplete
+        )
+        OUTPUT INSERTED.id
+        VALUES (
+          @userId, @studentId, CAST(@dateIssued AS date), CAST(@dateDue AS date),
+          @infraction, @scripture, @demerits, @isComplete
+        )
+        `,
+        {
+          userId: { type: sql.Int, value: Number(sessionUserId) },
+          studentId: { type: sql.Int, value: parsedStudentId },
+
+          // ✅ bind as text; SQL does date conversion (timezone-proof)
+          dateIssued: { type: sql.NVarChar(10), value: issuedDateOnly },
+          dateDue: { type: sql.NVarChar(10), value: dueDateOnly },
+
+          infraction: { type: sql.NVarChar(sql.MAX), value: infraction ?? null },
+          scripture: { type: sql.NVarChar(sql.MAX), value: scripture ?? null },
+          demerits: { type: sql.Int, value: safeDemerits },
+          isComplete: { type: sql.Bit, value: safeIsComplete }
+        }
+      );
+
+      const newId = insertResult.recordset?.[0]?.id;
+      if (!newId) return res.status(500).json({ error: 'Insert succeeded but no id returned' });
+
+      const r = await query(
+        baseSelect('WHERE wa.id = @id'),
+        { id: { type: sql.Int, value: Number(newId) } }
+      );
+
+      const row = r.recordset?.[0];
+      if (!row) return res.status(500).json({ error: 'Created row not found' });
+
+      res.status(201).json(toListItem(row));
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Database insert error' });
+    }
+  });
 
   // PUT /api/writing-assignments/:id
   // Returns updated WritingAssignmentListItem
@@ -211,15 +254,25 @@ app.post('/writing-assignments', ensureAuthenticated, upload.none(), async (req,
         isComplete
       } = req.body;
 
-      const issued = dateIssued != null ? new Date(dateIssued) : null;
-      const due = dateDue != null ? new Date(dateDue) : null;
+      const issuedDateOnly = dateIssued != null ? toDateOnlyString(dateIssued) : null;
+      const dueDateOnly = dateDue != null ? toDateOnlyString(dateDue) : null;
 
-      if (issued && Number.isNaN(issued.getTime())) {
+      // If caller provided dates, they must be valid
+      if (dateIssued != null && !issuedDateOnly) {
         return res.status(400).json({ error: 'dateIssued must be a valid date' });
       }
-      if (due && Number.isNaN(due.getTime())) {
+      if (dateDue != null && !dueDateOnly) {
         return res.status(400).json({ error: 'dateDue must be a valid date' });
       }
+
+      // Handle isComplete from JSON clients robustly ("false" should be false)
+      const safeIsComplete =
+        isComplete == null
+          ? null
+          : (isComplete === true ||
+             isComplete === 'true' ||
+             isComplete === '1' ||
+             isComplete === 1);
 
       const updateResult = await query(
         `
@@ -227,8 +280,11 @@ app.post('/writing-assignments', ensureAuthenticated, upload.none(), async (req,
         SET
           userId     = COALESCE(@userId, userId),
           studentId  = COALESCE(@studentId, studentId),
-          dateIssued = COALESCE(@dateIssued, dateIssued),
-          dateDue    = COALESCE(@dateDue, dateDue),
+
+          -- ✅ timezone-proof date-only writes
+          dateIssued = COALESCE(CAST(@dateIssued AS date), dateIssued),
+          dateDue    = COALESCE(CAST(@dateDue AS date), dateDue),
+
           infraction = COALESCE(@infraction, infraction),
           scripture  = COALESCE(@scripture, scripture),
           demerits   = COALESCE(@demerits, demerits),
@@ -239,12 +295,15 @@ app.post('/writing-assignments', ensureAuthenticated, upload.none(), async (req,
           id: { type: sql.Int, value: id },
           userId: { type: sql.Int, value: userId == null ? null : Number(userId) },
           studentId: { type: sql.Int, value: studentId == null ? null : Number(studentId) },
-          dateIssued: { type: sql.DateTime2, value: issued ?? null },
-          dateDue: { type: sql.DateTime2, value: due ?? null },
+
+          // ✅ bind as text; SQL does date conversion
+          dateIssued: { type: sql.NVarChar(10), value: issuedDateOnly },
+          dateDue: { type: sql.NVarChar(10), value: dueDateOnly },
+
           infraction: { type: sql.NVarChar(sql.MAX), value: infraction ?? null },
           scripture: { type: sql.NVarChar(sql.MAX), value: scripture ?? null },
           demerits: { type: sql.Int, value: demerits == null ? null : Number(demerits) },
-          isComplete: { type: sql.Bit, value: isComplete == null ? null : !!isComplete }
+          isComplete: { type: sql.Bit, value: safeIsComplete }
         }
       );
 
