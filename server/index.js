@@ -47,6 +47,7 @@ const registerBedAssignmentRoutes = require('./controllers/bedAssignmentsControl
 const registerResidentialStructureRoutes = require('./controllers/residentialStructureController');
 const registerWritingAssignmentRoutes = require('./controllers/writingAssignmentsController');
 const registerEmployeeRoutes = require('./controllers/employeeController');
+const registerTimeOffRoutes = require('./controllers/timeOffController');
 
 
 
@@ -174,6 +175,7 @@ registerBedAssignmentRoutes(api, db);
 registerResidentialStructureRoutes(api, db);
 registerWritingAssignmentRoutes(api, db);
 registerEmployeeRoutes(api, db);
+registerTimeOffRoutes(api, db);
 
 app.use('/api', api);
 // ----------------------
