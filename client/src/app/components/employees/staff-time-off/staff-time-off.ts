@@ -86,11 +86,17 @@ export class StaffTimeOffComponent implements OnInit {
     this.loading = true;
 
     this.timeOff.getLeaveTypes().subscribe({
-      next: (types) => (this.leaveTypes = types ?? []),
+      next: (types) => {
+        this.leaveTypes = types ?? [];
+        this.cdr.markForCheck();
+      },
     });
 
     this.timeOff.getMyBalances().subscribe({
-      next: (rows) => (this.balances = rows ?? []),
+      next: (rows) => {
+        this.balances = rows ?? [];
+        this.cdr.markForCheck();
+      },
     });
 
     this.timeOff.getMyRequests().subscribe({
