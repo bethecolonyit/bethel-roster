@@ -9,7 +9,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDividerModule } from '@angular/material/divider';
 import { CreateStudentComponent } from './create-student/create-student';
 import { StudentService } from '../../services/student.service';
 import { Student } from '../../models/student';
@@ -17,7 +18,9 @@ import { StudentList } from './student-list/student-list';
 import { StudentCard } from './student-card/student-card';
 import { AuthService } from '../../services/auth';
 
-type SortOption = 'alpha' | 'dayIn' | 'dayOut' | 'program';
+type SortOption = 'alpha' | 'lastName' | 'dayIn' | 'dayOut' | 'program';
+
+type ProgramFilter = '65 Day' | '30 Day' | 'VSP';
 
 @Component({
   selector: 'app-students',
@@ -39,7 +42,9 @@ type SortOption = 'alpha' | 'dayIn' | 'dayOut' | 'program';
     StudentCard,
     FormsModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatCheckboxModule,
+    MatDividerModule
   ]
 })
 export class Students implements OnInit {
@@ -55,6 +60,27 @@ export class Students implements OnInit {
 
   // Sorting
   sortOption: SortOption = 'alpha';
+
+  // -----------------------------
+  // NEW: Filters
+  // -----------------------------
+  programOptions: ProgramFilter[] = ['65 Day', '30 Day', 'VSP'];
+
+  filters = {
+    program: {
+      '65 Day': false,
+      '30 Day': false,
+      'VSP': false
+    } as Record<ProgramFilter, boolean>,
+
+    // When checked => require the student field to be true
+    isFelon: false,
+    onProbation: false,
+    usesNicotine: false,
+    hasDriverLicense: false,
+    foodAllergies: false,
+    beeAllergies: false
+  };
 
   constructor(
     private studentService: StudentService,
@@ -104,7 +130,9 @@ export class Students implements OnInit {
   getSortLabel(): string {
     switch (this.sortOption) {
       case 'alpha':
-        return 'Sort Alphabetical';
+        return 'Sort Alphabetical (First Name)';
+      case 'lastName':
+        return 'Sort Alphabetical (Last Name)';
       case 'dayIn':
         return 'Sort by Day-In';
       case 'dayOut':
@@ -116,10 +144,49 @@ export class Students implements OnInit {
     }
   }
 
+  // -----------------------------
+  // NEW: Filter helpers
+  // -----------------------------
+  onFiltersChanged() {
+    this.applyFilterAndSort();
+  }
+
+  clearFilters() {
+    // Reset programs
+    this.programOptions.forEach((p) => (this.filters.program[p] = false));
+
+    // Reset booleans
+    this.filters.isFelon = false;
+    this.filters.onProbation = false;
+    this.filters.usesNicotine = false;
+    this.filters.hasDriverLicense = false;
+    this.filters.foodAllergies = false;
+    this.filters.beeAllergies = false;
+
+    this.applyFilterAndSort();
+  }
+
+  isAnyFilterActive(): boolean {
+    const programActive = this.programOptions.some((p) => this.filters.program[p]);
+    const boolActive =
+      this.filters.isFelon ||
+      this.filters.onProbation ||
+      this.filters.usesNicotine ||
+      this.filters.hasDriverLicense ||
+      this.filters.foodAllergies ||
+      this.filters.beeAllergies;
+
+    return programActive || boolActive;
+  }
+
+  getFilterLabel(): string {
+    return this.isAnyFilterActive() ? 'Filters (active)' : 'Filters';
+  }
+
   private applyFilterAndSort() {
     const term = this.searchTerm.trim().toLowerCase();
 
-    // 1) Filter
+    // 1) Search filter
     let list: Student[];
     if (!term) {
       list = [...this.students];
@@ -139,8 +206,43 @@ export class Students implements OnInit {
       });
     }
 
-    // 2) Sort filtered list
+    // 2) NEW: Checkbox filters (program + boolean flags)
+    list = this.applyCheckboxFilters(list);
+
+    // 3) Sort filtered list
     this.filteredStudents = this.sortStudents(list, this.sortOption);
+  }
+
+  private applyCheckboxFilters(list: Student[]): Student[] {
+    // Program filter:
+    // If none selected => no constraint
+    // If one/more selected => student.program must be in selected set
+    const selectedPrograms = this.programOptions.filter((p) => this.filters.program[p]);
+    const constrainProgram = selectedPrograms.length > 0;
+
+    const requireIsFelon = this.filters.isFelon;
+    const requireOnProbation = this.filters.onProbation;
+    const requireUsesNicotine = this.filters.usesNicotine;
+    const requireHasDriverLicense = this.filters.hasDriverLicense;
+    const requireFoodAllergies = this.filters.foodAllergies;
+    const requireBeeAllergies = this.filters.beeAllergies;
+
+    return list.filter((s) => {
+      if (constrainProgram) {
+        const prog = (s.program || '').trim();
+        if (!selectedPrograms.includes(prog as ProgramFilter)) return false;
+      }
+
+      // Each checked filter means the corresponding field must be true
+      if (requireIsFelon && !(s as any).isFelon) return false;
+      if (requireOnProbation && !(s as any).onProbation) return false;
+      if (requireUsesNicotine && !(s as any).usesNicotine) return false;
+      if (requireHasDriverLicense && !(s as any).hasDriverLicense) return false;
+      if (requireFoodAllergies && !(s as any).foodAllergies) return false;
+      if (requireBeeAllergies && !(s as any).beeAllergies) return false;
+
+      return true;
+    });
   }
 
   private sortStudents(list: Student[], option: SortOption): Student[] {
@@ -186,8 +288,23 @@ export class Students implements OnInit {
           const bl = safeString(b.lastName);
           if (al !== bl) return al.localeCompare(bl);
 
-          const aid = safeString(a.idNumber);
-          const bid = safeString(b.idNumber);
+          const aid = safeString((a as any).idNumber);
+          const bid = safeString((b as any).idNumber);
+          return aid.localeCompare(bid);
+        }
+
+        case 'lastName': {
+          // Primary: lastName, Secondary: firstName, Tertiary: idNumber
+          const al = safeString(a.lastName);
+          const bl = safeString(b.lastName);
+          if (al !== bl) return al.localeCompare(bl);
+
+          const af = safeString(a.firstName);
+          const bf = safeString(b.firstName);
+          if (af !== bf) return af.localeCompare(bf);
+
+          const aid = safeString((a as any).idNumber);
+          const bid = safeString((b as any).idNumber);
           return aid.localeCompare(bid);
         }
 

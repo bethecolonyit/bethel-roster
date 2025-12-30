@@ -30,7 +30,7 @@
           </mat-icon>
         </button>
 
-        <!-- NEW: Sort button -->
+        <!-- Sort button -->
         <button
           mat-icon-button
           color="primary"
@@ -44,7 +44,13 @@
         <mat-menu #sortMenu="matMenu">
           <button mat-menu-item (click)="setSort('alpha')">
             <mat-icon>sort_by_alpha</mat-icon>
-            <span>Sort Alphabetical</span>
+            <span>Sort Alphabetical (First Name)</span>
+          </button>
+
+          <!-- Sort by Last Name -->
+          <button mat-menu-item (click)="setSort('lastName')">
+            <mat-icon>sort_by_alpha</mat-icon>
+            <span>Sort Alphabetical (Last Name)</span>
           </button>
 
           <button mat-menu-item (click)="setSort('dayIn')">
@@ -60,6 +66,103 @@
           <button mat-menu-item (click)="setSort('program')">
             <mat-icon>category</mat-icon>
             <span>Sort by Program</span>
+          </button>
+        </mat-menu>
+
+        <!-- Filter button -->
+        <button
+          mat-icon-button
+          color="primary"
+          [matMenuTriggerFor]="filterMenu"
+          aria-label="Filter options"
+          matTooltip="{{ getFilterLabel() }}"
+        >
+          <mat-icon>filter_alt</mat-icon>
+        </button>
+
+        <!-- IMPORTANT: no overlayPanelClass/panelClass here (not supported in your Material version) -->
+        <mat-menu #filterMenu="matMenu" class="students-filter-menu">
+
+          <!-- Programs header -->
+          <button mat-menu-item class="filter-section-header" disabled>
+            Program
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox
+              [(ngModel)]="filters.program['65 Day']"
+              (change)="onFiltersChanged()"
+            >
+              65 Day
+            </mat-checkbox>
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox
+              [(ngModel)]="filters.program['30 Day']"
+              (change)="onFiltersChanged()"
+            >
+              30 Day
+            </mat-checkbox>
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox
+              [(ngModel)]="filters.program['VSP']"
+              (change)="onFiltersChanged()"
+            >
+              VSP
+            </mat-checkbox>
+          </button>
+
+          <mat-divider></mat-divider>
+
+          <!-- Flags header -->
+          <button mat-menu-item class="filter-section-header" disabled>
+            Flags (checked = must be true)
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox [(ngModel)]="filters.isFelon" (change)="onFiltersChanged()">
+              Felon
+            </mat-checkbox>
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox [(ngModel)]="filters.onProbation" (change)="onFiltersChanged()">
+              On Probation
+            </mat-checkbox>
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox [(ngModel)]="filters.usesNicotine" (change)="onFiltersChanged()">
+              Uses Nicotine
+            </mat-checkbox>
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox [(ngModel)]="filters.hasDriverLicense" (change)="onFiltersChanged()">
+              Has Driver License
+            </mat-checkbox>
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox [(ngModel)]="filters.foodAllergies" (change)="onFiltersChanged()">
+              Food Allergies
+            </mat-checkbox>
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox [(ngModel)]="filters.beeAllergies" (change)="onFiltersChanged()">
+              Bee Allergies
+            </mat-checkbox>
+          </button>
+
+          <mat-divider></mat-divider>
+
+          <button mat-menu-item (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            <span>Clear filters</span>
           </button>
         </mat-menu>
 

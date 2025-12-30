@@ -105,3 +105,21 @@
     width: 100%;
   }
 }
+
+/* ===== Filter menu refinements (overlay panel via panelClass) ===== */
+:host ::ng-deep .students-filter-menu {
+  /* Give section headers nicer spacing/appearance */
+  .filter-section-header.mat-mdc-menu-item {
+    opacity: 0.85;
+    font-weight: 600;
+
+    /* Adds a bit of breathing room without affecting other items */
+    padding-top: 10px;
+    padding-bottom: 6px;
+  }
+
+  /* Optional: tighten divider spacing */
+  .mat-mdc-menu-content mat-divider {
+    margin: 8px 0;
+  }
+}
