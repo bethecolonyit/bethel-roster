@@ -1,0 +1,145 @@
+<div class="section-container">
+  <mat-card class="section-card">
+    <mat-card-header>
+      <div mat-card-avatar class="title-icon-container">
+        <mat-icon class="title-icon">event</mat-icon>
+      </div>
+      <mat-card-title>My Time Off</mat-card-title>
+      <mat-card-subtitle>View balances, submit requests, and track approvals</mat-card-subtitle>
+      <span class="flex-spacer"></span>
+      <button mat-icon-button (click)="reloadAll()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </mat-card-header>
+
+    <mat-card-content>
+
+      <!-- Balances -->
+      <div class="panel">
+        <h3 class="panel-title">My Leave Balances</h3>
+
+        <table class="assignment-table mat-elevation-z2" *ngIf="balances.length; else noBalances">
+          <thead>
+            <tr class="table-row">
+              <th>Type</th>
+              <th>Code</th>
+              <th>Current Hours</th>
+              <th>Last Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-row" *ngFor="let b of balances">
+              <td>{{ b.name }}</td>
+              <td>{{ b.code }}</td>
+              <td>{{ b.currentHours }}</td>
+              <td>{{ b.updatedAt ? (b.updatedAt | date:'short') : '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <ng-template #noBalances>
+          <div class="empty-state">No balances found yet.</div>
+        </ng-template>
+      </div>
+
+      <!-- New Request -->
+      <div class="panel">
+        <h3 class="panel-title">Submit a Time Off Request</h3>
+
+        <form class="request-form" [formGroup]="form" (ngSubmit)="submitRequest()">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Leave Type</mat-label>
+            <mat-select formControlName="leaveTypeCode">
+              <mat-option *ngFor="let lt of leaveTypes" [value]="lt.code">
+                {{ lt.name }} ({{ lt.code }}) — Current: {{ getCurrentHours(lt.code) }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.controls.leaveTypeCode.invalid">Required</mat-error>
+          </mat-form-field>
+
+          <!-- Start Date (Datepicker) -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Start Date</mat-label>
+            <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+            <mat-error *ngIf="form.controls.startDate.invalid">Required</mat-error>
+          </mat-form-field>
+
+          <!-- End Date (Datepicker) -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>End Date</mat-label>
+            <input matInput [matDatepicker]="endPicker" formControlName="endDate" />
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+            <mat-error *ngIf="form.controls.endDate.invalid">Required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Requested Hours</mat-label>
+            <input matInput type="number" step="0.25" min="0.25" formControlName="requestedHours" />
+            <mat-error *ngIf="form.controls.requestedHours.invalid">Enter hours</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field full">
+            <mat-label>Notes (optional)</mat-label>
+            <textarea matInput rows="2" formControlName="notes"></textarea>
+          </mat-form-field>
+
+          <div class="form-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="submitting">
+              Submit Request
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- My Requests -->
+      <div class="panel">
+        <h3 class="panel-title">My Requests</h3>
+
+        <table class="assignment-table mat-elevation-z2" *ngIf="requests.length; else noRequests">
+          <thead>
+            <tr class="table-row">
+              <th>Type</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Hours</th>
+              <th>Status</th>
+              <th class="actions-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-row" *ngFor="let r of requests">
+              <td>{{ r.leaveTypeName }} ({{ r.leaveTypeCode }})</td>
+              <td>{{ r.startDateTime | date:'shortDate' }}</td>
+              <td>{{ r.endDateTime | date:'shortDate' }}</td>
+              <td>{{ r.requestedHours }}</td>
+              <td>
+                <span class="status-pill" [ngClass]="'status-' + (r.status | lowercase)">
+                  {{ r.status }}
+                </span>
+              </td>
+              <td class="actions-col">
+                <button
+                  mat-icon-button
+                  matTooltip="Cancel (Pending only)"
+                  (click)="cancelPending(r)"
+                  [disabled]="r.status !== 'Pending'"
+                >
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <ng-template #noRequests>
+          <div class="empty-state">No requests submitted yet.</div>
+        </ng-template>
+
+      </div>
+
+    </mat-card-content>
+  </mat-card>
+</div>

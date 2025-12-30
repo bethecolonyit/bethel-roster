@@ -85,7 +85,6 @@
     >
       <span class="sub-label">Counseling Coordinator</span>
     </a>
-
     <a
       mat-list-item
       routerLink="/departments/counseling"
@@ -93,7 +92,6 @@
     >
       <span class="sub-label">Counseling</span>
     </a>
-
     <a
       mat-list-item
       routerLink="/departments/office"
@@ -101,13 +99,20 @@
     >
       <span class="sub-label">Office</span>
     </a>
-
     <a
+      *ngIf="auth.isAdmin"
       mat-list-item
       routerLink="/departments/project-office"
       routerLinkActive="active-link"
     >
       <span class="sub-label">Project Office</span>
+    </a>
+    <a
+      mat-list-item
+      routerLink="/departments/hr"
+      routerLinkActive="active-link"
+    >
+      <span class="sub-label">Human Resources</span>
     </a>
   </div>
 </mat-nav-list>
@@ -155,6 +160,7 @@
     *ngIf="!isLoginPage"
     mat-icon-button
     aria-label="User account"
+    routerLink="/employees/me"
   >
     <mat-icon>account_circle</mat-icon>
   </button>

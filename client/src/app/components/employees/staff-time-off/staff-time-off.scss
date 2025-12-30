@@ -1,0 +1,86 @@
+.section-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.section-card {
+  width: min(1200px, 100%);
+  margin: 0 12px;
+}
+
+.flex-spacer {
+  flex: 1 1 auto;
+}
+
+.panel {
+  margin: 12px 0 22px 0;
+}
+
+.panel-title {
+  margin: 8px 0 10px 0;
+  font-weight: 600;
+}
+
+.empty-state {
+  padding: 12px;
+  opacity: 0.8;
+}
+
+.request-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.form-field {
+  min-width: 220px;
+  flex: 1 1 220px;
+}
+
+.form-field.full {
+  flex: 1 1 100%;
+}
+
+.form-actions {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.assignment-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .actions-col {
+    width: 90px;
+    text-align: center;
+  }
+
+  .table-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.status-pending { background: rgba(255, 193, 7, 0.22); }
+.status-approved { background: rgba(76, 175, 80, 0.22); }
+.status-denied { background: rgba(244, 67, 54, 0.22); }
+.status-cancelled { background: rgba(158, 158, 158, 0.22); }

@@ -1,0 +1,203 @@
+.section-container {
+  margin: 16px auto;
+  max-width: 1100px;
+  padding: 0 12px;
+}
+
+.section-card {
+  position: relative;
+  padding: 8px 8px 16px 8px;
+}
+
+.flex-spacer {
+  flex: 1 1 auto;
+}
+
+.card-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.title-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title-icon {
+  font-size: 24px;
+}
+
+.controls-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 8px 0 14px 0;
+}
+
+.employee-select {
+  min-width: 320px;
+  flex: 1 1 320px;
+}
+
+.save-button {
+  white-space: nowrap;
+}
+
+.loading-row {
+  margin: 10px 0 14px 0;
+}
+
+.balances-section {
+  margin-top: 8px;
+}
+
+.section-title {
+  margin: 10px 0 8px 0;
+  font-weight: 600;
+}
+
+.assignment-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-row th,
+.table-row td {
+  padding: 12px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table-row th {
+  font-weight: 600;
+}
+
+.table-row:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.target-col {
+  width: 240px;
+}
+
+.hours-field {
+  width: 160px;
+}
+
+.type-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.type-code {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.type-name {
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+.hint {
+  opacity: 0.75;
+  margin-top: 10px;
+}
+.tab-section {
+  padding-top: 12px;
+}
+
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.flex-spacer {
+  flex: 1 1 auto;
+}
+
+.employee-select {
+  width: 360px;
+  max-width: 100%;
+}
+
+.filter-field {
+  width: 220px;
+  max-width: 100%;
+}
+
+.target-col {
+  width: 220px;
+}
+
+.hours-field {
+  width: 180px;
+}
+
+.type-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.type-code {
+  font-weight: 600;
+}
+
+.type-name,
+.muted {
+  opacity: 0.75;
+  font-size: 12px;
+}
+
+.loading-row,
+.hint {
+  padding: 8px 0;
+  opacity: 0.85;
+}
+
+.actions-col {
+  min-width: 420px;
+}
+
+.deny-notes {
+  width: 240px;
+  margin: 0 8px;
+}
+
+.date-range {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adjust-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.memo-field {
+  grid-column: span 3;
+}
+
+@media (max-width: 900px) {
+  .adjust-grid {
+    grid-template-columns: 1fr;
+  }
+  .memo-field {
+    grid-column: span 1;
+  }
+  .actions-col {
+    min-width: auto;
+  }
+}

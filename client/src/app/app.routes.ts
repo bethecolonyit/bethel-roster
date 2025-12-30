@@ -14,6 +14,8 @@ import { OfficeDashboard } from './components/departments/office/office-dashboar
 import { CounselingDashboard } from './components/departments/counseling/counseling-dashboard/counseling-dashboard';
 import { CreateWritingAssignment } from './components/writing-assignments/create-writing-assignment/create-writing-assignment';
 import { ManageEmployees } from './components/employees/manage-employees/manage-employees';
+import { HrDashboardComponent } from './components/departments/hr/hr-dashboard/hr-dashboard';
+import { StaffTimeOffComponent } from './components/employees/staff-time-off/staff-time-off';
 
 export const appRoutes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -71,9 +73,19 @@ export const appRoutes: Routes = [
     canActivate: [adminGuard],
   },
   {
+    path: 'departments/hr',
+    component: HrDashboardComponent,
+    canActivate: [adminGuard],
+  },
+  {
     path: 'employees',
     component: ManageEmployees,
     canActivate: [adminGuard],
+  },
+  {
+    path: 'employees/me',
+    component: StaffTimeOffComponent,
+    canActivate: [authGuard],
   },
 
   { path: '**', redirectTo: 'login' },
