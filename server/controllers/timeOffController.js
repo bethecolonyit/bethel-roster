@@ -380,6 +380,84 @@ app.get('/my/leave-balances', ensureAuthenticated, async (req, res) => {
       res.status(500).json({ error: 'Database error creating time off request' });
     }
   });
+  // -----------------------------
+// MY REQUESTS (always the current user's requests)
+// -----------------------------
+app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
+  try {
+    const uid = sessionUserId(req);
+    if (!uid) return res.status(401).json({ error: 'Not authenticated' });
+
+    const myEmployeeId = await getEmployeeIdForUser(uid);
+    if (!myEmployeeId) {
+      return res.status(403).json({ error: 'No employee record is linked to this user account' });
+    }
+
+    const where = ['r.employeeId = @employeeId'];
+    const params = {
+      employeeId: { type: sql.Int, value: myEmployeeId },
+    };
+
+    // Optional filters (same as admin list)
+    if (typeof req.query.status === 'string' && req.query.status.trim()) {
+      where.push('r.status = @status');
+      params.status = { type: sql.NVarChar(20), value: req.query.status.trim() };
+    }
+
+    if (typeof req.query.leaveTypeCode === 'string' && req.query.leaveTypeCode.trim()) {
+      where.push('lt.code = @leaveTypeCode');
+      params.leaveTypeCode = {
+        type: sql.NVarChar(20),
+        value: req.query.leaveTypeCode.trim().toUpperCase(),
+      };
+    }
+
+    if (typeof req.query.from === 'string' && req.query.from.trim()) {
+      where.push('r.startDateTime >= @from');
+      params.from = { type: sql.DateTime2(0), value: req.query.from.trim() };
+    }
+
+    if (typeof req.query.to === 'string' && req.query.to.trim()) {
+      where.push('r.endDateTime <= @to');
+      params.to = { type: sql.DateTime2(0), value: req.query.to.trim() };
+    }
+
+    const whereSql = `WHERE ${where.join(' AND ')}`;
+
+    const r = await query(
+      `
+      SELECT
+        r.id,
+        r.employeeId,
+        e.firstName AS employeeFirstName,
+        e.lastName  AS employeeLastName,
+        lt.code     AS leaveTypeCode,
+        lt.name     AS leaveTypeName,
+        r.startDateTime,
+        r.endDateTime,
+        r.requestedHours,
+        r.status,
+        r.requestedByUserId,
+        r.reviewedByUserId,
+        r.reviewedAt,
+        r.notes,
+        r.createdAt,
+        r.updatedAt
+      FROM app.time_off_requests r
+      INNER JOIN app.employees e ON e.id = r.employeeId
+      INNER JOIN app.leave_types lt ON lt.id = r.leaveTypeId
+      ${whereSql}
+      ORDER BY r.createdAt DESC
+      `,
+      params
+    );
+
+    res.json(r.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error fetching my time off requests' });
+  }
+});
 
   /**
    * List requests:

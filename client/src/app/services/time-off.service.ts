@@ -143,7 +143,7 @@ getMyBalances(): Observable<LeaveBalanceRow[]> {
 
 getMyRequests(): Observable<TimeOffRequestListItem[]> {
   return this.http.get<TimeOffRequestListItem[]>(
-    `${this.baseUrl}/time-off-requests`,
+    `${this.baseUrl}/my/time-off-requests`,
     this.httpOptions
   );
 }
