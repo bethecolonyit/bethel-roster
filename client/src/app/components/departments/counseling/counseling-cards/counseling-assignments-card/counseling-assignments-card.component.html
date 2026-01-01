@@ -1,0 +1,72 @@
+<div class="section-container">
+  <mat-card class="section-card">
+    <div class="card-header">
+      <div class="title-icon-container">
+        <mat-icon class="title-icon">assignment_ind</mat-icon>
+      </div>
+
+      <div class="header-text">
+        <h2 class="card-title">{{ title }}</h2>
+        <div class="card-subtitle">{{ subtitle }}</div>
+      </div>
+
+      <span class="flex-spacer"></span>
+
+      <button mat-stroked-button color="primary" (click)="refresh()" [disabled]="isLoading">
+        Refresh
+      </button>
+    </div>
+
+    <mat-card-content>
+      <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
+
+      <table class="assignment-table mat-elevation-z2" *ngIf="!isLoading && studentsNeedingCounselor.length">
+        <thead>
+          <tr class="table-row">
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>File Number</th>
+            <th>Day In</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr class="table-row" *ngFor="let student of studentsNeedingCounselor">
+            <td>{{ student.firstName }}</td>
+            <td>{{ student.lastName }}</td>
+            <td>{{ student.idNumber }}</td>
+            <td>{{ student.dayin | date }}</td>
+
+            <td class="actions-col">
+              <button
+                mat-icon-button
+                color="primary"
+                matTooltip="Assign Counselor"
+                [matMenuTriggerFor]="assignMenu"
+                aria-label="Assign Counselor"
+                [disabled]="busyByStudentId[student.id]"
+              >
+                <mat-icon>person_add</mat-icon>
+              </button>
+
+              <mat-menu #assignMenu="matMenu">
+                <button
+                  mat-menu-item
+                  *ngFor="let counselor of counselorOptions"
+                  (click)="assignCounselor(student, counselor)"
+                >
+                  {{ counselor }}
+                </button>
+              </mat-menu>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="hint" *ngIf="!isLoading && !studentsNeedingCounselor.length">
+        No students currently require counselor assignment.
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

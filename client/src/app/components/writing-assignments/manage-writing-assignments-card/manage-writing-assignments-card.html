@@ -1,0 +1,227 @@
+<div class="section-container">
+  <mat-card class="section-card">
+    <div class="card-header">
+      <h2 class="card-title">Manage Writing Assignments</h2>
+      <span class="flex-spacer"></span>
+
+      <button mat-stroked-button color="primary" (click)="refreshCurrentTab()">
+        Refresh
+      </button>
+    </div>
+
+    <mat-card-content>
+      <mat-progress-bar *ngIf="isLoadingDue || isLoadingStudents || isLoadingStudentAssignments || isLoadingAtRisk" mode="indeterminate"></mat-progress-bar>
+
+      <mat-tab-group [(selectedIndex)]="selectedTabIndex">
+        <!-- ================================================= -->
+        <!-- TAB 1: Incomplete -->
+        <!-- ================================================= -->
+        <mat-tab label="Incomplete Assignments">
+          <div class="tab-section">
+            <div class="toolbar-row">
+              <div class="hint">Showing writing assignments due:</div>
+              <span class="flex-spacer"></span>
+              <button mat-stroked-button color="primary" (click)="loadDueAssignments()" [disabled]="isLoadingDue">
+                Refresh Incomplete
+              </button>
+            </div>
+
+            <div class="loading-row" *ngIf="isLoadingDue">Loading incomplete assignments...</div>
+
+            <table class="assignment-table mat-elevation-z2" *ngIf="!isLoadingDue && assignmentsDue.length">
+              <thead>
+                <tr class="table-row">
+                  <th>Student</th>
+                  <th>Assignment</th>
+                  <th>Infraction</th>
+                  <th>Issued By</th>
+                  <th>Date Issued</th>
+                  <th>Date Due</th>
+                  <th>Demerits</th>
+                  <th class="actions-col">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr class="table-row" *ngFor="let assignment of assignmentsDue">
+                  <td>{{ assignment.firstName }} {{ assignment.lastName }}</td>
+                  <td>{{ assignment.scripture }}</td>
+                  <td>{{ assignment.infraction }}</td>
+                  <td>{{ assignment.issuedBy }}</td>
+
+                  <td>{{ toUtcDateOnly(assignment.dateIssued) | date : 'mediumDate' : 'UTC' }}</td>
+                  <td>{{ toUtcDateOnly(assignment.dateDue) | date : 'mediumDate' : 'UTC' }}</td>
+                  <td>{{ assignment.demerits }}</td>
+
+                  <td class="actions-col">
+                    <button
+                      mat-icon-button
+                      color="primary"
+                      matTooltip="Mark assignment complete"
+                      aria-label="Mark assignment complete"
+                      (click)="onMarkAssignmentComplete(assignment)"
+                      [disabled]="assignmentBusy[assignment.id]"
+                    >
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+
+                    <button
+                      mat-icon-button
+                      color="primary"
+                      matTooltip="Extend due date"
+                      aria-label="Extend due date"
+                      (click)="onExtendDueDate(assignment)"
+                      [disabled]="assignmentBusy[assignment.id]"
+                    >
+                      <mat-icon>schedule</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="hint" *ngIf="!isLoadingDue && !assignmentsDue.length">
+              No incomplete writing assignments found.
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- ================================================= -->
+        <!-- TAB 2: By Student -->
+        <!-- ================================================= -->
+        <mat-tab label="By Student">
+          <div class="tab-section">
+            <div class="toolbar-row">
+              <mat-form-field appearance="outline" class="student-select">
+                <mat-label>Select Student</mat-label>
+                <mat-select [formControl]="selectedStudentId">
+                  <mat-option [value]="null">-- Select --</mat-option>
+                  <mat-option *ngFor="let s of students" [value]="s.id">
+                    {{ studentName(s) }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <span class="flex-spacer"></span>
+
+              <button
+                mat-stroked-button
+                color="primary"
+                (click)="selectedStudentId.value ? loadAssignmentsForStudent(selectedStudentId.value) : null"
+                [disabled]="!selectedStudentId.value || isLoadingStudentAssignments"
+              >
+                Refresh Student Assignments
+              </button>
+            </div>
+
+            <div class="loading-row" *ngIf="isLoadingStudentAssignments">Loading writing assignments...</div>
+
+            <table class="assignment-table mat-elevation-z2" *ngIf="!isLoadingStudentAssignments && selectedStudentId.value && studentAssignments.length">
+              <thead>
+                <tr class="table-row">
+                  <th>Student</th>
+                  <th>Assignment</th>
+                  <th>Infraction</th>
+                  <th>Issued By</th>
+                  <th>Date Issued</th>
+                  <th>Date Due</th>
+                  <th>Demerits</th>
+                  <th class="actions-col">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr class="table-row" *ngFor="let assignment of studentAssignments">
+                  <td>{{ assignment.firstName }} {{ assignment.lastName }}</td>
+                  <td>{{ assignment.scripture }}</td>
+                  <td>{{ assignment.infraction }}</td>
+                  <td>{{ assignment.issuedBy }}</td>
+
+                  <td>{{ toUtcDateOnly(assignment.dateIssued) | date : 'mediumDate' : 'UTC' }}</td>
+                  <td>{{ toUtcDateOnly(assignment.dateDue) | date : 'mediumDate' : 'UTC' }}</td>
+                  <td>{{ assignment.demerits }}</td>
+
+                  <td class="actions-col">
+                    <button
+                      mat-icon-button
+                      color="primary"
+                      matTooltip="Remove Demerits"
+                      aria-label="Remove Demerits"
+                      (click)="onRemoveDemerits(assignment)"
+                      [disabled]="assignmentBusy[assignment.id]"
+                    >
+                      <mat-icon>remove_circle</mat-icon>
+                    </button>
+
+                    <!-- Optional: reuse existing actions here if you want -->
+                    <button
+                      mat-icon-button
+                      color="primary"
+                      matTooltip="Extend due date"
+                      aria-label="Extend due date"
+                      (click)="onExtendDueDate(assignment)"
+                      [disabled]="assignmentBusy[assignment.id]"
+                    >
+                      <mat-icon>schedule</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="hint" *ngIf="!isLoadingStudentAssignments && selectedStudentId.value && !studentAssignments.length">
+              No writing assignments found for this student.
+            </div>
+
+            <div class="hint" *ngIf="!selectedStudentId.value">
+              Select a student to view and manage their writing assignments.
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- ================================================= -->
+        <!-- TAB 3: At Risk -->
+        <!-- ================================================= -->
+        <mat-tab label="At Risk Students">
+          <div class="tab-section">
+            <div class="toolbar-row">
+              <div class="hint">Students with <strong>{{ minDemeritsAtRisk }}+</strong> total demerits.</div>
+              <span class="flex-spacer"></span>
+
+              <button mat-stroked-button color="primary" (click)="loadAtRiskStudents(minDemeritsAtRisk)" [disabled]="isLoadingAtRisk">
+                Refresh At Risk
+              </button>
+            </div>
+
+            <div class="loading-row" *ngIf="isLoadingAtRisk">Loading at-risk students...</div>
+
+            <table class="assignment-table mat-elevation-z2" *ngIf="!isLoadingAtRisk && atRiskStudents.length">
+              <thead>
+                <tr class="table-row">
+                  <th>Student</th>
+                  <th>Program</th>
+                  <th>Counselor</th>
+                  <th>Total Demerits</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr class="table-row" *ngFor="let s of atRiskStudents">
+                  <td>{{ s.firstName }} {{ s.lastName }}</td>
+                  <td>{{ s.program || '—' }}</td>
+                  <td>{{ s.counselor || '—' }}</td>
+                  <td><strong>{{ s.totalDemerits }}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="hint" *ngIf="!isLoadingAtRisk && !atRiskStudents.length">
+              No students currently meet the at-risk threshold.
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+</div>
+

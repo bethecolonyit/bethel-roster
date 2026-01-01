@@ -11,7 +11,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { StudentService } from '../../../services/student.service';
-import { Student } from '../../../models/student';
+import { StudentDraft } from '../../../models/student';
 
 
 @Component({
@@ -33,7 +33,7 @@ import { Student } from '../../../models/student';
 })
 export class CreateStudentComponent {
 @Output() studentCreated = new EventEmitter<any>();
-  student: Student = {
+  student: StudentDraft = {
     firstName: '',
     lastName: '',
     idNumber: '',

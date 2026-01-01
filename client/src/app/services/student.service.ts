@@ -17,6 +17,13 @@ export class StudentService {
     getStudents(): Observable<Student[]> {
         return this.http.get<Student[]>(`${this.api}-with-rooms`, {withCredentials: true});
     }
+    getStudentsSimple(): Observable<Array<{ id: number; firstName: string; lastName: string }>> {
+        return this.http.get<Array<{ id: number; firstName: string; lastName: string }>>(
+          `${environment.apiBaseUrl}/api/students/simple`,
+          { withCredentials: true }
+        );
+      }
+
     getStudentById(id: number): Observable<Student> {
         return this.http.get<Student>(`${this.api}/${id}`, {withCredentials: true});
     }

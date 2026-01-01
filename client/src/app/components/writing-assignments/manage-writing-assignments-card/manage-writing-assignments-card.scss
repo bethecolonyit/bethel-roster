@@ -1,0 +1,83 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.section-container {
+  width: 100%;
+  max-width: min(1100px, 75vw);
+  padding: 0 12px;
+  margin: 16px auto;
+}
+
+
+.section-card {
+  position: relative;
+  padding: 8px 8px 16px 8px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.card-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.flex-spacer {
+  flex: 1 1 auto;
+}
+
+.tab-section {
+  padding-top: 12px;
+}
+
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.student-select {
+  width: 360px;
+  max-width: 100%;
+}
+
+.loading-row,
+.hint {
+  padding: 8px 0;
+  opacity: 0.85;
+}
+
+.assignment-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-row th,
+.table-row td {
+  padding: 12px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table-row th {
+  font-weight: 600;
+}
+
+.table-row:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.actions-col {
+  min-width: 140px;
+  white-space: nowrap;
+}

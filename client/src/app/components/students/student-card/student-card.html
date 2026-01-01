@@ -73,6 +73,10 @@
             {{ formatDateOnly(student.dayout) }}
           </span>
         </div>
+        <div class="meta-row">
+          <span class="meta-label">Total Demerits:</span>
+          <span class="meta-value">{{ student.totalDemerits ?? 0 }}</span>
+        </div>
       </div>
 
       <!-- Boolean flags as icons (only if true) -->

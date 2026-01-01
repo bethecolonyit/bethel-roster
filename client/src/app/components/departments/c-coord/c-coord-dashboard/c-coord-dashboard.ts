@@ -2,15 +2,16 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTooltip } from '@angular/material/tooltip';
+
 import { StudentService } from '../../../../services/student.service';
 import { Student } from '../../../../models/student';
 import { CommonModule } from '@angular/common';
-import { WritingAssignmentsList } from '../../../writing-assignments/writing-assignments-list/writing-assignments-list';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { ManageWritingAssignmentsCardComponent } from '../../../writing-assignments/manage-writing-assignments-card/manage-writing-assignments-card';
+import { CounselingAssignmentsCardComponent } from '../../counseling/counseling-cards/counseling-assignments-card/counseling-assignments-card.component';
+
 @Component({
   selector: 'app-counseling-dashboard',
-  imports: [CommonModule, MatCardModule, MatMenuModule, MatIconModule, MatTooltip, WritingAssignmentsList],
+  imports: [CommonModule, MatCardModule, MatMenuModule, MatIconModule, ManageWritingAssignmentsCardComponent, CounselingAssignmentsCardComponent],
   templateUrl: './c-coord-dashboard.html',
   styleUrl: './c-coord-dashboard.scss',
   standalone: true,
@@ -22,42 +23,9 @@ export class CCoordDashboard {
   filteredStudents: Student[] = []
   error: string | null = null;
 
-  constructor(private studentService: StudentService, private cdr: ChangeDetectorRef, private snack: MatSnackBar) {
-    this.loadStudents();
+  constructor(private studentService: StudentService, private cdr: ChangeDetectorRef) {
+    
 
   }
-
-  loadStudents() {
-    this.studentService.getStudents().subscribe({
-      next: (data) => { 
-        this.students = data; 
-        this.filteredStudents = [...this.students];
-        this.loadStudentsNeedingCounselor();
-        this.cdr.detectChanges(); 
-      },
-      error: () => this.error = 'Error loading students'
-    });
-  }
-
-  loadStudentsNeedingCounselor() {
-    this.studentsNeedingCounselor = this.students.filter(student => !student.counselor);
-  }
-
   emptyFunction() { } // Placeholder for future functionality
-  onAssignCounselor(student: Student, counselor: string) {
-    const confirmed = window.confirm(
-      `Are you sure you want to assign ${student.firstName} ${student.lastName} to ${counselor}?`
-    );
-    if (!confirmed) return;
-      student.counselor = counselor;
-      this.studentService.updateStudent(student.id!, student).subscribe({
-        next: () => {
-          this.snack.open(`${student.firstName} ${student.lastName} has been assigned to ${student.counselor}`, 'close', {
-            duration : 3000
-          })
-          this.loadStudents();
-        }
-      })
-  } 
-
 }

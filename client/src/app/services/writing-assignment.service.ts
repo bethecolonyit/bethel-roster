@@ -4,8 +4,19 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { WritingAssignmentListItem } from '../models/WritingAssignmentListItem';
 
+export interface AtRiskStudentRow {
+  studentId: number;
+  firstName: string;
+  lastName: string;
+  program: string | null;
+  counselor: string | null;
+  idNumber: string | null;
+  totalDemerits: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class WritingAssignmentService {
+  
 
   private api = `${environment.apiBaseUrl}/api/writing-assignments`;
 
@@ -34,4 +45,11 @@ export class WritingAssignmentService {
           withCredentials: true
         });
       }
+      
+    getAtRiskStudents(minDemerits: number = 7): Observable<AtRiskStudentRow[]> {
+      return this.http.get<AtRiskStudentRow[]>(
+        `${this.api}/at-risk?minDemerits=${encodeURIComponent(minDemerits)}`,
+        { withCredentials: true }
+      );
+    }
 }

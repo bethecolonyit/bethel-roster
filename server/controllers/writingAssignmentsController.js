@@ -120,6 +120,40 @@ function registerWritingAssignmentRoutes(app, db) {
       res.status(500).json({ error: 'Database read error' });
     }
   });
+   // GET /api/writing-assignments/at-risk?minDemerits=7
+  // Returns students whose total demerits (sum of ALL assignments) >= minDemerits
+  app.get('/writing-assignments/at-risk', ensureAuthenticated, async (req, res) => {
+    try {
+      const min = req.query.minDemerits ? Number(req.query.minDemerits) : 7;
+      const minDemerits = Number.isFinite(min) ? min : 7;
+
+      const r = await query(
+        `
+        SELECT
+          s.id AS studentId,
+          s.firstName,
+          s.lastName,
+          s.program,
+          s.counselor,
+          s.idNumber,
+          SUM(COALESCE(wa.demerits, 0)) AS totalDemerits
+        FROM app.writing_assignments wa
+        INNER JOIN app.students s
+          ON s.id = wa.studentId
+        GROUP BY
+          s.id, s.firstName, s.lastName, s.program, s.counselor, s.idNumber
+        HAVING SUM(COALESCE(wa.demerits, 0)) >= @minDemerits
+        ORDER BY totalDemerits DESC, s.lastName ASC, s.firstName ASC
+        `,
+        { minDemerits: { type: sql.Int, value: minDemerits } }
+      );
+
+      res.json(r.recordset || []);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Database read error' });
+    }
+  });
 
   // GET /api/writing-assignments/:studentId
   app.get('/writing-assignments/:studentId', ensureAuthenticated, async (req, res) => {

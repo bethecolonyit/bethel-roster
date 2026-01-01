@@ -74,7 +74,7 @@ function registerStudentRoutes(app, db, upload) {
   // GET /students/simple
   app.get('/students/simple', ensureAuthenticated, async (req, res) => {
     try {
-      const r = await query(`SELECT id, firstName, lastName FROM app.students`);
+      const r = await query(`SELECT id, firstName, lastName, counselor FROM app.students`);
       res.json(r.recordset);
     } catch (err) {
       console.error(err);
@@ -132,48 +132,57 @@ function registerStudentRoutes(app, db, upload) {
   });
 
   // GET /students-with-rooms
-  app.get('/students-with-rooms', ensureAuthenticated, async (req, res) => {
-    try {
-      const r = await query(
-        `
+app.get('/students-with-rooms', ensureAuthenticated, async (req, res) => {
+  try {
+    const r = await query(
+      `
+      SELECT
+        s.id,
+        s.firstName,
+        s.lastName,
+        s.program,
+        s.idNumber,
+        s.counselor,
+        s.dayin,
+        s.dayout,
+        s.isFelon,
+        s.onProbation,
+        s.usesNicotine,
+        s.hasDriverLicense,
+        s.foodAllergies,
+        s.beeAllergies,
+        r.roomNumber AS roomNumber,
+        b.bedLetter  AS bedLetter,
+        bu.buildingName AS buildingName,
+        COALESCE(wa.totalDemerits, 0) AS totalDemerits
+      FROM app.students s
+      LEFT JOIN app.bed_assignments ba
+        ON ba.student_id = s.id
+        AND ba.end_date IS NULL
+      LEFT JOIN app.beds b
+        ON b.id = ba.bed_id
+      LEFT JOIN app.rooms r
+        ON r.id = b.roomId
+      LEFT JOIN app.buildings bu
+        ON bu.id = r.buildingId
+      LEFT JOIN (
         SELECT
-          s.id,
-          s.firstName,
-          s.lastName,
-          s.program,
-          s.idNumber,
-          s.counselor,
-          s.dayin,
-          s.dayout,
-          s.isFelon,
-          s.onProbation,
-          s.usesNicotine,
-          s.hasDriverLicense,
-          s.foodAllergies,
-          s.beeAllergies,
-          r.roomNumber AS roomNumber,
-          b.bedLetter  AS bedLetter,
-          bu.buildingName AS buildingName
-        FROM app.students s
-        LEFT JOIN app.bed_assignments ba
-          ON ba.student_id = s.id
-          AND ba.end_date IS NULL
-        LEFT JOIN app.beds b
-          ON b.id = ba.bed_id
-        LEFT JOIN app.rooms r
-          ON r.id = b.roomId
-        LEFT JOIN app.buildings bu
-          ON bu.id = r.buildingId
-        ORDER BY s.firstName, s.lastName
-        `
-      );
+          studentId,
+          SUM(COALESCE(demerits, 0)) AS totalDemerits
+        FROM app.writing_assignments
+        GROUP BY studentId
+      ) wa
+        ON wa.studentId = s.id
+      ORDER BY s.firstName, s.lastName;
+      `
+    );
 
-      res.json(r.recordset);
-    } catch (err) {
-      console.error('Error fetching students with room info', err);
-      res.status(500).json({ error: 'Failed to load students' });
-    }
-  });
+    res.json(r.recordset);
+  } catch (err) {
+    console.error('Error fetching students with room info', err);
+    res.status(500).json({ error: 'Failed to load students' });
+  }
+});
 
   // POST /students
   app.post('/students', ensureOffice, upload.single('photo'), async (req, res) => {

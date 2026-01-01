@@ -1,0 +1,84 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.section-container {
+  width: 100%;
+  max-width: min(1100px, 75vw);
+  padding: 0 12px;
+  margin: 16px auto;
+}
+
+.section-card {
+  position: relative;
+  padding: 8px 8px 16px 8px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.title-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title-icon {
+  font-size: 24px;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.card-subtitle {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.flex-spacer {
+  flex: 1 1 auto;
+}
+
+.assignment-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-row th,
+.table-row td {
+  padding: 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table-row th {
+  font-weight: 600;
+}
+
+.table-row:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.actions-col {
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+.hint {
+  padding: 8px 0;
+  opacity: 0.85;
+}

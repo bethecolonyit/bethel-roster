@@ -1,11 +1,10 @@
-export interface Student {
-  id?: number;
+export interface StudentBase {
   firstName: string;
   lastName: string;
   idNumber: string;
   counselor: string;
   program: string;
-  dayin: string; 
+  dayin: string;
   dayout: string;
   isFelon: boolean;
   onProbation: boolean;
@@ -14,8 +13,11 @@ export interface Student {
   foodAllergies: boolean;
   beeAllergies: boolean;
 
-  roomNumber?: string;
-  bedLetter?: string;
-
-
+  // plus any other fields you have (roomNumber/bedLetter/buildingName/totalDemerits, etc.)
 }
+
+export interface Student extends StudentBase {
+  id: number; // ✅ persisted entity
+}
+
+export type StudentDraft = StudentBase; // ✅ no id until DB creates it
