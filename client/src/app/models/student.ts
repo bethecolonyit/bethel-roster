@@ -4,7 +4,7 @@ export interface StudentBase {
   idNumber: string;
   counselor: string;
   program: string;
-  dayin: string;
+  dayin: string; 
   dayout: string;
   isFelon: boolean;
   onProbation: boolean;
@@ -12,6 +12,9 @@ export interface StudentBase {
   hasDriverLicense: boolean;
   foodAllergies: boolean;
   beeAllergies: boolean;
+  roomNumber?: string;
+  bedLetter?: string;
+  totalDemerits?: number;
 
   // plus any other fields you have (roomNumber/bedLetter/buildingName/totalDemerits, etc.)
 }
