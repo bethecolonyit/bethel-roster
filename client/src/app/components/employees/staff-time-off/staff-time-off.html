@@ -106,6 +106,7 @@
               <th>End</th>
               <th>Hours</th>
               <th>Status</th>
+              <th>Notes</th>
               <th class="actions-col">Actions</th>
             </tr>
           </thead>
@@ -120,6 +121,7 @@
                   {{ r.status }}
                 </span>
               </td>
+              <td>{{ r.notes || '-' }}</td> 
               <td class="actions-col">
                 <button
                   mat-icon-button

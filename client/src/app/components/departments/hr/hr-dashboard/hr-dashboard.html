@@ -129,6 +129,7 @@
                   <th>Dates</th>
                   <th>Hours</th>
                   <th>Status</th>
+                  <th>Notes</th>
                   <th class="actions-col">Actions</th>
                 </tr>
               </thead>
@@ -146,6 +147,7 @@
                   </td>
                   <td>{{ r.requestedHours }}</td>
                   <td>{{ r.status }}</td>
+                  <td>{{ r.notes || '-' }}</td>
 
                   <td class="actions-col">
                     <ng-container *ngIf="r.status === 'Pending'; else nonPendingActions">
