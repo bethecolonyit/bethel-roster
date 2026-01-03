@@ -1,7 +1,7 @@
 // controllers/timeOffController.js
 const {
   ensureAuthenticated,
-  ensureAdmin,
+  ensureHR,
   // ensureOffice,
   // ensureHR,
 } = require('../middleware/auth');
@@ -29,7 +29,7 @@ function registerTimeOffRoutes(app, db) {
 
   // IMPORTANT: This app uses sessions (req.session.userId / req.session.role), not req.user
   function isAdmin(req) {
-    return Boolean(req.session && req.session.role === 'admin');
+    return Boolean(req.session && req.session.role === 'admin' || req.session && req.session.role === 'hr');
   }
 
   function sessionUserId(req) {
@@ -213,7 +213,7 @@ app.get('/my/leave-balances', ensureAuthenticated, async (req, res) => {
    * Body: { leaveTypeCode: "PTO", targetHours: 120, memo?: "..." }
    * Creates a ledger ManualAdjustment for the delta and updates cache.
    */
-  app.post('/employees/:employeeId/leave-balances/set', ensureAdmin, async (req, res) => {
+  app.post('/employees/:employeeId/leave-balances/set', ensureHR, async (req, res) => {
     const employeeId = toInt(req.params.employeeId);
     const { leaveTypeCode, targetHours, memo } = req.body || {};
 
@@ -558,7 +558,7 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
    *
    * Includes a "no negative balance" guard. If you want to allow negative, remove that block.
    */
-  app.post('/time-off-requests/:id/approve', ensureAdmin, async (req, res) => {
+  app.post('/time-off-requests/:id/approve', ensureHR, async (req, res) => {
     const requestId = toInt(req.params.id);
     if (!requestId) return res.status(400).json({ error: 'Invalid request id' });
 
@@ -654,7 +654,7 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
     }
   });
 
-  app.post('/time-off-requests/:id/deny', ensureAdmin, async (req, res) => {
+  app.post('/time-off-requests/:id/deny', ensureHR, async (req, res) => {
     const requestId = toInt(req.params.id);
     const { notes } = req.body || {};
     if (!requestId) return res.status(400).json({ error: 'Invalid request id' });
@@ -690,7 +690,7 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
    * - Pending -> Cancelled (no ledger)
    * - Approved -> Cancelled + reversal credit + cache update
    */
-  app.post('/time-off-requests/:id/cancel', ensureAdmin, async (req, res) => {
+  app.post('/time-off-requests/:id/cancel', ensureHR, async (req, res) => {
     const requestId = toInt(req.params.id);
     if (!requestId) return res.status(400).json({ error: 'Invalid request id' });
 
@@ -835,7 +835,7 @@ app.post('/time-off-requests/:id/cancel-self', ensureAuthenticated, async (req, 
   // -----------------------------
   // LEDGER ADJUSTMENTS
   // -----------------------------
-  app.post('/time-off-ledger/adjust', ensureAdmin, async (req, res) => {
+  app.post('/time-off-ledger/adjust', ensureHR, async (req, res) => {
     const { employeeId, leaveTypeCode, amountHours, source, effectiveDate, memo } = req.body || {};
 
     const empId = toInt(employeeId);

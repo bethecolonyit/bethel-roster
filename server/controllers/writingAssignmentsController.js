@@ -1,5 +1,5 @@
 // controllers/writingAssignmentsController.js (MSSQL)
-const { ensureAuthenticated, ensureOffice } = require('../middleware/auth');
+const { ensureAuthenticated, ensureAdmin, ensureCounselingCoordinator } = require('../middleware/auth');
 
 function toDateOnlyString(value) {
   if (value == null || value === '') return null;
@@ -272,7 +272,7 @@ function registerWritingAssignmentRoutes(app, db) {
 
   // PUT /api/writing-assignments/:id
   // Returns updated WritingAssignmentListItem
-  app.put('/writing-assignments/:id', ensureOffice, async (req, res) => {
+  app.put('/writing-assignments/:id', ensureCounselingCoordinator, async (req, res) => {
     try {
       const id = Number(req.params.id);
       if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
@@ -362,7 +362,7 @@ function registerWritingAssignmentRoutes(app, db) {
 
   // DELETE /api/writing-assignments (expects JSON body { id })
   // Returns TEXT to match Angular deleteWritingAssignment(): responseType 'text'
-  app.delete('/writing-assignments', ensureOffice, async (req, res) => {
+  app.delete('/writing-assignments', ensureAdmin, async (req, res) => {
     try {
       const { id } = req.body;
       const numericId = Number(id);

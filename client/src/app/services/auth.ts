@@ -78,11 +78,21 @@ export class AuthService {
     get isLoggedIn(): boolean {
     return !!this.currentUser;
   }
-
   get isAdmin(): boolean {
     return this.currentUser?.role === 'admin';
   }
-
+  get isHR(): boolean {
+    return this.currentUser?.role === 'hr';
+  }
+  get isOffice(): boolean {
+    return this.currentUser?.role === 'office';
+  }
+  get isCounseling(): boolean {
+    return this.currentUser?.role === 'counseling';
+  }
+  get isCounselingCoordinator(): boolean {
+    return this.currentUser?.role === 'counseling_coordinator';
+  }
   getUsersLookup(includeUserId?: number) {
   const url =
     includeUserId != null

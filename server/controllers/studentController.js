@@ -1,7 +1,7 @@
 // controllers/studentController.js (MSSQL)
 const fs = require('fs');
 const path = require('path');
-const { ensureAuthenticated, ensureOffice } = require('../middleware/auth');
+const { ensureAuthenticated, ensureOffice, ensureAnyRole } = require('../middleware/auth');
 
 /**
  * Convert incoming date-ish values to a DATE-ONLY string "YYYY-MM-DD".
@@ -267,7 +267,7 @@ app.get('/students-with-rooms', ensureAuthenticated, async (req, res) => {
   });
 
   // PUT /students/:id
-  app.put('/students/:id', ensureOffice, async (req, res) => {
+  app.put('/students/:id', ensureAnyRole('counseling_coordinator', 'counselor', 'office', 'admin'), async (req, res) => {
     try {
       const id = Number(req.params.id);
 

@@ -8,7 +8,7 @@ import { adminGuard } from './guards/admin-guard';
 import { Residential } from './components/residential/residential';
 import { ViewStudent } from './components/students/view-student/view-student';
 import { CCoordDashboard } from './components/departments/c-coord/c-coord-dashboard/c-coord-dashboard';
-import { counselorGuard } from './guards/counselor-guard';
+import { hrGuard } from './guards/hr-guard';
 import { ProjectOfficeDashboard } from './components/departments/project_office/project-office-dashboard/project-office-dashboard';
 import { OfficeDashboard } from './components/departments/office/office-dashboard/office-dashboard';
 import { CounselingDashboard } from './components/departments/counseling/counseling-dashboard/counseling-dashboard';
@@ -16,6 +16,7 @@ import { CreateWritingAssignment } from './components/writing-assignments/create
 import { ManageEmployees } from './components/employees/manage-employees/manage-employees';
 import { HrDashboardComponent } from './components/departments/hr/hr-dashboard/hr-dashboard';
 import { StaffTimeOffComponent } from './components/employees/staff-time-off/staff-time-off';
+import { counselingcoordinatorGuard } from './guards/counseling_coordinator-guard';
 
 export const appRoutes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -55,7 +56,7 @@ export const appRoutes: Routes = [
   {
     path: 'departments/c-coord-dashboard',
     component: CCoordDashboard,
-    canActivate: [counselorGuard],
+    canActivate: [counselingcoordinatorGuard],
   },
   {
     path: 'departments/counseling',
@@ -75,7 +76,7 @@ export const appRoutes: Routes = [
   {
     path: 'departments/hr',
     component: HrDashboardComponent,
-    canActivate: [adminGuard],
+    canActivate: [hrGuard],
   },
   {
     path: 'employees',

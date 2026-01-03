@@ -1,10 +1,10 @@
-const { ensureAdmin } = require('../middleware/auth');
+const { ensureAdmin, ensureAuthenticated } = require('../middleware/auth');
 
 
 function registerEmployeeRoutes(app, db) {
     const {sql, query } = db;
 
-    app.get('/employees', ensureAdmin, async (req, res) => {
+    app.get('/employees', ensureAuthenticated, async (req, res) => {
         try {
             const r = await query(
                 `SELECT id, userId, firstName, lastName, hireDate FROM app.employees ORDER BY firstName ASC`

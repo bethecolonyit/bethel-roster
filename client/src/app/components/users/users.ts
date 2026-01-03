@@ -115,6 +115,7 @@ export class UsersComponent implements OnInit {
 
         // Reload from backend so list is always canonical
         this.loadUsers();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error creating user:', err);

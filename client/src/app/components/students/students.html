@@ -171,7 +171,7 @@
           mat-icon-button
           color="primary"
           type="button"
-          *ngIf="auth.isAdmin"
+          *ngIf="auth.isAdmin || auth.isOffice"
           (click)="toggleCreateStudent()"
           [attr.aria-label]="showCreateForm ? 'Hide create student form' : 'Show create student form'"
           matTooltip="{{ showCreateForm ? 'Close' : 'Add student' }}"
