@@ -14,12 +14,12 @@ export interface User {
 export interface CreateUserDto {
   email: string;
   password: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'user' | 'counseling_coordinator' | 'counselor' | 'office';
 }
 
 export interface UpdateUserDto {
   email: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'user' | 'counseling_coordinator' | 'counselor' | 'office';
   password?: string;  // optional when editing
 }
 export interface ResetPasswordDto {

@@ -130,7 +130,7 @@ export class UsersComponent implements OnInit {
     this.editingUserId = user.id;
     this.editModel = {
       email: user.email,
-      role: (user.role as 'admin' | 'user') || 'user',
+      role: (user.role as 'admin' | 'user' | 'counseling_coordinator' | 'counselor' | 'office') || 'user',
       password: ''
     };
     this.cancelResetPassword();
