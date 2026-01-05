@@ -17,45 +17,65 @@ import { AuthService } from '../../../services/auth';
   standalone: true,
 })
 export class StudentCard {
-  @Input()
-  menuHidden: boolean = false;
-  @Input()
-  student!: Student;
+  @Input() menuHidden: boolean = false;
+  @Input() student!: Student;
 
-   @Output() viewDetails = new EventEmitter<Student>();
+  @Output() viewDetails = new EventEmitter<Student>();
   @Output() createNote = new EventEmitter<Student>();
   @Output() createWriteUp = new EventEmitter<Student>();
 
   constructor(public auth: AuthService) {}
+
   getStudentPhoto(idNumber: string) {
     return `${environment.apiBaseUrl}/uploads/students/${idNumber}.jpg`;
   }
-  formatDateOnly(value: any): string {
-  if (!value) return '';
 
-  // If it's already a Date object
-  if (value instanceof Date) {
-    const y = value.getFullYear();
-    const m = String(value.getMonth() + 1).padStart(2, '0');
-    const d = String(value.getDate()).padStart(2, '0');
-    return `${m}/${d}/${y}`;
+  /**
+   * Prefer DB-driven pastorName, fallback to legacy counselor string,
+   * then default to "TBD".
+   */
+  getCounselorDisplay(): string {
+    const pastorName = (this.student?.pastorName ?? '').trim();
+    if (pastorName) return pastorName;
+
+    const counselor = (this.student?.counselor ?? '').trim();
+    if (counselor) return counselor;
+
+    return 'TBD';
   }
 
-  // If it's a string like "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm:ss..."
-  if (typeof value === 'string') {
-    const s = value.trim();
+  formatDateOnly(value: any): string {
+    if (!value) return '';
 
-    // "YYYY-MM-DD" (date-only) -> format directly, no Date parsing
-    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
-    if (m) {
-      const yyyy = m[1];
-      const mm = m[2];
-      const dd = m[3];
+    if (value instanceof Date) {
+      const y = value.getFullYear();
+      const m = String(value.getMonth() + 1).padStart(2, '0');
+      const d = String(value.getDate()).padStart(2, '0');
+      return `${m}/${d}/${y}`;
+    }
+
+    if (typeof value === 'string') {
+      const s = value.trim();
+
+      // "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm:ss..."
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+      if (m) {
+        const yyyy = m[1];
+        const mm = m[2];
+        const dd = m[3];
+        return `${mm}/${dd}/${yyyy}`;
+      }
+
+      // Fallback parse
+      const d = new Date(s);
+      if (!Number.isFinite(d.getTime())) return '';
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
       return `${mm}/${dd}/${yyyy}`;
     }
 
-    // Fallback: attempt Date parse (last resort)
-    const d = new Date(s);
+    const d = new Date(value);
     if (!Number.isFinite(d.getTime())) return '';
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -63,16 +83,7 @@ export class StudentCard {
     return `${mm}/${dd}/${yyyy}`;
   }
 
-  // Unknown type: try Date coercion
-  const d = new Date(value);
-  if (!Number.isFinite(d.getTime())) return '';
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${mm}/${dd}/${yyyy}`;
-}
-
-   onViewDetails() {
+  onViewDetails() {
     this.viewDetails.emit(this.student);
   }
 
@@ -84,4 +95,3 @@ export class StudentCard {
     this.createWriteUp.emit(this.student);
   }
 }
-

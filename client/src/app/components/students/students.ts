@@ -11,6 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
+
 import { CreateStudentComponent } from './create-student/create-student';
 import { StudentService } from '../../services/student.service';
 import { Student } from '../../models/student';
@@ -19,7 +20,6 @@ import { StudentCard } from './student-card/student-card';
 import { AuthService } from '../../services/auth';
 
 type SortOption = 'alpha' | 'lastName' | 'dayIn' | 'dayOut' | 'program';
-
 type ProgramFilter = '65 Day' | '30 Day' | 'VSP';
 
 @Component({
@@ -52,7 +52,6 @@ export class Students implements OnInit {
   filteredStudents: Student[] = [];
 
   error: string | null = null;
-
   searchTerm: string = '';
 
   showCreateForm = false;
@@ -61,9 +60,7 @@ export class Students implements OnInit {
   // Sorting
   sortOption: SortOption = 'alpha';
 
-  // -----------------------------
-  // NEW: Filters
-  // -----------------------------
+  // Filters
   programOptions: ProgramFilter[] = ['65 Day', '30 Day', 'VSP'];
 
   filters = {
@@ -95,16 +92,19 @@ export class Students implements OnInit {
   loadStudents() {
     this.studentService.getStudents().subscribe({
       next: (data) => {
-        this.students = data;
+        this.students = data ?? [];
         this.applyFilterAndSort();
         this.cdr.detectChanges();
       },
-      error: () => (this.error = 'Error loading students')
+      error: (err) => {
+        console.error(err);
+        this.error = 'Error loading students';
+      }
     });
   }
 
   onSearchTermChange(term: string) {
-    this.searchTerm = term;
+    this.searchTerm = term ?? '';
     this.applyFilterAndSort();
   }
 
@@ -144,9 +144,7 @@ export class Students implements OnInit {
     }
   }
 
-  // -----------------------------
-  // NEW: Filter helpers
-  // -----------------------------
+  // Filter helpers
   onFiltersChanged() {
     this.applyFilterAndSort();
   }
@@ -184,7 +182,7 @@ export class Students implements OnInit {
   }
 
   private applyFilterAndSort() {
-    const term = this.searchTerm.trim().toLowerCase();
+    const term = (this.searchTerm ?? '').trim().toLowerCase();
 
     // 1) Search filter
     let list: Student[];
@@ -206,7 +204,7 @@ export class Students implements OnInit {
       });
     }
 
-    // 2) NEW: Checkbox filters (program + boolean flags)
+    // 2) Checkbox filters (program + boolean flags)
     list = this.applyCheckboxFilters(list);
 
     // 3) Sort filtered list
@@ -214,9 +212,6 @@ export class Students implements OnInit {
   }
 
   private applyCheckboxFilters(list: Student[]): Student[] {
-    // Program filter:
-    // If none selected => no constraint
-    // If one/more selected => student.program must be in selected set
     const selectedPrograms = this.programOptions.filter((p) => this.filters.program[p]);
     const constrainProgram = selectedPrograms.length > 0;
 
@@ -233,7 +228,6 @@ export class Students implements OnInit {
         if (!selectedPrograms.includes(prog as ProgramFilter)) return false;
       }
 
-      // Each checked filter means the corresponding field must be true
       if (requireIsFelon && !(s as any).isFelon) return false;
       if (requireOnProbation && !(s as any).onProbation) return false;
       if (requireUsesNicotine && !(s as any).usesNicotine) return false;
@@ -247,10 +241,8 @@ export class Students implements OnInit {
 
   private sortStudents(list: Student[], option: SortOption): Student[] {
     const copy = [...list];
-
     const safeString = (v: unknown) => (v ?? '').toString().trim().toLowerCase();
 
-    // Robust date parsing for MSSQL values that may arrive as ISO strings or Date objects.
     const toTime = (v: unknown): number => {
       if (!v) return NaN;
       if (v instanceof Date) return v.getTime();
@@ -266,20 +258,17 @@ export class Students implements OnInit {
 
     const getDayInMs = (s: Student) => {
       const ms = toTime((s as any).dayin);
-      // Missing/invalid dayin goes last for "most recent first"
       return Number.isFinite(ms) ? ms : Number.NEGATIVE_INFINITY;
     };
 
     const getDayOutMs = (s: Student) => {
       const ms = toTime((s as any).dayout);
-      // Missing/invalid dayout goes last for "soonest first"
       return Number.isFinite(ms) ? ms : Number.POSITIVE_INFINITY;
     };
 
     copy.sort((a: Student, b: Student) => {
       switch (option) {
         case 'alpha': {
-          // Primary: firstName, Secondary: lastName, Tertiary: idNumber
           const af = safeString(a.firstName);
           const bf = safeString(b.firstName);
           if (af !== bf) return af.localeCompare(bf);
@@ -294,7 +283,6 @@ export class Students implements OnInit {
         }
 
         case 'lastName': {
-          // Primary: lastName, Secondary: firstName, Tertiary: idNumber
           const al = safeString(a.lastName);
           const bl = safeString(b.lastName);
           if (al !== bl) return al.localeCompare(bl);
@@ -309,12 +297,10 @@ export class Students implements OnInit {
         }
 
         case 'dayIn': {
-          // Most recent dayin first
           const ad = getDayInMs(a);
           const bd = getDayInMs(b);
           if (ad !== bd) return bd - ad;
 
-          // Tie-breaker alpha
           const af = safeString(a.firstName);
           const bf = safeString(b.firstName);
           if (af !== bf) return af.localeCompare(bf);
@@ -322,12 +308,10 @@ export class Students implements OnInit {
         }
 
         case 'dayOut': {
-          // Soonest dayout first
           const ad = getDayOutMs(a);
           const bd = getDayOutMs(b);
           if (ad !== bd) return ad - bd;
 
-          // Tie-breaker alpha
           const af = safeString(a.firstName);
           const bf = safeString(b.firstName);
           if (af !== bf) return af.localeCompare(bf);
@@ -335,7 +319,6 @@ export class Students implements OnInit {
         }
 
         case 'program': {
-          // Program A-Z, then alpha name
           const ap = safeString(a.program);
           const bp = safeString(b.program);
           if (ap !== bp) return ap.localeCompare(bp);

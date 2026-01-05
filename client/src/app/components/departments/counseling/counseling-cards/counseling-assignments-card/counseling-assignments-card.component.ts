@@ -1,16 +1,17 @@
-import { Component, ChangeDetectorRef, Input, OnInit } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { MatCardModule } from '@angular/material/card';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
-import { StudentService } from '../../../../../services/student.service';
 import { Student } from '../../../../../models/student';
+import { StudentService } from '../../../../../services/student.service';
+import { PastorService } from '../../../../../services/pastor.service';
+import { Pastor } from '../../../../../models/pastor';
 
 @Component({
   selector: 'app-counseling-assignments-card',
@@ -18,108 +19,140 @@ import { Student } from '../../../../../models/student';
   imports: [
     CommonModule,
     MatCardModule,
-    MatMenuModule,
     MatIconModule,
-    MatTooltipModule,
     MatButtonModule,
-    MatProgressBarModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatProgressBarModule
   ],
   templateUrl: './counseling-assignments-card.component.html',
   styleUrls: ['./counseling-assignments-card.component.scss'],
 })
-export class CounselingAssignmentsCardComponent implements OnInit {
-  @Input() title = 'Counseling Assignments';
-  @Input() subtitle = 'The following students need a counselor assigned';
+export class CounselingAssignmentsCardComponent {
+  @Input() title = 'Counselor Assignments';
+  @Input() subtitle = 'Assign counselors to students who are currently unassigned';
 
-  @Input() counselorOptions: string[] = [
-    'Pastor Starnes',
-    'Pastor Benfield',
-    'Pastor Alphin',
-    'Pastor Frye',
-  ];
-
-  studentsNeedingCounselor: Student[] = [];
   isLoading = false;
 
-  // optional: prevents double-clicks on the same student row
+  pastors: Pastor[] = [];
+  studentsNeedingCounselor: Student[] = [];
+
   busyByStudentId: Record<number, boolean> = {};
 
   constructor(
     private studentService: StudentService,
+    private pastorService: PastorService,
     private snack: MatSnackBar,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.refresh();
   }
 
-  refresh(): void {
+  refresh() {
     this.isLoading = true;
-    this.cdr.detectChanges();
+    this.loadPastorsAndStudents();
+  }
 
-    this.studentService.getStudents().subscribe({
-      next: (students) => {
-        const list = (students || []).filter(s => !s.counselor);
-        // sort optional, matches your “dashboard” feel
-        this.studentsNeedingCounselor = list.sort((a, b) =>
-          (a.firstName || '').localeCompare(b.firstName || '')
-        );
-        this.cdr.detectChanges();
+  private loadPastorsAndStudents() {
+    this.pastorService.getPastors(true).subscribe({
+      next: (pastors) => {
+        this.pastors = pastors ?? [];
+        this.loadStudents();
       },
       error: (err) => {
-        console.error(err);
-        this.snack.open('Error loading students', 'close', { duration: 3000 });
-      },
-      complete: () => {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
+        console.error('Failed to load pastors', err);
+        this.pastors = [];
+        this.loadStudents(); // still load students, menu will be empty
+      }
     });
   }
 
-  assignCounselor(student: Student, counselor: string): void {
-    const id = Number(student.id);
-    if (!Number.isInteger(id)) {
-      this.snack.open('Invalid student id', 'close', { duration: 3000 });
-      return;
-    }
-    if (this.busyByStudentId[id]) return;
+  private loadStudents() {
+    this.studentService.getStudents().subscribe({
+      next: (students) => {
+        const rows = students ?? [];
 
-    const confirmed = window.confirm(
-      `Are you sure you want to assign ${student.firstName} ${student.lastName} to ${counselor}?`
-    );
-    if (!confirmed) return;
+        // "Needs counselor" if BOTH:
+        // - no pastorId
+        // - counselor string empty/null
+        this.studentsNeedingCounselor = rows.filter(s => {
+          const hasPastorId = !!(s.pastorId && Number(s.pastorId) > 0);
+          const counselorText = (s.counselor ?? '').trim();
+          return !hasPastorId && counselorText === '';
+        });
 
-    this.busyByStudentId[id] = true;
-    this.cdr.detectChanges();
-
-    const updated: Student = { ...student, counselor };
-
-    this.studentService.updateStudent(id, updated).subscribe({
-      next: () => {
-        this.snack.open(
-          `${student.firstName} ${student.lastName} has been assigned to ${counselor}`,
-          'close',
-          { duration: 3000 }
-        );
-
-        // Remove from local list immediately for UX
-        this.studentsNeedingCounselor = this.studentsNeedingCounselor.filter(s => s.id !== id);
+        this.isLoading = false;
         this.cdr.detectChanges();
-
-        // Optional: also refresh from server to stay authoritative
-        this.refresh();
       },
       error: (err) => {
-        console.error(err);
-        const msg = err?.error?.error || 'Failed to assign counselor';
-        this.snack.open(msg, 'close', { duration: 3500 });
-      },
-      complete: () => {
-        this.busyByStudentId[id] = false;
+        console.error('Failed to load students', err);
+        this.studentsNeedingCounselor = [];
+        this.isLoading = false;
+        this.snack.open('Failed to load students', 'Close', { duration: 3000 });
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  assignPastor(student: Student, pastorId: number) {
+    if (!student?.id) return;
+
+    const pastor = this.pastors.find(p => p.id === pastorId);
+    const counselorName = pastor?.fullName ?? '';
+
+    this.busyByStudentId[student.id] = true;
+
+    this.studentService.updateStudent(student.id, {
+      pastorId,
+      counselor: counselorName, // keep legacy field in sync
+    }).subscribe({
+      next: () => {
+        this.snack.open('Counselor assigned', 'Close', { duration: 2000 });
+
+        // remove from list
+        this.studentsNeedingCounselor = this.studentsNeedingCounselor.filter(s => s.id !== student.id);
+
+        this.busyByStudentId[student.id!] = false;
         this.cdr.detectChanges();
       },
+      error: (err) => {
+        console.error('Assign counselor failed', err);
+        this.busyByStudentId[student.id!] = false;
+        this.snack.open('Failed to assign counselor', 'Close', { duration: 3000 });
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  unassignCounselor(student: Student) {
+    if (!student?.id) return;
+
+    this.busyByStudentId[student.id] = true;
+
+    this.studentService.updateStudent(student.id, {
+      pastorId: null,
+      counselor: '',
+    }).subscribe({
+      next: () => {
+        this.snack.open('Counselor unassigned', 'Close', { duration: 2000 });
+
+        // Still “needs counselor” → keep it in the list, but refresh row locally
+        const idx = this.studentsNeedingCounselor.findIndex(s => s.id === student.id);
+        if (idx >= 0) {
+          this.studentsNeedingCounselor[idx] = { ...this.studentsNeedingCounselor[idx], pastorId: null, counselor: '' };
+        }
+
+        this.busyByStudentId[student.id!] = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Unassign counselor failed', err);
+        this.busyByStudentId[student.id!] = false;
+        this.snack.open('Failed to unassign counselor', 'Close', { duration: 3000 });
+        this.cdr.detectChanges();
+      }
     });
   }
 }

@@ -1,109 +1,116 @@
 <div class="student-card">
-      <div class="card-menu">
-            <button
-            *ngIf="!menuHidden"
-            mat-icon-button
-            [matMenuTriggerFor]="cardMenu"
-            (click)="$event.stopPropagation()"
-            aria-label="Student options"
-            >
-            <mat-icon>more_vert</mat-icon>
-            </button>
+  <div class="card-menu">
+    <button
+      *ngIf="!menuHidden"
+      mat-icon-button
+      [matMenuTriggerFor]="cardMenu"
+      (click)="$event.stopPropagation()"
+      aria-label="Student options"
+    >
+      <mat-icon>more_vert</mat-icon>
+    </button>
 
-            <mat-menu #cardMenu="matMenu">
-            <button *ngIf="auth.isOffice" mat-menu-item [routerLink]="['/students/view/', student.id]">
-                <mat-icon>visibility</mat-icon>
-                <span>View details</span>
-            </button>
-            <button mat-menu-item (click)="onCreateNote()">
-                <mat-icon>note_add</mat-icon>
-                <span>Create note</span>
-            </button>
-            <button mat-menu-item [routerLink]="['/students/create-writing-assignment/', student.id]">
-                <mat-icon>report</mat-icon>
-                <span>Create write-up</span>
-            </button>
-            </mat-menu>
-        </div>
-    <!-- Top: large photo -->
-    <div class="student-photo-wrapper">
-      <img
-        [src]="getStudentPhoto(student.idNumber)"
-        alt="Student Photo"
-        class="student-photo"
-      />
+    <mat-menu #cardMenu="matMenu">
+      <button *ngIf="auth.isOffice || auth.isAdmin" mat-menu-item [routerLink]="['/students/view/', student.id]">
+        <mat-icon>visibility</mat-icon>
+        <span>View details</span>
+      </button>
+      <button mat-menu-item (click)="onCreateNote()">
+        <mat-icon>note_add</mat-icon>
+        <span>Create note</span>
+      </button>
+      <button mat-menu-item [routerLink]="['/students/create-writing-assignment/', student.id]">
+        <mat-icon>report</mat-icon>
+        <span>Create write-up</span>
+      </button>
+    </mat-menu>
+  </div>
+
+  <!-- Top: large photo -->
+  <div class="student-photo-wrapper">
+    <img
+      [src]="getStudentPhoto(student.idNumber)"
+      alt="Student Photo"
+      class="student-photo"
+    />
+  </div>
+
+  <!-- Bottom: info area -->
+  <div class="student-body">
+    <div class="student-name">
+      {{ student.firstName }} {{ student.lastName }}
     </div>
 
-    <!-- Bottom: info area -->
-    <div class="student-body">
-      <div class="student-name">
-        {{ student.firstName }} {{ student.lastName }}
+    <div class="student-meta">
+      <div class="meta-row">
+        <span class="meta-label">Program: </span>
+        <span class="meta-value">{{ student.program }}</span>
       </div>
 
-      <div class="student-meta">
-        <div class="meta-row">
-          <span class="meta-label">Program: </span>
-          <span class="meta-value">{{ student.program }}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">File Number:</span>
-          <span class="meta-value">{{ student.idNumber }}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Counselor:</span>
-          <span class="meta-value">
-            {{ student.counselor || 'TBD' }}
-          </span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Room:</span>
-          <span class="meta-value">
-            {{ student.roomNumber || 'TBD' }}{{ student.bedLetter || '' }}
-          </span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Day In:</span>
-          <span class="meta-value">
-            {{ formatDateOnly(student.dayin) }}
-          </span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Day Out:</span>
-          <span class="meta-value">
-            {{ formatDateOnly(student.dayout) }}
-          </span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Total Demerits:</span>
-          <span class="meta-value">{{ student.totalDemerits ?? 0 }}</span>
-        </div>
+      <div class="meta-row">
+        <span class="meta-label">File Number:</span>
+        <span class="meta-value">{{ student.idNumber }}</span>
       </div>
 
-      <!-- Boolean flags as icons (only if true) -->
-      <div class="student-flags">
-        <ng-container *ngIf="student.isFelon">
-          <mat-icon matTooltip="Felony history">balance</mat-icon>
-        </ng-container>
-
-        <ng-container *ngIf="student.onProbation">
-          <mat-icon matTooltip="On probation">gavel</mat-icon>
-        </ng-container>
-
-        <ng-container *ngIf="student.usesNicotine">
-          <mat-icon matTooltip="Uses nicotine">smoking_rooms</mat-icon>
-        </ng-container>
-
-        <ng-container *ngIf="student.hasDriverLicense">
-          <mat-icon matTooltip="Has driver license">directions_car</mat-icon>
-        </ng-container>
-
-        <ng-container *ngIf="student.foodAllergies">
-          <mat-icon matTooltip="Food allergies">restaurant</mat-icon>
-        </ng-container>
-
-        <ng-container *ngIf="student.beeAllergies">
-          <mat-icon [ngStyle]="{'color': '#FF5C00'}" matTooltip="Bee allergies">bug_report</mat-icon>
-        </ng-container>
+      <div class="meta-row">
+        <span class="meta-label">Counselor:</span>
+        <span class="meta-value">
+          {{ getCounselorDisplay() }}
+        </span>
       </div>
+
+      <div class="meta-row">
+        <span class="meta-label">Room:</span>
+        <span class="meta-value">
+          {{ student.roomNumber || 'TBD' }}{{ student.bedLetter || '' }}
+        </span>
+      </div>
+
+      <div class="meta-row">
+        <span class="meta-label">Day In:</span>
+        <span class="meta-value">
+          {{ formatDateOnly(student.dayin) }}
+        </span>
+      </div>
+
+      <div class="meta-row">
+        <span class="meta-label">Day Out:</span>
+        <span class="meta-value">
+          {{ formatDateOnly(student.dayout) }}
+        </span>
+      </div>
+
+      <div class="meta-row">
+        <span class="meta-label">Total Demerits:</span>
+        <span class="meta-value">{{ student.totalDemerits ?? 0 }}</span>
+      </div>
+    </div>
+
+    <!-- Boolean flags as icons (only if true) -->
+    <div class="student-flags">
+      <ng-container *ngIf="student.isFelon">
+        <mat-icon matTooltip="Felony history">balance</mat-icon>
+      </ng-container>
+
+      <ng-container *ngIf="student.onProbation">
+        <mat-icon matTooltip="On probation">gavel</mat-icon>
+      </ng-container>
+
+      <ng-container *ngIf="student.usesNicotine">
+        <mat-icon matTooltip="Uses nicotine">smoking_rooms</mat-icon>
+      </ng-container>
+
+      <ng-container *ngIf="student.hasDriverLicense">
+        <mat-icon matTooltip="Has driver license">directions_car</mat-icon>
+      </ng-container>
+
+      <ng-container *ngIf="student.foodAllergies">
+        <mat-icon matTooltip="Food allergies">restaurant</mat-icon>
+      </ng-container>
+
+      <ng-container *ngIf="student.beeAllergies">
+        <mat-icon [ngStyle]="{ 'color': '#FF5C00' }" matTooltip="Bee allergies">bug_report</mat-icon>
+      </ng-container>
     </div>
   </div>
+</div>

@@ -2,6 +2,8 @@ export interface StudentBase {
   firstName: string;
   lastName: string;
   idNumber: string;
+  pastorId?: number | null;
+  pastorName?: string | null;
   counselor: string;
   program: string;
   dayin: string; 

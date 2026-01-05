@@ -47,7 +47,6 @@
             <span>Sort Alphabetical (First Name)</span>
           </button>
 
-          <!-- Sort by Last Name -->
           <button mat-menu-item (click)="setSort('lastName')">
             <mat-icon>sort_by_alpha</mat-icon>
             <span>Sort Alphabetical (Last Name)</span>
@@ -80,9 +79,7 @@
           <mat-icon>filter_alt</mat-icon>
         </button>
 
-        <!-- IMPORTANT: no overlayPanelClass/panelClass here (not supported in your Material version) -->
         <mat-menu #filterMenu="matMenu" class="students-filter-menu">
-
           <!-- Programs header -->
           <button mat-menu-item class="filter-section-header" disabled>
             Program

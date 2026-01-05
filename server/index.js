@@ -48,7 +48,7 @@ const registerResidentialStructureRoutes = require('./controllers/residentialStr
 const registerWritingAssignmentRoutes = require('./controllers/writingAssignmentsController');
 const registerEmployeeRoutes = require('./controllers/employeeController');
 const registerTimeOffRoutes = require('./controllers/timeOffController');
-
+const registerPastorRoutes = require('./controllers/pastorsController');
 
 
 const app = express();
@@ -176,6 +176,7 @@ registerResidentialStructureRoutes(api, db);
 registerWritingAssignmentRoutes(api, db);
 registerEmployeeRoutes(api, db);
 registerTimeOffRoutes(api, db);
+registerPastorRoutes(api, db);
 
 app.use('/api', api);
 // ----------------------

@@ -51,12 +51,16 @@
               </button>
 
               <mat-menu #assignMenu="matMenu">
+                <button mat-menu-item (click)="unassignCounselor(student)">
+                  Unassigned
+                </button>
+
                 <button
                   mat-menu-item
-                  *ngFor="let counselor of counselorOptions"
-                  (click)="assignCounselor(student, counselor)"
+                  *ngFor="let p of pastors"
+                  (click)="assignPastor(student, p.id)"
                 >
-                  {{ counselor }}
+                  {{ p.fullName }}
                 </button>
               </mat-menu>
             </td>
