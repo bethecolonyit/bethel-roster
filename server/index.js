@@ -140,12 +140,31 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Allow both dev (localhost:4200) and prod (same-origin 10.0.0.217:3000)
-const allowedOrigins = [
-  'http://localhost:4200',
-  'http://10.0.0.217:3000',
-  'http://bethel-app',
-  'http://bethel-app:3000',
-];
+const allowedOrigins = new Set(
+  (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+);
+
+// Sensible defaults for local/dev
+allowedOrigins.add('http://localhost:4200');
+allowedOrigins.add('http://localhost:3000');
+allowedOrigins.add('http://127.0.0.1:3000');
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (curl/Postman, server-to-server)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.has(origin)) return callback(null, true);
+
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
 
 app.use(
   cors({
