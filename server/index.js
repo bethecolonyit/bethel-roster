@@ -169,15 +169,18 @@ app.use(
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (e.g. curl, Postman) or from allowed list
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('Not allowed by CORS'));
+      // Allow requests with no origin (curl/Postman) – and same-origin cases
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.has(origin)) return callback(null, true);
+
+      // Do NOT throw (causes 500). Just don't enable CORS for this origin.
+      return callback(null, false);
     },
     credentials: true,
   })
 );
+
 
 // ----------------------
 // Register controllers (API routes)
