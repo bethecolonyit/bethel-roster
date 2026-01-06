@@ -27,7 +27,7 @@ export class StudentCard {
   constructor(public auth: AuthService) {}
 
   getStudentPhoto(idNumber: string) {
-    return `${environment.apiBaseUrl}/uploads/students/${idNumber}.jpg`;
+    return `/uploads/students/${idNumber}.jpg`;
   }
 
   /**
