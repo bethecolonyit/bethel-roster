@@ -113,8 +113,8 @@
           <tbody>
             <tr class="table-row" *ngFor="let r of requests">
               <td>{{ r.leaveTypeName }} ({{ r.leaveTypeCode }})</td>
-              <td>{{ r.startDateTime | date:'shortDate' }}</td>
-              <td>{{ r.endDateTime | date:'shortDate' }}</td>
+              <td>{{ r.startDate | date:'shortDate':'UTC' }}</td>
+              <td>{{ r.endDate   | date:'shortDate':'UTC' }}</td>
               <td>{{ r.requestedHours }}</td>
               <td>
                 <span class="status-pill" [ngClass]="'status-' + (r.status | lowercase)">

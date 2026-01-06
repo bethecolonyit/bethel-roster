@@ -2,13 +2,22 @@
 const {
   ensureAuthenticated,
   ensureHR,
-  // ensureOffice,
-  // ensureHR,
 } = require('../middleware/auth');
 
 /**
  * Time Off / Leave module routes.
  * Controllers are mounted behind "/api" already.
+ *
+ * IMPORTANT: This version uses DATE columns on app.time_off_requests:
+ *   - startDate (DATE, NOT NULL)
+ *   - endDate   (DATE, NOT NULL)
+ *
+ * It accepts incoming payloads that may still include startDateTime/endDateTime
+ * and will coerce them to YYYY-MM-DD date-only strings.
+ *
+ * IMPORTANT DISPLAY NOTE:
+ * SQL DATE types can serialize to JS Dates and shift a day when displayed in local time.
+ * To prevent that, this controller returns startDate/endDate as VARCHAR(10) "YYYY-MM-DD".
  */
 function registerTimeOffRoutes(app, db) {
   const { sql, query, getPool } = db;
@@ -29,12 +38,54 @@ function registerTimeOffRoutes(app, db) {
 
   // IMPORTANT: This app uses sessions (req.session.userId / req.session.role), not req.user
   function isAdmin(req) {
-    return Boolean(req.session && req.session.role === 'admin' || req.session && req.session.role === 'hr');
+    return Boolean(
+      (req.session && req.session.role === 'admin') ||
+      (req.session && req.session.role === 'hr')
+    );
   }
 
   function sessionUserId(req) {
     const id = Number(req.session?.userId);
     return Number.isInteger(id) && id > 0 ? id : null;
+  }
+
+  /**
+   * Coerce various date inputs into YYYY-MM-DD string.
+   * Accepts:
+   * - "2026-01-15"
+   * - "2026-01-15T00:00:00"
+   * - "2026-01-15T00:00:00.000Z"
+   * Returns: "YYYY-MM-DD" or null
+   */
+  function toYmdDateOnly(v) {
+    if (v === null || v === undefined) return null;
+
+    if (v instanceof Date && !Number.isNaN(v.valueOf())) {
+      // Convert Date to local YYYY-MM-DD
+      const yyyy = v.getFullYear();
+      const mm = String(v.getMonth() + 1).padStart(2, '0');
+      const dd = String(v.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    const s = String(v).trim();
+    if (!s) return null;
+
+    // If it's an ISO datetime, keep only date part
+    const ymd = s.length >= 10 ? s.slice(0, 10) : s;
+
+    // Validate basic YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;
+
+    // Lightweight sanity check
+    const y = Number(ymd.slice(0, 4));
+    const m = Number(ymd.slice(5, 7));
+    const d = Number(ymd.slice(8, 10));
+    if (y < 1900 || y > 2100) return null;
+    if (m < 1 || m > 12) return null;
+    if (d < 1 || d > 31) return null;
+
+    return ymd;
   }
 
   async function getEmployeeIdForUser(userId) {
@@ -163,55 +214,53 @@ function registerTimeOffRoutes(app, db) {
       res.status(500).json({ error: 'Database error fetching balances' });
     }
   });
+
   // -----------------------------
-// MY BALANCES (staff convenience)
-// -----------------------------
-app.get('/my/leave-balances', ensureAuthenticated, async (req, res) => {
-  try {
-    const userId = req.session?.userId;
-    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+  // MY BALANCES (staff convenience)
+  // -----------------------------
+  app.get('/my/leave-balances', ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) return res.status(401).json({ error: 'Not authenticated' });
 
-    const myEmployeeId = await getEmployeeIdForUser(userId);
-    if (!myEmployeeId) {
-      return res.status(403).json({ error: 'No employee record is linked to this user account' });
+      const myEmployeeId = await getEmployeeIdForUser(userId);
+      if (!myEmployeeId) {
+        return res.status(403).json({ error: 'No employee record is linked to this user account' });
+      }
+
+      // Ensure rows exist for all active leave types
+      const lt = await query(`SELECT id FROM app.leave_types WHERE isActive = 1`);
+      for (const row of lt.recordset) {
+        await ensureBalanceRow(myEmployeeId, row.id);
+      }
+
+      const r = await query(
+        `
+        SELECT
+          b.employeeId,
+          b.leaveTypeId,
+          lt.code,
+          lt.name,
+          b.currentHours,
+          b.updatedAt
+        FROM app.employee_leave_balances b
+        INNER JOIN app.leave_types lt ON lt.id = b.leaveTypeId
+        WHERE b.employeeId = @employeeId
+          AND lt.isActive = 1
+        ORDER BY lt.code ASC
+        `,
+        { employeeId: { type: sql.Int, value: myEmployeeId } }
+      );
+
+      res.json(r.recordset);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Database error fetching balances' });
     }
-
-    // Ensure rows exist for all active leave types
-    const lt = await query(`SELECT id FROM app.leave_types WHERE isActive = 1`);
-    for (const row of lt.recordset) {
-      await ensureBalanceRow(myEmployeeId, row.id);
-    }
-
-    const r = await query(
-      `
-      SELECT
-        b.employeeId,
-        b.leaveTypeId,
-        lt.code,
-        lt.name,
-        b.currentHours,
-        b.updatedAt
-      FROM app.employee_leave_balances b
-      INNER JOIN app.leave_types lt ON lt.id = b.leaveTypeId
-      WHERE b.employeeId = @employeeId
-        AND lt.isActive = 1
-      ORDER BY lt.code ASC
-      `,
-      { employeeId: { type: sql.Int, value: myEmployeeId } }
-    );
-
-    res.json(r.recordset);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Database error fetching balances' });
-  }
-});
-
+  });
 
   /**
-   * HR "set-to" balance:
-   * Body: { leaveTypeCode: "PTO", targetHours: 120, memo?: "..." }
-   * Creates a ledger ManualAdjustment for the delta and updates cache.
+   * HR "set-to" balance
    */
   app.post('/employees/:employeeId/leave-balances/set', ensureHR, async (req, res) => {
     const employeeId = toInt(req.params.employeeId);
@@ -310,19 +359,17 @@ app.get('/my/leave-balances', ensureAuthenticated, async (req, res) => {
   // REQUESTS
   // -----------------------------
 
-  /**
-   * Create request (Pending)
-   * Staff: can only create for themselves
-   * Admin: can create for anyone if employeeId provided; if not provided, will fall back to admin's own employee record (if exists)
-   */
   app.post('/time-off-requests', ensureAuthenticated, async (req, res) => {
     const { leaveTypeCode, startDateTime, endDateTime, requestedHours, notes } = req.body || {};
 
     const hrs = toHours(requestedHours);
     if (hrs === null || hrs <= 0) return res.status(400).json({ error: 'requestedHours must be > 0' });
 
-    if (!startDateTime || !endDateTime) {
-      return res.status(400).json({ error: 'startDateTime and endDateTime are required' });
+    const startDate = toYmdDateOnly(startDateTime);
+    const endDate = toYmdDateOnly(endDateTime);
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'startDateTime and endDateTime are required (YYYY-MM-DD recommended)' });
     }
 
     try {
@@ -336,7 +383,6 @@ app.get('/my/leave-balances', ensureAuthenticated, async (req, res) => {
         if (requestedEmployeeId) {
           employeeId = requestedEmployeeId;
         } else {
-          // QoL: allow admin to create for self without providing employeeId
           const uid = sessionUserId(req);
           if (!uid) return res.status(401).json({ error: 'Not authenticated' });
 
@@ -350,24 +396,22 @@ app.get('/my/leave-balances', ensureAuthenticated, async (req, res) => {
         if (!uid) return res.status(401).json({ error: 'Not authenticated' });
 
         employeeId = await getEmployeeIdForUser(uid);
-        if (!employeeId) {
-          return res.status(403).json({ error: 'No employee record is linked to this user account' });
-        }
+        if (!employeeId) return res.status(403).json({ error: 'No employee record is linked to this user account' });
       }
 
       const r = await query(
         `
         INSERT INTO app.time_off_requests
-          (employeeId, leaveTypeId, startDateTime, endDateTime, requestedHours, status, requestedByUserId, notes)
+          (employeeId, leaveTypeId, startDate, endDate, requestedHours, status, requestedByUserId, notes)
         OUTPUT INSERTED.*
         VALUES
-          (@employeeId, @leaveTypeId, @startDateTime, @endDateTime, @requestedHours, 'Pending', @requestedByUserId, @notes);
+          (@employeeId, @leaveTypeId, @startDate, @endDate, @requestedHours, 'Pending', @requestedByUserId, @notes);
         `,
         {
           employeeId: { type: sql.Int, value: employeeId },
           leaveTypeId: { type: sql.Int, value: lt.id },
-          startDateTime: { type: sql.DateTime2(0), value: startDateTime },
-          endDateTime: { type: sql.DateTime2(0), value: endDateTime },
+          startDate: { type: sql.Date, value: startDate },
+          endDate: { type: sql.Date, value: endDate },
           requestedHours: { type: sql.Decimal(7, 2), value: hrs },
           requestedByUserId: { type: sql.Int, value: sessionUserId(req) },
           notes: { type: sql.NVarChar(1000), value: notes ? String(notes) : null },
@@ -380,90 +424,97 @@ app.get('/my/leave-balances', ensureAuthenticated, async (req, res) => {
       res.status(500).json({ error: 'Database error creating time off request' });
     }
   });
+
   // -----------------------------
-// MY REQUESTS (always the current user's requests)
-// -----------------------------
-app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
-  try {
-    const uid = sessionUserId(req);
-    if (!uid) return res.status(401).json({ error: 'Not authenticated' });
+  // MY REQUESTS (always the current user's requests)
+  // -----------------------------
+  app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
+    try {
+      const uid = sessionUserId(req);
+      if (!uid) return res.status(401).json({ error: 'Not authenticated' });
 
-    const myEmployeeId = await getEmployeeIdForUser(uid);
-    if (!myEmployeeId) {
-      return res.status(403).json({ error: 'No employee record is linked to this user account' });
-    }
+      const myEmployeeId = await getEmployeeIdForUser(uid);
+      if (!myEmployeeId) {
+        return res.status(403).json({ error: 'No employee record is linked to this user account' });
+      }
 
-    const where = ['r.employeeId = @employeeId'];
-    const params = {
-      employeeId: { type: sql.Int, value: myEmployeeId },
-    };
-
-    // Optional filters (same as admin list)
-    if (typeof req.query.status === 'string' && req.query.status.trim()) {
-      where.push('r.status = @status');
-      params.status = { type: sql.NVarChar(20), value: req.query.status.trim() };
-    }
-
-    if (typeof req.query.leaveTypeCode === 'string' && req.query.leaveTypeCode.trim()) {
-      where.push('lt.code = @leaveTypeCode');
-      params.leaveTypeCode = {
-        type: sql.NVarChar(20),
-        value: req.query.leaveTypeCode.trim().toUpperCase(),
+      const where = ['r.employeeId = @employeeId'];
+      const params = {
+        employeeId: { type: sql.Int, value: myEmployeeId },
       };
+
+      if (typeof req.query.status === 'string' && req.query.status.trim()) {
+        where.push('r.status = @status');
+        params.status = { type: sql.NVarChar(20), value: req.query.status.trim() };
+      }
+
+      if (typeof req.query.leaveTypeCode === 'string' && req.query.leaveTypeCode.trim()) {
+        where.push('lt.code = @leaveTypeCode');
+        params.leaveTypeCode = {
+          type: sql.NVarChar(20),
+          value: req.query.leaveTypeCode.trim().toUpperCase(),
+        };
+      }
+
+      if (typeof req.query.from === 'string' && req.query.from.trim()) {
+        const fromYmd = toYmdDateOnly(req.query.from);
+        if (fromYmd) {
+          where.push('r.startDate >= @from');
+          params.from = { type: sql.Date, value: fromYmd };
+        }
+      }
+
+      if (typeof req.query.to === 'string' && req.query.to.trim()) {
+        const toYmd = toYmdDateOnly(req.query.to);
+        if (toYmd) {
+          where.push('r.endDate <= @to');
+          params.to = { type: sql.Date, value: toYmd };
+        }
+      }
+
+      const whereSql = `WHERE ${where.join(' AND ')}`;
+
+      const r = await query(
+        `
+        SELECT
+          r.id,
+          r.employeeId,
+          e.firstName AS employeeFirstName,
+          e.lastName  AS employeeLastName,
+          lt.code     AS leaveTypeCode,
+          lt.name     AS leaveTypeName,
+
+          -- RETURN DATE-ONLY STRINGS TO PREVENT TZ SHIFT
+          CONVERT(varchar(10), r.startDate, 23) AS startDate,
+          CONVERT(varchar(10), r.endDate,   23) AS endDate,
+
+          r.requestedHours,
+          r.status,
+          r.requestedByUserId,
+          r.reviewedByUserId,
+          r.reviewedAt,
+          r.notes,
+          r.createdAt,
+          r.updatedAt
+        FROM app.time_off_requests r
+        INNER JOIN app.employees e ON e.id = r.employeeId
+        INNER JOIN app.leave_types lt ON lt.id = r.leaveTypeId
+        ${whereSql}
+        ORDER BY r.createdAt DESC
+        `,
+        params
+      );
+
+      res.json(r.recordset);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Database error fetching my time off requests' });
     }
+  });
 
-    if (typeof req.query.from === 'string' && req.query.from.trim()) {
-      where.push('r.startDateTime >= @from');
-      params.from = { type: sql.DateTime2(0), value: req.query.from.trim() };
-    }
-
-    if (typeof req.query.to === 'string' && req.query.to.trim()) {
-      where.push('r.endDateTime <= @to');
-      params.to = { type: sql.DateTime2(0), value: req.query.to.trim() };
-    }
-
-    const whereSql = `WHERE ${where.join(' AND ')}`;
-
-    const r = await query(
-      `
-      SELECT
-        r.id,
-        r.employeeId,
-        e.firstName AS employeeFirstName,
-        e.lastName  AS employeeLastName,
-        lt.code     AS leaveTypeCode,
-        lt.name     AS leaveTypeName,
-        r.startDateTime,
-        r.endDateTime,
-        r.requestedHours,
-        r.status,
-        r.requestedByUserId,
-        r.reviewedByUserId,
-        r.reviewedAt,
-        r.notes,
-        r.createdAt,
-        r.updatedAt
-      FROM app.time_off_requests r
-      INNER JOIN app.employees e ON e.id = r.employeeId
-      INNER JOIN app.leave_types lt ON lt.id = r.leaveTypeId
-      ${whereSql}
-      ORDER BY r.createdAt DESC
-      `,
-      params
-    );
-
-    res.json(r.recordset);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Database error fetching my time off requests' });
-  }
-});
-
-  /**
-   * List requests:
-   * - Admin: can view all (optional employeeId filter)
-   * - Non-admin: forced to their own employeeId
-   */
+  // -----------------------------
+  // LIST REQUESTS
+  // -----------------------------
   app.get('/time-off-requests', ensureAuthenticated, async (req, res) => {
     try {
       const where = [];
@@ -500,13 +551,19 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
       }
 
       if (typeof req.query.from === 'string' && req.query.from.trim()) {
-        where.push('r.startDateTime >= @from');
-        params.from = { type: sql.DateTime2(0), value: req.query.from.trim() };
+        const fromYmd = toYmdDateOnly(req.query.from);
+        if (fromYmd) {
+          where.push('r.startDate >= @from');
+          params.from = { type: sql.Date, value: fromYmd };
+        }
       }
 
       if (typeof req.query.to === 'string' && req.query.to.trim()) {
-        where.push('r.endDateTime <= @to');
-        params.to = { type: sql.DateTime2(0), value: req.query.to.trim() };
+        const toYmd = toYmdDateOnly(req.query.to);
+        if (toYmd) {
+          where.push('r.endDate <= @to');
+          params.to = { type: sql.Date, value: toYmd };
+        }
       }
 
       const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
@@ -520,8 +577,11 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
           e.lastName  AS employeeLastName,
           lt.code     AS leaveTypeCode,
           lt.name     AS leaveTypeName,
-          r.startDateTime,
-          r.endDateTime,
+
+          -- RETURN DATE-ONLY STRINGS TO PREVENT TZ SHIFT
+          CONVERT(varchar(10), r.startDate, 23) AS startDate,
+          CONVERT(varchar(10), r.endDate,   23) AS endDate,
+
           r.requestedHours,
           r.status,
           r.requestedByUserId,
@@ -549,15 +609,6 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
   // -----------------------------
   // APPROVE / DENY / CANCEL
   // -----------------------------
-
-  /**
-   * Approve request (transaction):
-   * - Pending -> Approved
-   * - Ledger debit (ApprovedRequest, -requestedHours)
-   * - Cache update (delta -requestedHours)
-   *
-   * Includes a "no negative balance" guard. If you want to allow negative, remove that block.
-   */
   app.post('/time-off-requests/:id/approve', ensureHR, async (req, res) => {
     const requestId = toInt(req.params.id);
     if (!requestId) return res.status(400).json({ error: 'Invalid request id' });
@@ -568,7 +619,6 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
     try {
       await tx.begin();
 
-      // 1) Approve (only if Pending)
       const approveReq = new sql.Request(tx);
       const upd = await approveReq
         .input('id', sql.Int, requestId)
@@ -591,10 +641,8 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
       const r0 = upd.recordset[0];
       const debit = -Math.abs(Number(r0.requestedHours));
 
-      // 2) Ensure balance row exists in cache
       await ensureBalanceRowTx(tx, r0.employeeId, r0.leaveTypeId);
 
-      // 3) No-negative-balance guard
       const balCheck = new sql.Request(tx);
       const bal = await balCheck
         .input('employeeId', sql.Int, r0.employeeId)
@@ -611,7 +659,6 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
         return res.status(400).json({ error: 'Insufficient balance to approve this request' });
       }
 
-      // 4) Ledger debit
       const ledReq = new sql.Request(tx);
       const led = await ledReq
         .input('employeeId', sql.Int, r0.employeeId)
@@ -628,7 +675,6 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
             (@employeeId, @leaveTypeId, @amountHours, 'ApprovedRequest', @sourceRequestId, @effectiveDate, NULL, @createdByUserId);
         `);
 
-      // 5) Cache update
       const balReq = new sql.Request(tx);
       await balReq
         .input('employeeId', sql.Int, r0.employeeId)
@@ -685,11 +731,6 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
     }
   });
 
-  /**
-   * Cancel request (transaction if Approved):
-   * - Pending -> Cancelled (no ledger)
-   * - Approved -> Cancelled + reversal credit + cache update
-   */
   app.post('/time-off-requests/:id/cancel', ensureHR, async (req, res) => {
     const requestId = toInt(req.params.id);
     if (!requestId) return res.status(400).json({ error: 'Invalid request id' });
@@ -700,7 +741,6 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
     try {
       await tx.begin();
 
-      // Load request
       const getReq = new sql.Request(tx);
       const r0 = await getReq
         .input('id', sql.Int, requestId)
@@ -722,7 +762,6 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
         return res.status(400).json({ error: 'Request is already Cancelled' });
       }
 
-      // Mark cancelled
       const updReq = new sql.Request(tx);
       const upd = await updReq
         .input('id', sql.Int, requestId)
@@ -739,7 +778,6 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
       const updated = upd.recordset[0];
       let reversal = null;
 
-      // If previously approved, post reversal credit
       if (existing.status === 'Approved') {
         const credit = Math.abs(Number(existing.requestedHours));
 
@@ -786,51 +824,47 @@ app.get('/my/time-off-requests', ensureAuthenticated, async (req, res) => {
     }
   });
 
-  // -----------------------------
-// STAFF CANCEL (Pending only, own requests)
-// -----------------------------
-app.post('/time-off-requests/:id/cancel-self', ensureAuthenticated, async (req, res) => {
-  const requestId = toInt(req.params.id);
-  if (!requestId) return res.status(400).json({ error: 'Invalid request id' });
+  // STAFF CANCEL (Pending only, own requests)
+  app.post('/time-off-requests/:id/cancel-self', ensureAuthenticated, async (req, res) => {
+    const requestId = toInt(req.params.id);
+    if (!requestId) return res.status(400).json({ error: 'Invalid request id' });
 
-  try {
-    const userId = req.session?.userId;
-    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    try {
+      const userId = req.session?.userId;
+      if (!userId) return res.status(401).json({ error: 'Not authenticated' });
 
-    const myEmployeeId = await getEmployeeIdForUser(userId);
-    if (!myEmployeeId) return res.status(403).json({ error: 'No employee record is linked to this user account' });
+      const myEmployeeId = await getEmployeeIdForUser(userId);
+      if (!myEmployeeId) return res.status(403).json({ error: 'No employee record is linked to this user account' });
 
-    // Pending only, must belong to this employee
-    const r = await query(
-      `
-      UPDATE app.time_off_requests
-      SET status = 'Cancelled',
-          reviewedByUserId = COALESCE(reviewedByUserId, @userId),
-          reviewedAt = COALESCE(reviewedAt, SYSDATETIME()),
-          updatedAt = SYSDATETIME()
-      OUTPUT INSERTED.*
-      WHERE id = @id
-        AND employeeId = @employeeId
-        AND status = 'Pending';
-      `,
-      {
-        id: { type: sql.Int, value: requestId },
-        employeeId: { type: sql.Int, value: myEmployeeId },
-        userId: { type: sql.Int, value: userId },
+      const r = await query(
+        `
+        UPDATE app.time_off_requests
+        SET status = 'Cancelled',
+            reviewedByUserId = COALESCE(reviewedByUserId, @userId),
+            reviewedAt = COALESCE(reviewedAt, SYSDATETIME()),
+            updatedAt = SYSDATETIME()
+        OUTPUT INSERTED.*
+        WHERE id = @id
+          AND employeeId = @employeeId
+          AND status = 'Pending';
+        `,
+        {
+          id: { type: sql.Int, value: requestId },
+          employeeId: { type: sql.Int, value: myEmployeeId },
+          userId: { type: sql.Int, value: userId },
+        }
+      );
+
+      if (!r.recordset?.length) {
+        return res.status(400).json({ error: 'Request not found, not Pending, or not yours' });
       }
-    );
 
-    if (!r.recordset?.length) {
-      return res.status(400).json({ error: 'Request not found, not Pending, or not yours' });
+      res.json(r.recordset[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Database error cancelling request' });
     }
-
-    res.json(r.recordset[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Database error cancelling request' });
-  }
-});
-
+  });
 
   // -----------------------------
   // LEDGER ADJUSTMENTS
@@ -870,7 +904,7 @@ app.post('/time-off-requests/:id/cancel-self', ensureAuthenticated, async (req, 
           leaveTypeId: { type: sql.Int, value: lt.id },
           amountHours: { type: sql.Decimal(7, 2), value: amt },
           source: { type: sql.NVarChar(50), value: String(source) },
-          effectiveDate: { type: sql.Date, value: effectiveDate ? String(effectiveDate) : null },
+          effectiveDate: { type: sql.Date, value: effectiveDate ? String(effectiveDate).slice(0, 10) : null },
           memo: { type: sql.NVarChar(1000), value: memo ? String(memo) : null },
           createdByUserId: { type: sql.Int, value: sessionUserId(req) },
         }

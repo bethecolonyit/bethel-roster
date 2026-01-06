@@ -133,8 +133,8 @@ export class StaffTimeOffComponent implements OnInit {
 
     const dto: CreateTimeOffRequestDto = {
       leaveTypeCode: v.leaveTypeCode,
-      startDateTime: `${startYmd}T00:00:00`,
-      endDateTime: `${endYmd}T23:59:59`,
+      startDateTime: startYmd,
+      endDateTime: endYmd,
       requestedHours: Number(v.requestedHours),
       notes: v.notes ?? null,
     };

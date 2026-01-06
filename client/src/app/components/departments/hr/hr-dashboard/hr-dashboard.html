@@ -140,9 +140,9 @@
                   <td>{{ r.leaveTypeCode }}</td>
                   <td>
                     <div class="date-range">
-                      <div>{{ fmtDateTime(r.startDateTime) }}</div>
+                      <div>{{ r.startDate | date:'shortDate':'UTC' }}</div>
                       <div class="muted">to</div>
-                      <div>{{ fmtDateTime(r.endDateTime) }}</div>
+                      <div>{{ r.endDate | date:'shortDate':'UTC' }}</div>
                     </div>
                   </td>
                   <td>{{ r.requestedHours }}</td>

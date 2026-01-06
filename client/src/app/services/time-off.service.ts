@@ -16,7 +16,7 @@ export interface EmployeeListItem {
   userId: number | null;
   firstName: string;
   lastName: string;
-  hireDate: string; // ISO date
+  hireDate: string; // YYYY-MM-DD (or ISO date string)
 }
 
 export interface LeaveBalanceRow {
@@ -27,13 +27,19 @@ export interface LeaveBalanceRow {
   currentHours: number;
   updatedAt?: string | null;
 }
+
+
 export interface CreateTimeOffRequestDto {
   leaveTypeCode: string;
-  startDateTime: string;   // ISO or "YYYY-MM-DDTHH:mm"
-  endDateTime: string;     // ISO or "YYYY-MM-DDTHH:mm"
+
+  // Preferred now: "YYYY-MM-DD"
+  startDateTime: string;
+  endDateTime: string;
+
   requestedHours: number;
   notes?: string | null;
 }
+
 export type TimeOffStatus = 'Pending' | 'Approved' | 'Denied' | 'Cancelled';
 
 export interface TimeOffRequestListItem {
@@ -43,8 +49,8 @@ export interface TimeOffRequestListItem {
   employeeLastName: string;
   leaveTypeCode: string;
   leaveTypeName: string;
-  startDateTime: string;
-  endDateTime: string;
+  startDate: string; // "YYYY-MM-DD"
+  endDate: string;   // "YYYY-MM-DD"
   requestedHours: number;
   status: TimeOffStatus;
   requestedByUserId?: number | null;
@@ -63,6 +69,27 @@ export class TimeOffService {
   private httpOptions = { withCredentials: true as const };
 
   constructor(private http: HttpClient) {}
+
+  /**
+   * Normalize a value to YYYY-MM-DD.
+   * Accepts: Date | ISO string | "YYYY-MM-DD" | "YYYY-MM-DDTHH:mm:ss..."
+   */
+  private toYmd(v: unknown): string | null {
+    if (v === null || v === undefined) return null;
+
+    if (v instanceof Date && !Number.isNaN(v.valueOf())) {
+      const yyyy = v.getFullYear();
+      const mm = String(v.getMonth() + 1).padStart(2, '0');
+      const dd = String(v.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    const s = String(v).trim();
+    if (!s) return null;
+
+    const ymd = s.length >= 10 ? s.slice(0, 10) : s;
+    return /^\d{4}-\d{2}-\d{2}$/.test(ymd) ? ymd : null;
+  }
 
   // Employees
   getEmployees(): Observable<EmployeeListItem[]> {
@@ -95,15 +122,22 @@ export class TimeOffService {
     employeeId?: number;
     status?: TimeOffStatus | '';
     leaveTypeCode?: string;
-    from?: string; // ISO date/time
-    to?: string;   // ISO date/time
+
+    // Now date-only filters (YYYY-MM-DD). We will normalize if you pass full ISO strings.
+    from?: string | Date;
+    to?: string | Date;
   }): Observable<TimeOffRequestListItem[]> {
     const q: string[] = [];
+
     if (params?.employeeId) q.push(`employeeId=${encodeURIComponent(String(params.employeeId))}`);
     if (params?.status) q.push(`status=${encodeURIComponent(params.status)}`);
     if (params?.leaveTypeCode) q.push(`leaveTypeCode=${encodeURIComponent(params.leaveTypeCode)}`);
-    if (params?.from) q.push(`from=${encodeURIComponent(params.from)}`);
-    if (params?.to) q.push(`to=${encodeURIComponent(params.to)}`);
+
+    const fromYmd = this.toYmd(params?.from);
+    const toYmd = this.toYmd(params?.to);
+
+    if (fromYmd) q.push(`from=${encodeURIComponent(fromYmd)}`);
+    if (toYmd) q.push(`to=${encodeURIComponent(toYmd)}`);
 
     const qs = q.length ? `?${q.join('&')}` : '';
     return this.http.get<TimeOffRequestListItem[]>(`${this.baseUrl}/time-off-requests${qs}`, this.httpOptions);
@@ -114,7 +148,11 @@ export class TimeOffService {
   }
 
   denyRequest(requestId: number, notes?: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/time-off-requests/${requestId}/deny`, { notes: notes ?? null }, this.httpOptions);
+    return this.http.post(
+      `${this.baseUrl}/time-off-requests/${requestId}/deny`,
+      { notes: notes ?? null },
+      this.httpOptions
+    );
   }
 
   cancelRequest(requestId: number): Observable<any> {
@@ -127,41 +165,57 @@ export class TimeOffService {
     leaveTypeCode: string;
     amountHours: number;
     source: LedgerSource;
-    effectiveDate?: string; // YYYY-MM-DD
+    effectiveDate?: string | Date; // YYYY-MM-DD preferred
     memo?: string | null;
   }): Observable<any> {
-    return this.http.post(`${this.baseUrl}/time-off-ledger/adjust`, body, this.httpOptions);
+    const eff = this.toYmd(body.effectiveDate);
+
+    return this.http.post(
+      `${this.baseUrl}/time-off-ledger/adjust`,
+      {
+        ...body,
+        effectiveDate: eff ?? null,
+      },
+      this.httpOptions
+    );
   }
 
-// ---- Staff endpoints ----
-getMyBalances(): Observable<LeaveBalanceRow[]> {
-  return this.http.get<LeaveBalanceRow[]>(
-    `${this.baseUrl}/my/leave-balances`,
-    this.httpOptions
-  );
-}
+  // ---- Staff endpoints ----
+  getMyBalances(): Observable<LeaveBalanceRow[]> {
+    return this.http.get<LeaveBalanceRow[]>(
+      `${this.baseUrl}/my/leave-balances`,
+      this.httpOptions
+    );
+  }
 
-getMyRequests(): Observable<TimeOffRequestListItem[]> {
-  return this.http.get<TimeOffRequestListItem[]>(
-    `${this.baseUrl}/my/time-off-requests`,
-    this.httpOptions
-  );
-}
+  getMyRequests(): Observable<TimeOffRequestListItem[]> {
+    return this.http.get<TimeOffRequestListItem[]>(
+      `${this.baseUrl}/my/time-off-requests`,
+      this.httpOptions
+    );
+  }
 
-createMyRequest(dto: CreateTimeOffRequestDto): Observable<any> {
-  return this.http.post(
-    `${this.baseUrl}/time-off-requests`,
-    dto,
-    this.httpOptions
-  );
-}
+  createMyRequest(dto: CreateTimeOffRequestDto): Observable<any> {
+    // Normalize to YYYY-MM-DD even if caller still passes "YYYY-MM-DDT00:00:00"
+    const startYmd = this.toYmd(dto.startDateTime);
+    const endYmd = this.toYmd(dto.endDateTime);
 
-cancelMyPendingRequest(requestId: number): Observable<any> {
-  return this.http.post(
-    `${this.baseUrl}/time-off-requests/${requestId}/cancel-self`,
-    {},
-    this.httpOptions
-  );
-}
-}
+    return this.http.post(
+      `${this.baseUrl}/time-off-requests`,
+      {
+        ...dto,
+        startDateTime: startYmd ?? dto.startDateTime,
+        endDateTime: endYmd ?? dto.endDateTime,
+      },
+      this.httpOptions
+    );
+  }
 
+  cancelMyPendingRequest(requestId: number): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/time-off-requests/${requestId}/cancel-self`,
+      {},
+      this.httpOptions
+    );
+  }
+}

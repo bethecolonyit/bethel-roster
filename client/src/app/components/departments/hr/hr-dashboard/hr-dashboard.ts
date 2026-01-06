@@ -404,8 +404,4 @@ cancel(reqItem: TimeOffRequestListItem): void {
   employeeName(e: EmployeeListItem): string {
     return `${e.firstName} ${e.lastName}`;
   }
-
-  fmtDateTime(v: string): string {
-    return v ? new Date(v).toLocaleString() : '';
-  }
 }
