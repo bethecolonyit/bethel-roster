@@ -30,7 +30,7 @@ export interface ResetPasswordDto {
 })
 export class UserService {
   // Adjust to environment later if you want
-  private baseUrl = `${environment.apiBaseUrl}/api/auth/users`;
+  private baseUrl = `${environment.apiBaseUrl}/auth/users`;
 
   constructor(private http: HttpClient) {}
 

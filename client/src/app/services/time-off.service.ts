@@ -65,7 +65,7 @@ export type LedgerSource = 'ManualAdjustment' | 'BankedHoliday' | 'OvertimeBank'
 
 @Injectable({ providedIn: 'root' })
 export class TimeOffService {
-  private baseUrl = `${environment.apiBaseUrl}/api`;
+  private baseUrl = `${environment.apiBaseUrl}`;
   private httpOptions = { withCredentials: true as const };
 
   constructor(private http: HttpClient) {}

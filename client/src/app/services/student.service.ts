@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class StudentService {
 
-  private api = `${environment.apiBaseUrl}/api/students`;
+  private api = `${environment.apiBaseUrl}/students`;
 
   constructor(private http: HttpClient) {}
 
@@ -19,7 +19,7 @@ export class StudentService {
     }
     getStudentsSimple(): Observable<Array<{ id: number; firstName: string; lastName: string }>> {
         return this.http.get<Array<{ id: number; firstName: string; lastName: string }>>(
-          `${environment.apiBaseUrl}/api/students/simple`,
+          `${environment.apiBaseUrl}/students/simple`,
           { withCredentials: true }
         );
       }

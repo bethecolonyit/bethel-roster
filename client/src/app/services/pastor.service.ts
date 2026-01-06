@@ -6,7 +6,7 @@ import { Pastor } from '../models/pastor';
 
 @Injectable({ providedIn: 'root' })
 export class PastorService {
-  private api = `${environment.apiBaseUrl}/api/pastors`;
+  private api = `${environment.apiBaseUrl}/pastors`;
 
   constructor(private http: HttpClient) {}
 

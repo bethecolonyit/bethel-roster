@@ -18,7 +18,7 @@ export interface AtRiskStudentRow {
 export class WritingAssignmentService {
   
 
-  private api = `${environment.apiBaseUrl}/api/writing-assignments`;
+  private api = `${environment.apiBaseUrl}/writing-assignments`;
 
   constructor(private http: HttpClient) {}
 

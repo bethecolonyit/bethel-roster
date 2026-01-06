@@ -37,7 +37,7 @@ export class AuthService {
   /** Check current session */
   me(): Observable<User | null> {
     return this.http
-      .get<User | null>(`${this.apiUrl}/api/auth/me`, {
+      .get<User | null>(`${this.apiUrl}/auth/me`, {
         withCredentials: true,
       })
       .pipe(tap(user => this.setUser(user)));
@@ -59,7 +59,7 @@ export class AuthService {
     const payload: LoginPayload = { email, password };
 
     return this.http
-      .post<User>(`${this.apiUrl}/api/auth/login`, payload, {
+      .post<User>(`${this.apiUrl}/auth/login`, payload, {
         withCredentials: true,
       })
       .pipe(tap(user => this.setUser(user)));
@@ -69,7 +69,7 @@ export class AuthService {
   logout(): Observable<{ message: string }> {
     return this.http
       .post<{ message: string }>(
-        `${this.apiUrl}/api/auth/logout`,
+        `${this.apiUrl}/auth/logout`,
         {},
         { withCredentials: true }
       )
@@ -96,8 +96,8 @@ export class AuthService {
   getUsersLookup(includeUserId?: number) {
   const url =
     includeUserId != null
-      ? `${this.apiUrl}/api/auth/users/lookup/?includeUserId=${includeUserId}`
-      : `${this.apiUrl}/api/auth/users/lookup`;
+      ? `${this.apiUrl}/auth/users/lookup/?includeUserId=${includeUserId}`
+      : `${this.apiUrl}/auth/users/lookup`;
   return this.http.get<UserLookup[]>(url, { withCredentials: true });
 }
 }
