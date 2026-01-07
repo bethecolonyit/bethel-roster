@@ -4,7 +4,8 @@ import { Dashboard } from './components/dashboard/dashboard';
 import { Students } from './components/students/students';
 import { authGuard } from './guards/auth-guard';
 import { UsersComponent } from './components/users/users'; 
-import { adminGuard } from './guards/admin-guard';           
+import { adminGuard } from './guards/admin-guard';  
+import { officeGuard } from './guards/office-guard';
 import { Residential } from './components/residential/residential';
 import { ViewStudent } from './components/students/view-student/view-student';
 import { CCoordDashboard } from './components/departments/c-coord/c-coord-dashboard/c-coord-dashboard';
@@ -51,7 +52,7 @@ export const appRoutes: Routes = [
   {
     path: 'residential',
     component: Residential,
-    canActivate: [adminGuard],  
+    canActivate: [officeGuard],  
   },
   {
     path: 'departments/c-coord-dashboard',

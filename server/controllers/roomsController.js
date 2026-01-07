@@ -1,5 +1,5 @@
 // controllers/roomsController.js (MSSQL)
-const { ensureAuthenticated, ensureOffice } = require('../middleware/auth');
+const { ensureAuthenticated, ensureOffice, ensureAnyRole } = require('../middleware/auth');
 
 function registerRoomRoutes(app, db) {
   const { sql, query, getPool } = db;

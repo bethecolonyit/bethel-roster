@@ -40,7 +40,7 @@
     mat-list-item
     routerLink="/residential"
     routerLinkActive="active-link"
-    *ngIf="auth.isAdmin"
+    *ngIf="auth.isAdmin || auth.isOffice"
   >
     <mat-icon matListItemIcon>apartment</mat-icon>
     <span class="menu-label">Residential</span>
