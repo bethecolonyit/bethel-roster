@@ -85,6 +85,45 @@
               No leave types found. Seed PTO/SICK in app.leave_types.
             </div>
           </div>
+          <div class="balances-section" *ngIf="selectedEmployeeId">
+  <div class="section-title">Ledger</div>
+
+  <div class="loading-row" *ngIf="isLoadingLedger">
+    Loading ledger...
+  </div>
+
+  <table class="assignment-table mat-elevation-z2" *ngIf="!isLoadingLedger && ledgerRows.length">
+    <thead>
+      <tr class="table-row">
+        <th>Date</th>
+        <th>Type</th>
+        <th>Hours</th>
+        <th>Source</th>
+        <th>Memo</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr class="table-row" *ngFor="let l of ledgerRows">
+        <td>{{ l.effectiveDate | date:'shortDate':'UTC' }}</td>
+        <td>
+          <div class="type-cell">
+            <div class="type-code">{{ l.leaveTypeCode }}</div>
+            <div class="type-name">{{ l.leaveTypeName }}</div>
+          </div>
+        </td>
+        <td>{{ l.amountHours }}</td>
+        <td>{{ l.source }}</td>
+        <td>{{ l.memo || '-' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="hint" *ngIf="!isLoadingLedger && !ledgerRows.length">
+    No ledger entries found for this employee.
+  </div>
+</div>
+
         </mat-tab>
 
         <!-- ========================= -->

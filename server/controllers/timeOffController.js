@@ -165,6 +165,59 @@ function registerTimeOffRoutes(app, db) {
       res.status(500).json({ error: 'Database error fetching leave types' });
     }
   });
+  
+// -----------------------------
+// LEDGER (per employee)
+// -----------------------------
+app.get('/employees/:employeeId/time-off-ledger', ensureAuthenticated, async (req, res) => {
+  const employeeId = toInt(req.params.employeeId);
+  if (!employeeId) return res.status(400).json({ error: 'Invalid employeeId' });
+
+  try {
+    // Non-admin: only allow viewing their own ledger
+    if (!isAdmin(req)) {
+      const uid = sessionUserId(req);
+      if (!uid) return res.status(401).json({ error: 'Not authenticated' });
+
+      const myEmployeeId = await getEmployeeIdForUser(uid);
+      if (!myEmployeeId) return res.status(403).json({ error: 'No employee record is linked to this user account' });
+      if (employeeId !== myEmployeeId) return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const r = await query(
+      `
+      SELECT
+        l.id,
+        l.employeeId,
+        lt.code AS leaveTypeCode,
+        lt.name AS leaveTypeName,
+        l.amountHours,
+        l.source,
+        l.sourceRequestId,
+
+        -- return date-only string to avoid TZ shift
+        CONVERT(varchar(10), l.effectiveDate, 23) AS effectiveDate,
+
+        l.memo,
+        l.createdByUserId,
+
+        -- keep createdAt/updatedAt as-is (DATETIME2), but you can stringify if needed
+        l.createdAt
+
+      FROM app.time_off_ledger l
+      INNER JOIN app.leave_types lt ON lt.id = l.leaveTypeId
+      WHERE l.employeeId = @employeeId
+      ORDER BY l.effectiveDate DESC, l.createdAt DESC;
+      `,
+      { employeeId: { type: sql.Int, value: employeeId } }
+    );
+
+    res.json(r.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error fetching ledger entries' });
+  }
+});
 
   // -----------------------------
   // BALANCES

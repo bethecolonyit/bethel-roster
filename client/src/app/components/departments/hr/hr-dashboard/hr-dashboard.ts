@@ -19,7 +19,8 @@ import {
   LeaveType,
   TimeOffRequestListItem,
   TimeOffStatus,
-  LedgerSource
+  LedgerSource,
+  TimeOffLedgerRow
 } from '../../../../services/time-off.service';
 import { MatTabsModule } from '@angular/material/tabs';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -66,6 +67,10 @@ export class HrDashboardComponent implements OnInit {
   form: BalanceFormGroup = new FormGroup<Record<string, FormControl<number | null>>>({});
   // per-row busy state (prevents double clicks + used by template)
   requestBusy: Record<number, boolean> = {};
+
+  // ledger
+ledgerRows: TimeOffLedgerRow[] = [];
+isLoadingLedger = false;
 
   // used by *ngFor trackBy in template
   trackByRequestId = (_: number, r: TimeOffRequestListItem) => r.id;
@@ -151,6 +156,7 @@ export class HrDashboardComponent implements OnInit {
 
     if (!employeeId) return;
     this.loadBalances(employeeId);
+    this.loadLedger(employeeId);
   }
 
   private loadBalances(employeeId: number): void {
@@ -208,6 +214,7 @@ export class HrDashboardComponent implements OnInit {
       next: () => {
         this.snack.open('Balances saved', 'close', { duration: 2500 });
         this.loadBalances(employeeId);
+        this.loadLedger(employeeId);
       },
       error: (err) => {
         console.error(err);
@@ -219,6 +226,33 @@ export class HrDashboardComponent implements OnInit {
       },
     });
   }
+  // -----------------------------
+  // Ledgers
+  // -----------------------------
+private loadLedger(employeeId: number): void {
+  this.isLoadingLedger = true;
+  this.cdr.detectChanges();
+
+  this.timeOff.getEmployeeLedger(employeeId).subscribe({
+    next: (rows) => {
+      // already ordered by date in SQL, but keep stable ordering just in case
+      this.ledgerRows = (rows || []).slice().sort((a, b) =>
+        (b.effectiveDate || '').localeCompare(a.effectiveDate || '') ||
+        (b.createdAt || '').localeCompare(a.createdAt || '')
+      );
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error(err);
+      this.snack.open('Failed to load ledger entries', 'close', { duration: 3000 });
+    },
+    complete: () => {
+      this.isLoadingLedger = false;
+      this.cdr.detectChanges();
+    },
+  });
+}
+
 
   // -----------------------------
   // Requests
@@ -275,6 +309,11 @@ export class HrDashboardComponent implements OnInit {
 
       // Then refresh for consistency
       this.refreshRequests();
+      if (this.selectedEmployeeId === reqItem.employeeId) {
+      this.loadBalances(reqItem.employeeId);
+      this.loadLedger(reqItem.employeeId);
+}
+
     },
     error: (err) => {
       console.error(err);
@@ -305,6 +344,10 @@ deny(reqItem: TimeOffRequestListItem): void {
       this.cdr.detectChanges();
 
       this.refreshRequests();
+      if (this.selectedEmployeeId === reqItem.employeeId) {
+      this.loadBalances(reqItem.employeeId);
+      this.loadLedger(reqItem.employeeId);
+    }
     },
     error: (err) => {
       console.error(err);
@@ -331,6 +374,10 @@ cancel(reqItem: TimeOffRequestListItem): void {
       this.cdr.detectChanges();
 
       this.refreshRequests();
+      if (this.selectedEmployeeId === reqItem.employeeId) {
+      this.loadBalances(reqItem.employeeId);
+      this.loadLedger(reqItem.employeeId);
+    }
     },
     error: (err) => {
       console.error(err);
@@ -385,6 +432,7 @@ cancel(reqItem: TimeOffRequestListItem): void {
           // if the HR user is currently viewing this employee in balances, refresh
           if (this.selectedEmployeeId === employeeId) {
             this.loadBalances(employeeId);
+            this.loadLedger(employeeId);
           }
 
           this.cdr.detectChanges();

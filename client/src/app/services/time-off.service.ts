@@ -60,6 +60,20 @@ export interface TimeOffRequestListItem {
   createdAt: string;
   updatedAt?: string | null;
 }
+export interface TimeOffLedgerRow {
+  id: number;
+  employeeId: number;
+  leaveTypeCode: string;
+  leaveTypeName: string;
+  amountHours: number;
+  source: string;
+  sourceRequestId?: number | null;
+  effectiveDate: string; // "YYYY-MM-DD"
+  memo?: string | null;
+  createdByUserId?: number | null;
+  createdAt: string; // ISO datetime
+}
+
 
 export type LedgerSource = 'ManualAdjustment' | 'BankedHoliday' | 'OvertimeBank' | 'Accrual';
 
@@ -116,6 +130,14 @@ export class TimeOffService {
       this.httpOptions
     );
   }
+
+  getEmployeeLedger(employeeId: number): Observable<TimeOffLedgerRow[]> {
+  return this.http.get<TimeOffLedgerRow[]>(
+    `${this.baseUrl}/employees/${employeeId}/time-off-ledger`,
+    this.httpOptions
+  );
+}
+
 
   // Requests (Admin view)
   getTimeOffRequests(params?: {
