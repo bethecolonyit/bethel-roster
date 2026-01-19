@@ -100,6 +100,8 @@ function registerStudentRoutes(app, db, upload) {
           s.hasDriverLicense,
           s.foodAllergies,
           s.beeAllergies,
+          s.enrolledInGed,
+          s.tutoring,
           r.roomNumber    AS roomNumber,
           b.bedLetter     AS bedLetter,
           bu.buildingName AS buildingName
@@ -151,6 +153,8 @@ function registerStudentRoutes(app, db, upload) {
           s.hasDriverLicense,
           s.foodAllergies,
           s.beeAllergies,
+          s.enrolledInGed,
+          s.tutoring,
           r.roomNumber AS roomNumber,
           b.bedLetter  AS bedLetter,
           bu.buildingName AS buildingName,
@@ -205,7 +209,9 @@ function registerStudentRoutes(app, db, upload) {
         usesNicotine,
         hasDriverLicense,
         foodAllergies,
-        beeAllergies
+        beeAllergies,
+        enrolledInGed,
+        tutoring
       } = student;
 
       if (!req.file) return res.status(400).json({ error: 'Photo is required' });
@@ -225,13 +231,13 @@ function registerStudentRoutes(app, db, upload) {
         INSERT INTO app.students (
           firstName, lastName, idNumber, counselor, pastorId, program, dayin, dayout,
           isFelon, onProbation, usesNicotine, hasDriverLicense,
-          foodAllergies, beeAllergies
+          foodAllergies, beeAllergies, enrolledInGed, tutoring
         )
         VALUES (
           @firstName, @lastName, @idNumber, @counselor, @pastorId, @program,
           CAST(@dayin AS date), CAST(@dayout AS date),
           @isFelon, @onProbation, @usesNicotine, @hasDriverLicense,
-          @foodAllergies, @beeAllergies
+          @foodAllergies, @beeAllergies, @enrolledInGed, @tutoring
         )
         `,
         {
@@ -249,6 +255,8 @@ function registerStudentRoutes(app, db, upload) {
           hasDriverLicense: { type: sql.Bit, value: !!hasDriverLicense },
           foodAllergies: { type: sql.Bit, value: !!foodAllergies },
           beeAllergies: { type: sql.Bit, value: !!beeAllergies },
+          enrolledInGed: { type: sql.Bit, value: !!enrolledInGed },
+          tutoring: { type: sql.Bit, value: !!tutoring },
         }
       );
 
@@ -286,7 +294,9 @@ function registerStudentRoutes(app, db, upload) {
           usesNicotine,
           hasDriverLicense,
           foodAllergies,
-          beeAllergies
+          beeAllergies,
+          enrolledInGed,
+          tutoring
         FROM app.students
         WHERE id=@id
         `,
@@ -335,6 +345,8 @@ function registerStudentRoutes(app, db, upload) {
           hasDriverLicense=@hasDriverLicense,
           foodAllergies=@foodAllergies,
           beeAllergies=@beeAllergies,
+          enrolledInGed=@enrolledInGed,
+          tutoring=@tutoring,
           idNumber=@idNumber
         WHERE id=@id
         `,
@@ -353,6 +365,8 @@ function registerStudentRoutes(app, db, upload) {
           hasDriverLicense: { type: sql.Bit, value: !!merged.hasDriverLicense },
           foodAllergies: { type: sql.Bit, value: !!merged.foodAllergies },
           beeAllergies: { type: sql.Bit, value: !!merged.beeAllergies },
+          enrolledInGed: { type: sql.Bit, value: !!merged.enrolledInGed },
+          tutoring: { type: sql.Bit, value: !!merged.tutoring },
           idNumber: { type: sql.NVarChar(50), value: merged.idNumber ?? null },
         }
       );

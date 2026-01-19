@@ -17,6 +17,8 @@ export interface StudentBase {
   roomNumber?: string;
   bedLetter?: string;
   totalDemerits?: number;
+  enrolledInGed: boolean;
+  tutoring: boolean;
 
   // plus any other fields you have (roomNumber/bedLetter/buildingName/totalDemerits, etc.)
 }

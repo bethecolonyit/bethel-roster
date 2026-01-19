@@ -104,6 +104,14 @@
         <mat-icon matTooltip="Has driver license">directions_car</mat-icon>
       </ng-container>
 
+      <ng-container *ngIf="student.enrolledInGed">
+        <mat-icon matTooltip="Enrolled in GED">school</mat-icon>
+      </ng-container>
+
+      <ng-container *ngIf="student.tutoring">
+        <mat-icon matTooltip="Tutoring">history_edu</mat-icon>
+      </ng-container>
+
       <ng-container *ngIf="student.foodAllergies">
         <mat-icon matTooltip="Food allergies">restaurant</mat-icon>
       </ng-container>

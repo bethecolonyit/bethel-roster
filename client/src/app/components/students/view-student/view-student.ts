@@ -16,7 +16,6 @@ import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
-
 import { PastorService } from '../../../services/pastor.service';
 import { Pastor } from '../../../models/pastor';
 

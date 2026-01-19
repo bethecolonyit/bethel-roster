@@ -46,7 +46,9 @@ export class CreateStudentComponent {
     usesNicotine: false,
     hasDriverLicense: false,
     foodAllergies: false,
-    beeAllergies: false
+    beeAllergies: false,
+    enrolledInGed: false,
+    tutoring: false
   };
 
   selectedFile: File | null = null;
@@ -150,7 +152,9 @@ onDayInChange() {
     usesNicotine: false,
     hasDriverLicense: false,
     foodAllergies: false,
-    beeAllergies: false
+    beeAllergies: false,
+    enrolledInGed: false,
+    tutoring: false
   };
   this.selectedFile = null;
 

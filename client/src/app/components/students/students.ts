@@ -76,7 +76,9 @@ export class Students implements OnInit {
     usesNicotine: false,
     hasDriverLicense: false,
     foodAllergies: false,
-    beeAllergies: false
+    beeAllergies: false,
+    enrolledInGed: false,
+    tutoring: false
   };
 
   constructor(
@@ -160,6 +162,8 @@ export class Students implements OnInit {
     this.filters.hasDriverLicense = false;
     this.filters.foodAllergies = false;
     this.filters.beeAllergies = false;
+    this.filters.enrolledInGed = false;
+    this.filters.tutoring = false;
 
     this.applyFilterAndSort();
   }
@@ -172,7 +176,9 @@ export class Students implements OnInit {
       this.filters.usesNicotine ||
       this.filters.hasDriverLicense ||
       this.filters.foodAllergies ||
-      this.filters.beeAllergies;
+      this.filters.beeAllergies ||
+      this.filters.enrolledInGed ||
+      this.filters.tutoring;
 
     return programActive || boolActive;
   }
@@ -221,6 +227,8 @@ export class Students implements OnInit {
     const requireHasDriverLicense = this.filters.hasDriverLicense;
     const requireFoodAllergies = this.filters.foodAllergies;
     const requireBeeAllergies = this.filters.beeAllergies;
+    const requireEnrolledInGed = this.filters.enrolledInGed;
+    const requireTutoring = this.filters.tutoring;
 
     return list.filter((s) => {
       if (constrainProgram) {
@@ -234,6 +242,8 @@ export class Students implements OnInit {
       if (requireHasDriverLicense && !(s as any).hasDriverLicense) return false;
       if (requireFoodAllergies && !(s as any).foodAllergies) return false;
       if (requireBeeAllergies && !(s as any).beeAllergies) return false;
+      if (requireEnrolledInGed && !(s as any).enrolledInGed) return false;
+      if (requireTutoring && !(s as any).tutoring) return false;
 
       return true;
     });

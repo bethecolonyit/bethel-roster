@@ -135,6 +135,8 @@
           <mat-checkbox [(ngModel)]="student.hasDriverLicense" name="license" [disabled]="!isEditingBasic">Driver License</mat-checkbox>
           <mat-checkbox [(ngModel)]="student.foodAllergies" name="foodAllergies" [disabled]="!isEditingBasic">Food Allergies</mat-checkbox>
           <mat-checkbox [(ngModel)]="student.beeAllergies" name="beeAllergies" [disabled]="!isEditingBasic">Bee Allergies</mat-checkbox>
+          <mat-checkbox [(ngModel)]="student.enrolledInGed" name="enrolledInGed" [disabled]="!isEditingBasic">Enrolled in GED</mat-checkbox>
+          <mat-checkbox [(ngModel)]="student.tutoring" name="tutoring" [disabled]="!isEditingBasic">Tutoring</mat-checkbox>
         </div>
 
         <button class="submit-button" mat-raised-button color="primary" [disabled]="!isEditingBasic">

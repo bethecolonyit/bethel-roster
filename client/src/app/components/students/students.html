@@ -144,6 +144,18 @@
           </button>
 
           <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox [(ngModel)]="filters.enrolledInGed" (change)="onFiltersChanged()">
+              Enrolled in GED
+            </mat-checkbox>
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
+            <mat-checkbox [(ngModel)]="filters.tutoring" (change)="onFiltersChanged()">
+              Needs Tutoring
+            </mat-checkbox>
+          </button>
+
+          <button mat-menu-item (click)="$event.stopPropagation()">
             <mat-checkbox [(ngModel)]="filters.foodAllergies" (change)="onFiltersChanged()">
               Food Allergies
             </mat-checkbox>
