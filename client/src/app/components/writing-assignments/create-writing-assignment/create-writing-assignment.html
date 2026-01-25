@@ -61,6 +61,7 @@
             <mat-select name="demerits" [(ngModel)]="model.demerits">
               <mat-option [value]="1">1</mat-option>
               <mat-option [value]="2">2</mat-option>
+              <mat-option *ngIf="auth.isCounselingCoordinator || auth.isAdmin" [value]="5">5</mat-option>
             </mat-select>
           </mat-form-field>
         </div>

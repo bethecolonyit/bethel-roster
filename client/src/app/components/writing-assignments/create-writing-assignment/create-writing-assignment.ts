@@ -52,7 +52,7 @@ export class CreateWritingAssignment implements OnInit {
 
   constructor
   (
-    private auth: AuthService,
+    public auth: AuthService,
     private studentService : StudentService, 
     private service : WritingAssignmentService, 
     private snack: MatSnackBar, 
