@@ -7,6 +7,7 @@ export interface User {
   id: number;
   email: string;
   role: string; // 'admin' | 'user' | etc.
+  themePreference?: 'dark' | 'light' | null;
 }
 
 export interface LoginPayload {
@@ -99,5 +100,12 @@ export class AuthService {
       ? `${this.apiUrl}/auth/users/lookup/?includeUserId=${includeUserId}`
       : `${this.apiUrl}/auth/users/lookup`;
   return this.http.get<UserLookup[]>(url, { withCredentials: true });
+}
+saveThemePreference(themePreference: 'dark' | 'light') {
+  return this.http.patch(
+    `${this.apiUrl}/auth/me/theme`,
+    { themePreference },
+    { withCredentials: true }
+  );
 }
 }

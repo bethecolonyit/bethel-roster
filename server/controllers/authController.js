@@ -16,7 +16,7 @@ function registerAuthRoutes(app, db) {
 
     try {
       const r = await query(
-        `SELECT TOP (1) id, email, password_hash, role
+        `SELECT TOP (1) id, email, password_hash, role, themePreference
          FROM app.users
          WHERE email = @email`,
         { email: { type: sql.NVarChar(255), value: email } }
@@ -32,8 +32,9 @@ function registerAuthRoutes(app, db) {
         req.session.userId = user.id;
         req.session.role = user.role;
         req.session.email = user.email;
+        req.session.themePreference = user.themePreference;
 
-        return res.json({ id: user.id, email: user.email, role: user.role });
+        return res.json({ id: user.id, email: user.email, role: user.role, themePreference: user.themePreference});
       });
     } catch (err) {
       console.error(err);
@@ -47,10 +48,33 @@ function registerAuthRoutes(app, db) {
   });
 
   // GET /auth/me
-  app.get('/auth/me', (req, res) => {
-    if (!req.session || !req.session.userId) return res.status(200).json(null);
-    res.json({ id: req.session.userId, email: req.session.email, role: req.session.role });
-  });
+app.get('/auth/me', ensureAuthenticated, async (req, res) => {
+  try {
+    const r = await query(
+      `SELECT id, email, role, themePreference
+       FROM app.users
+       WHERE id = @id`,
+      { id: { type: sql.Int, value: req.session.userId } }
+    );
+
+    const user = r.recordset[0];
+    if (!user) return res.status(200).json(null);
+
+    // keep session email/role in sync (optional but nice)
+    req.session.email = user.email;
+    req.session.role = user.role;
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      themePreference: user.themePreference || 'light',
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
 
   // POST /auth/users (admin only)
   app.post('/auth/users', ensureAuthenticated, ensureAdmin, (req, res) => {
@@ -84,6 +108,30 @@ function registerAuthRoutes(app, db) {
       }
     });
   });
+  
+  app.patch('/auth/me/theme', ensureAuthenticated, async (req, res) => {
+  const raw = (req.body?.themePreference ?? '').toString().toLowerCase().trim();
+  if (raw !== 'dark' && raw !== 'light') {
+    return res.status(400).json({ error: "themePreference must be 'dark' or 'light'" });
+  }
+
+  try {
+    await query(
+      `UPDATE app.users
+       SET themePreference = @themePreference
+       WHERE id = @id`,
+      {
+        id: { type: sql.Int, value: req.session.userId },
+        themePreference: { type: sql.NVarChar(10), value: raw },
+      }
+    );
+
+    res.json({ themePreference: raw });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error saving theme preference' });
+  }
+});
 
   // GET /auth/users (admin only)
   app.get('/auth/users', ensureAuthenticated, ensureAdmin, async (req, res) => {
